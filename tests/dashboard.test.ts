@@ -1,0 +1,92 @@
+import { describe, expect, it } from "vitest";
+import {
+  buildMonthlyDashboard,
+  calculateCurrentStreak,
+  calculateProgressRate,
+  isHabitTargetDay,
+} from "../src/domain/dashboard";
+import type { HabitLogRecord, HabitRecord } from "../src/lib/types";
+
+const baseHabit: HabitRecord = {
+  id: "11111111-1111-1111-1111-111111111111",
+  userId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  name: "Reading",
+  emoji: "📚",
+  color: "blue",
+  frequencyType: "daily",
+  targetWeekdays: null,
+  isActive: true,
+  displayOrder: 0,
+  createdAt: "2026-04-20T00:00:00.000Z",
+  updatedAt: "2026-04-20T00:00:00.000Z",
+};
+
+function makeLog(date: string, status: boolean): HabitLogRecord {
+  return {
+    id: crypto.randomUUID(),
+    userId: baseHabit.userId,
+    habitId: baseHabit.id,
+    date,
+    status,
+    createdAt: `${date}T00:00:00.000Z`,
+    updatedAt: `${date}T00:00:00.000Z`,
+  };
+}
+
+describe("dashboard helpers", () => {
+  it("computes progress rate with one decimal place", () => {
+    expect(calculateProgressRate(7, 10)).toBe(70);
+    expect(calculateProgressRate(12, 17)).toBe(70.6);
+  });
+
+  it("marks only configured weekdays as targets for weekly habits", () => {
+    const weeklyHabit: HabitRecord = {
+      ...baseHabit,
+      frequencyType: "weekly_days",
+      targetWeekdays: [1, 3, 5],
+    };
+
+    expect(isHabitTargetDay(weeklyHabit, "2026-04-20")).toBe(true);
+    expect(isHabitTargetDay(weeklyHabit, "2026-04-21")).toBe(false);
+  });
+
+  it("builds monthly stats using target days only", () => {
+    const monthly = buildMonthlyDashboard(
+      [
+        baseHabit,
+        {
+          ...baseHabit,
+          id: "22222222-2222-2222-2222-222222222222",
+          name: "Workout",
+          frequencyType: "weekly_days",
+          targetWeekdays: [1, 3, 5],
+          displayOrder: 1,
+        },
+      ],
+      [
+        makeLog("2026-04-01", true),
+        {
+          ...makeLog("2026-04-02", true),
+          habitId: "22222222-2222-2222-2222-222222222222",
+        },
+      ],
+      "2026-04",
+      "UTC",
+    );
+
+    expect(monthly.habits).toHaveLength(2);
+    expect(monthly.summary.targetCount).toBeGreaterThan(0);
+    expect(monthly.dailyStats.find((day) => day.date === "2026-04-01")?.completedCount).toBe(1);
+  });
+
+  it("counts a streak only while all target habits are completed", () => {
+    const streak = calculateCurrentStreak(
+      [baseHabit],
+      [makeLog("2026-04-18", true), makeLog("2026-04-19", true), makeLog("2026-04-20", true)],
+      "UTC",
+      10,
+    );
+
+    expect(streak).toBeGreaterThanOrEqual(1);
+  });
+});

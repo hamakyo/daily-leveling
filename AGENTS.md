@@ -29,6 +29,7 @@ If docs conflict, prefer:
 - Use PostgreSQL as the source of truth
 - Use DB-backed sessions
 - Use Google OAuth only
+- Use `pnpm` as the package manager
 
 Do not introduce:
 - Next.js
