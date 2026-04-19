@@ -69,7 +69,9 @@ button {
 
 .hero-card h1 {
   margin: 0;
-  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  font-family: "Avenir Next", "Trebuchet MS", "Helvetica Neue", sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.045em;
   font-size: clamp(2.5rem, 6vw, 4.75rem);
   line-height: 0.95;
 }

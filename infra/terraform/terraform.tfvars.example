@@ -1,0 +1,6 @@
+account_id             = "replace_me"
+worker_name            = "daily-leveling"
+enable_workers_dev     = true
+zone_id                = "replace_me_if_using_zone_routing"
+custom_domain_hostname = null
+route_pattern          = null

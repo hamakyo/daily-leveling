@@ -30,6 +30,7 @@ If docs conflict, prefer:
 - Use DB-backed sessions
 - Use Google OAuth only
 - Use `pnpm` as the package manager
+- Keep UI font stacks sans-serif only
 
 Do not introduce:
 - Next.js
@@ -98,6 +99,12 @@ Minimum required coverage areas:
 - archive behavior
 
 When time is limited, test domain logic before UI details.
+
+## Local Dev Rule
+
+- Use `pnpm dev` as the default full-stack development command
+- After a code change is completed, restart the running dev server so Worker code and built assets are both fresh
+- For Cloudflare environment management, prefer Terraform for account-side resources and Wrangler for Worker build/deploy
 
 ## Definition of Done
 

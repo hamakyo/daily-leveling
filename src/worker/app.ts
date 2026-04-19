@@ -99,6 +99,13 @@ app.onError((error, c) => {
 
 app.notFound(() => jsonError(new AppError(404, "NOT_FOUND", "Route not found.")));
 
+app.get("/healthz", () =>
+  jsonOk({
+    ok: true,
+    service: "daily-leveling",
+  }),
+);
+
 app.get("/auth/google/start", async (c) => {
   const { authorizationUrl, state, codeVerifier } = await createGoogleAuthorizationRequest(c.env);
   const cookieOptions = getOAuthCookieOptions(c.env);

@@ -5,6 +5,8 @@
   "packageManager": "pnpm@9.15.4",
   "type": "module",
   "scripts": {
+    "dev": "concurrently -k -n assets,worker -c blue,green \"pnpm dev:assets\" \"pnpm dev:worker\"",
+    "dev:assets": "vite build --watch",
     "dev:web": "vite",
     "dev:worker": "wrangler dev",
     "build": "vite build",
@@ -24,6 +26,7 @@
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.2",
+    "concurrently": "^9.2.1",
     "typescript": "^5.8.3",
     "vite": "^7.1.4",
     "vitest": "^3.2.4",
