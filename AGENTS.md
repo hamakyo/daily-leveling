@@ -1,96 +1,96 @@
 # AGENTS.md
 
-## Purpose
+## 目的
 
-This repository is currently being built from design docs.
-Use this file as the working contract for implementation agents.
+このリポジトリは現在、設計ドキュメントを起点に構築されています。
+このファイルは実装エージェント向けの作業契約として扱います。
 
-Read order:
+読む順序:
 1. `SPEC.md`
 2. `PLAN.md`
-3. relevant files under `docs/` only if more detail is needed
+3. さらに詳細が必要な場合だけ `docs/` 配下の関連ファイル
 
-If docs conflict, prefer:
+ドキュメント間で矛盾がある場合の優先順位:
 1. `SPEC.md`
 2. `PLAN.md`
-3. latest design docs in `docs/`
+3. `docs/` 配下の最新設計書
 
-## Project Constraints
+## プロジェクト制約
 
-- This is a habit tracker, not a task manager
-- The MVP must stay narrow
-- Keep the architecture simple and production-shaped
-- Do not add features that widen the scope before core flows work
+- これはタスクマネージャーではなく habit tracker である
+- MVP のスコープは狭く保つ
+- アーキテクチャはシンプルかつ本番運用を意識した形にする
+- コアフローが完成する前にスコープを広げる機能を追加しない
 
-## Locked Technical Decisions
+## 固定済み技術判断
 
-- Use React SPA for the client
-- Use Hono on Cloudflare Workers for API/BFF
-- Use PostgreSQL as the source of truth
-- Use DB-backed sessions
-- Use Google OAuth only
-- Use `pnpm` as the package manager
-- Keep UI font stacks sans-serif only
+- クライアントには React SPA を使う
+- API/BFF には Cloudflare Workers 上の Hono を使う
+- 正本データストアは PostgreSQL とする
+- セッションは DB-backed sessions を使う
+- 認証は Google OAuth のみ
+- パッケージマネージャーは `pnpm`
+- UI のフォントスタックは sans-serif のみを使う
 
-Do not introduce:
+導入しないもの:
 - Next.js
-- a second auth provider
-- client-managed auth tokens
-- a second database
+- 2 つ目の認証プロバイダ
+- client-managed auth token
+- 2 つ目のデータベース
 
-## Locked Domain Decisions
+## 固定済みドメイン判断
 
-- Use `google_sub`, never `google_id`
-- Keep timezone in `user_settings.timezone`
-- Treat delete as archive through `is_active = false`
-- Store session hashes, never plaintext session secrets
-- Enforce user ownership on all habit and log operations
-- Interpret day boundaries in user-local time
+- `google_id` ではなく常に `google_sub` を使う
+- timezone は `user_settings.timezone` に置く
+- delete は `is_active = false` による archive として扱う
+- session secret は平文で保持せず hash を保存する
+- すべての habit/log 操作でユーザー所有権を強制する
+- 日付境界は user-local time で解釈する
 
-## Required Behavior
+## 必須挙動
 
-- All non-auth-start/callback APIs require auth
-- The API must never accept `userId` for data scoping
-- Future logs must be rejected
-- Non-target weekdays must be rejected by the API
-- Aggregates must use target days only
-- Aggregates must treat target days without `status=true` as incomplete
+- auth start/callback 以外の API はすべて認証必須
+- API はデータスコープのために `userId` を受け取ってはならない
+- 未来日の log は拒否する
+- 対象外曜日は API 側で拒否する
+- 集計は target day のみを母数に使う
+- target day に `status=true` がない場合は未達成として集計する
 
-## Directory Expectations
+## ディレクトリ方針
 
-Keep the codebase easy to navigate. A good default layout is:
+コードベースは追いやすく保つこと。基本レイアウトの目安は以下:
 
-- `src/api` for route handlers
-- `src/auth` for OAuth and session code
-- `src/db` for queries and migrations wiring
-- `src/domain` for habits, logs, and aggregate logic
-- `src/lib` for shared utilities
-- `src/web` for React UI
-- `tests` for unit and integration tests
-- `migrations` for SQL migrations
+- `src/api` に route handler
+- `src/auth` に OAuth と session code
+- `src/db` に query と migration wiring
+- `src/domain` に habits、logs、aggregate logic
+- `src/lib` に共通 utility
+- `src/web` に React UI
+- `tests` に unit test と integration test
+- `migrations` に SQL migration
 
-Adjust naming if needed, but preserve clear ownership boundaries.
+必要に応じて命名は調整してよいが、責務境界は明確に保つこと。
 
-## Implementation Guidance
+## 実装ガイダンス
 
-- Build vertical slices, not disconnected layers
-- Start with the minimum path that proves end-to-end value
-- Prefer server-owned aggregate APIs over stitching many small APIs in the client
-- Keep validation centralized
-- Keep date and timezone logic in reusable helpers
-- Add comments only where logic is genuinely easy to misread
+- 分断された層ではなく縦切りで実装する
+- end-to-end の価値を最短で証明する経路から作る
+- クライアントで小さな API をつなぐより、画面単位の aggregate API を優先する
+- バリデーションは集約する
+- 日付と timezone ロジックは再利用可能な helper に寄せる
+- コメントは誤読しやすいロジックにだけ最小限で付ける
 
-## Data and Query Guidance
+## データとクエリのガイダンス
 
-- Prefer simple SQL and indexed access patterns
-- Do not add caching or materialized views in the first pass
-- Do not physically delete habits in normal flows
-- Keep `display_order` deterministic
-- Ensure log upserts are idempotent
+- SQL はシンプルに保ち、index を前提にした access pattern を優先する
+- 初手では caching や materialized view を入れない
+- 通常フローで habit を物理削除しない
+- `display_order` は決定的に保つ
+- log upsert は idempotent にする
 
-## Testing Guidance
+## テストガイダンス
 
-Minimum required coverage areas:
+最低限カバーすべき領域:
 - auth session validation
 - weekday targeting
 - future-date rejection
@@ -98,33 +98,33 @@ Minimum required coverage areas:
 - streak correctness
 - archive behavior
 
-When time is limited, test domain logic before UI details.
+時間が限られる場合は、UI より先に domain logic をテストすること。
 
-## Local Dev Rule
+## ローカル開発ルール
 
-- Use `pnpm dev` as the default full-stack development command
-- After a code change is completed, restart the running dev server so Worker code and built assets are both fresh
-- For Cloudflare environment management, prefer Terraform for account-side resources and Wrangler for Worker build/deploy
+- フルスタック開発の標準コマンドは `pnpm dev`
+- コード変更が完了したら、Worker と build 済み asset の両方を確実に更新するため実行中の dev server を再起動する
+- Cloudflare 環境管理では、account-side resource は Terraform、Worker build/deploy は Wrangler を優先する
 
-## Definition of Done
+## 完了条件
 
-A task is not done unless:
-- it matches `SPEC.md`
-- it fits the current phase in `PLAN.md`
-- it includes the needed validation
-- it preserves user data isolation
-- it has enough verification to trust the behavior
+以下を満たさない限りタスク完了とはみなさない:
+- `SPEC.md` に一致している
+- `PLAN.md` の現在フェーズに収まっている
+- 必要なバリデーションが入っている
+- ユーザーデータ分離を壊していない
+- 振る舞いを信頼できるだけの検証がある
 
-## Anti-Patterns
+## アンチパターン
 
-Do not:
-- widen scope while core flows are incomplete
-- add speculative abstractions
-- hide unresolved spec conflicts in code
-- mix user-local date logic and raw UTC assumptions in the same workflow
-- ship UI-only guards for rules that must also be enforced by the API
+やってはいけないこと:
+- コアフロー未完成のままスコープを広げる
+- 推測ベースの抽象化を先回りで追加する
+- 未解決の仕様衝突をコードに埋め込んで隠す
+- 同じワークフローで user-local date logic と生の UTC 前提を混在させる
+- API でも守るべきルールを UI ガードだけで済ませる
 
-## Escalation Rule
+## エスカレーションルール
 
-If an implementation task is blocked by a real spec gap, do not guess silently.
-Document the gap explicitly and choose the narrowest decision that preserves MVP scope.
+実装タスクが本当の spec gap で詰まった場合は、黙って推測しないこと。
+ギャップを明示し、MVP のスコープを保てる最小の判断を選ぶこと。

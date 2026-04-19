@@ -1,27 +1,32 @@
 # Cloudflare Terraform
 
-This directory holds Cloudflare-side infrastructure as code for Daily Leveling.
+このディレクトリは、Daily Leveling の Cloudflare 側インフラを Terraform で管理するためのものです。
 
-## Scope
+## 管理対象
 
-This Terraform layer is intended to manage:
-- the Worker service shell
-- `workers.dev` enablement
-- optional custom domain attachment
-- optional Worker route attachment
+この Terraform レイヤーでは主に以下を扱います。
+- Worker サービス定義
+- `workers.dev` の有効化/無効化
+- 任意の Custom Domain
+- 任意の Worker Route
 
-This Terraform layer is not the primary build pipeline for the Worker bundle.
-Use Wrangler for local development and code deployment.
+Worker バンドルのビルドパイプライン自体はここでは管理しません。
+ローカル開発と Worker コードのデプロイは Wrangler を使います。
 
-## Files
+## ファイル構成
 
-- `versions.tf`: Terraform and provider requirements
-- `variables.tf`: input variables
-- `main.tf`: Cloudflare resources
-- `outputs.tf`: useful outputs
-- `terraform.tfvars.example`: example variable values
+- `versions.tf`
+  Terraform 本体と provider の要求バージョン
+- `variables.tf`
+  入力変数
+- `main.tf`
+  Cloudflare リソース定義
+- `outputs.tf`
+  出力値
+- `terraform.tfvars.example`
+  変数ファイルの雛形
 
-## Usage
+## 使い方
 
 ```bash
 cd infra/terraform
@@ -31,9 +36,9 @@ terraform plan
 terraform apply
 ```
 
-## Notes
+## 注意点
 
-- Set either `custom_domain_hostname` or `route_pattern` depending on how you expose the Worker.
-- Use a custom domain when the Worker is the origin.
-- Use a route when the Worker sits in front of another origin.
-- Keep Worker code deployment in Wrangler unless you intentionally move version management into Terraform.
+- `custom_domain_hostname` か `route_pattern` のどちらを使うかは公開方式に合わせて選んでください。
+- Worker 自体がオリジンになる場合は Custom Domain を使います。
+- 既存オリジンの前段に Worker を挟む場合は Route を使います。
+- Worker コードのバージョン管理まで Terraform に寄せる意図がない限り、コード配備は Wrangler のままにしてください。

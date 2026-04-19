@@ -1,81 +1,81 @@
-# Daily Leveling MVP Spec
+# Daily Leveling MVP 仕様
 
-## Purpose
+## 目的
 
-This file is the implementation-facing MVP spec for Daily Leveling.
-It consolidates the current requirement, DDL, basic design, and API design docs,
-and resolves the minimum set of ambiguities needed to start implementation.
+このファイルは Daily Leveling の MVP を実装するための仕様書です。
+現在の要件定義、DDL、基本設計、API 詳細設計を統合し、
+実装開始に必要な最小限の曖昧さを解消した内容をまとめています。
 
-Source docs:
+参照元ドキュメント:
 - `docs/Daily_Leveling_要件定義_v0.2.md`
 - `docs/Daily_Leveling_PostgreSQL_DDL草案_v0.1.md`
 - `docs/daily_leveling_schema_v0_1.sql`
 - `docs/Daily_Leveling_基本設計_v0.1.md`
 - `docs/Daily_Leveling_API詳細設計_v0.1.md`
 
-When older docs conflict, follow this file.
+旧来ドキュメントと矛盾する場合は、このファイルを優先します。
 
-## Product Summary
+## プロダクト概要
 
-Daily Leveling is a habit tracker focused on:
-- fast daily check-in
-- monthly grid visibility
-- simple progress feedback
+Daily Leveling は次の体験に特化した習慣トラッカーです。
+- 日々の素早いチェックイン
+- 月間グリッドでの可視化
+- シンプルな進捗フィードバック
 
-It is not a task manager. The MVP handles habits only.
+これはタスク管理アプリではありません。MVP は習慣管理のみを扱います。
 
-## Locked Architecture Decisions
+## 固定済みアーキテクチャ判断
 
-- Frontend: React SPA
+- フロントエンド: React SPA
 - BFF/API: Hono on Cloudflare Workers
-- Database: PostgreSQL
-- DB access path: Hyperdrive
-- Auth provider: Google OAuth 2.0 / OpenID Connect only
-- Session model: DB-backed sessions with an opaque cookie token
+- データベース: PostgreSQL
+- DB 接続経路: Hyperdrive
+- 認証プロバイダ: Google OAuth 2.0 / OpenID Connect のみ
+- セッション方式: DB-backed sessions と opaque cookie token
 
-## Locked Domain Decisions
+## 固定済みドメイン判断
 
-- External user identity key is `google_sub`
-- App user primary key is internal `users.id`
-- User timezone lives in `user_settings.timezone`
-- Habit delete in MVP means archive via `is_active = false`
-- No physical habit delete in the normal UI flow
-- Habit frequency types are only `daily` and `weekly_days`
-- Weekday convention is `1=Mon ... 7=Sun`
-- A habit log is unique per `user_id + habit_id + log_date`
-- Future dates are visible but not writable
-- DB timestamps are stored in UTC
-- Date boundaries are interpreted in the user's timezone
+- 外部ユーザー識別子は `google_sub`
+- アプリ内ユーザーの主キーは内部 `users.id`
+- ユーザーの timezone は `user_settings.timezone` に保持する
+- MVP における習慣削除は `is_active = false` による archive を意味する
+- 通常 UI フローでは習慣の物理削除は行わない
+- 習慣頻度タイプは `daily` と `weekly_days` のみ
+- 曜日表現は `1=Mon ... 7=Sun`
+- 習慣ログは `user_id + habit_id + log_date` で一意
+- 未来日は表示してよいが書き込みは禁止
+- DB の timestamp は UTC で保存する
+- 日付境界はユーザーの timezone で解釈する
 
-## Locked Calculation Rules
+## 固定済み集計ルール
 
-- Target days only count toward denominators
-- For aggregate calculations, `status = true` means complete
-- For aggregate calculations, target days without a `true` log count as incomplete
-- `progressRate` is returned as a percentage rounded to 1 decimal place
-- `currentStreak` is the number of consecutive user-local days up to today where:
-  - the day has at least 1 target habit
-  - all target habits for that day are completed
+- 母数には target day のみを含める
+- 集計上は `status = true` を達成とみなす
+- 集計上は target day に `true` のログがない場合は未達成とみなす
+- `progressRate` は百分率で小数 1 桁に丸めて返す
+- `currentStreak` は今日まで連続するユーザー現地日ベースの日数で、以下を満たすものとする
+  - その日に少なくとも 1 つ target habit がある
+  - その日の target habit がすべて達成されている
 
-## Required MVP User Flows
+## MVP 必須ユーザーフロー
 
-1. User starts Google login
-2. User completes OAuth callback and receives a session cookie
-3. First-time user lands on onboarding
-4. User applies a template and/or adds habits manually
-5. User completes onboarding
-6. User sees today's habits and can toggle completion
-7. User can open the monthly dashboard and review:
-   - monthly total progress
-   - daily progress
-   - per-habit progress
+1. ユーザーが Google ログインを開始する
+2. ユーザーが OAuth callback を完了し、session cookie を受け取る
+3. 初回ユーザーは onboarding に遷移する
+4. ユーザーはテンプレート適用または手動追加で習慣を作成する
+5. ユーザーは onboarding を完了する
+6. ユーザーは今日の習慣一覧を見て達成状態を切り替えられる
+7. ユーザーは月間ダッシュボードを開いて以下を確認できる
+   - 月間合計進捗
+   - 日別進捗
+   - 習慣別進捗
    - current streak
-8. User can edit habits, reorder habits, and archive habits
-9. User can log out
+8. ユーザーは習慣の編集、並び替え、archive を行える
+9. ユーザーはログアウトできる
 
-## API Scope
+## API スコープ
 
-Core MVP APIs:
+MVP のコア API:
 - `GET /auth/google/start`
 - `GET /auth/google/callback`
 - `GET /auth/me`
@@ -91,84 +91,84 @@ Core MVP APIs:
 - `GET /dashboard/today`
 - `GET /dashboard/monthly`
 
-Secondary APIs:
+二次 API:
 - `GET /settings`
 - `PATCH /settings`
 - `GET /dashboard/weekly`
 
-Secondary APIs can ship after the first usable MVP if needed.
+必要であれば、二次 API は最初の usable MVP 後に出してよいものとします。
 
-## Data Model
+## データモデル
 
-Required tables:
+必須テーブル:
 - `users`
 - `user_settings`
 - `sessions`
 - `habits`
 - `habit_logs`
 
-Key schema constraints:
-- `users.google_sub` is unique
-- `user_settings.user_id` is unique
-- `sessions.session_token_hash` is unique
-- `habit_logs(user_id, habit_id, log_date)` is unique
-- `habits.frequency_type` is `daily` or `weekly_days`
+主な schema 制約:
+- `users.google_sub` は一意
+- `user_settings.user_id` は一意
+- `sessions.session_token_hash` は一意
+- `habit_logs(user_id, habit_id, log_date)` は一意
+- `habits.frequency_type` は `daily` または `weekly_days`
 
-Implementation note:
-- The SQL draft's weekday-array validation should be implemented in a PostgreSQL-safe way
-  instead of relying on a fragile inline `CHECK` expression.
+実装メモ:
+- SQL 草案の weekday array バリデーションは、
+  壊れやすい inline `CHECK` ではなく PostgreSQL で安全に扱える方法で実装すること
 
-## Validation Rules
+## バリデーションルール
 
-- `name`: required, trimmed, 1 to 100 chars
-- `frequencyType`: required, `daily | weekly_days`
+- `name`: 必須、trim 後で 1 文字以上 100 文字以下
+- `frequencyType`: 必須、`daily | weekly_days`
 - `targetWeekdays`:
-  - must be absent or null for `daily`
-  - must be present for `weekly_days`
-  - must contain unique integers in `1..7`
-  - should be normalized to ascending order
+  - `daily` のときは未指定または null でなければならない
+  - `weekly_days` のときは必須
+  - `1..7` の重複しない整数でなければならない
+  - 昇順に正規化する
 - `date`: `YYYY-MM-DD`
 - `month`: `YYYY-MM`
 - `defaultView`: `today | month`
-- `timezone`: valid IANA timezone
+- `timezone`: 有効な IANA timezone
 
-## Security Rules
+## セキュリティルール
 
-- All APIs except Google auth start/callback require auth
-- Session cookie must be `HttpOnly`, `Secure`, `SameSite=Lax`
-- Session cookie must not contain plaintext session hashes
-- Session validity requires:
-  - cookie present
-  - session record exists
+- Google auth start/callback 以外の全 API は認証必須
+- Session cookie は `HttpOnly`, `Secure`, `SameSite=Lax`
+- Session cookie に平文の session hash を入れてはならない
+- Session 有効判定には以下をすべて満たす必要がある
+  - cookie が存在する
+  - session record が存在する
   - `revoked_at IS NULL`
   - `expires_at > NOW()`
-- Ownership checks are mandatory on all habit-scoped APIs
-- The API never accepts a client-provided `userId` for scoping
+- Habit スコープ API では所有権チェックを必須にする
+- API は scoping 用に client 提供の `userId` を受け取らない
 
-## UX Priorities
+## UX 優先順位
 
-- Mobile first for the daily check-in flow
-- Desktop first for the monthly dashboard flow
-- Toggling today should feel immediate
-- Monthly grid load should stay around 1 second in normal conditions
-- Avoid punitive language for misses
+- 日次チェックインは mobile first
+- 月間ダッシュボードは desktop first
+- 今日のトグル操作は即時に感じられること
+- 月間グリッドの表示は通常条件でおおむね 1 秒程度に収まること
+- 未達成に対して罰するような文言は避けること
 
-## Deferred From Core MVP
+## コア MVP から除外するもの
 
-- notifications
-- XP, badges, currency, or level systems
-- social features
-- AI review features
-- calendar integrations
-- widgets or PWA work
-- physical habit delete
+- 通知
+- XP、バッジ、通貨、レベル要素
+- ソーシャル機能
+- AI レビュー機能
+- カレンダー連携
+- Widget や PWA 対応
+- 習慣の物理削除
 
-## MVP Acceptance Criteria
+## MVP 受け入れ条件
 
-- Google login works end to end
-- First-time users can finish onboarding
-- Habits can be created, updated, reordered, and archived
-- Today's check-in works
-- Monthly dashboard works
-- Monthly total progress, daily progress, per-habit progress, and streak are visible
-- The app is usable on both mobile and desktop
+- Google ログインが end-to-end で動作する
+- 初回ユーザーが onboarding を完了できる
+- 習慣の作成、更新、並び替え、archive ができる
+- 今日のチェックインができる
+- 月間ダッシュボードが動作する
+- 月間合計進捗、日別進捗、習慣別進捗、streak が見える
+- モバイルとデスクトップの両方で実用になる

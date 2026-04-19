@@ -1,145 +1,145 @@
-# Daily Leveling MVP Plan
+# Daily Leveling MVP 実装計画
 
-## Goal
+## 目標
 
-Build the smallest production-shaped MVP that satisfies `SPEC.md`.
+`SPEC.md` を満たす、最小限で本番運用を見据えた MVP を構築すること。
 
-## Implementation Order
+## 実装順
 
 ### Phase 0: Workspace Bootstrap
 
-Deliverables:
-- Worker app scaffold
-- React SPA scaffold
-- TypeScript, lint, test, and formatting setup
-- environment variable handling
-- local and deploy config
+成果物:
+- Worker アプリの scaffold
+- React SPA の scaffold
+- TypeScript、lint、test、formatting のセットアップ
+- 環境変数の取り扱い
+- ローカル開発設定と deploy 設定
 
-Done when:
-- app boots locally
-- one Worker route responds
-- one React page renders through the chosen app structure
+完了条件:
+- アプリがローカルで起動する
+- Worker の 1 ルートが応答する
+- 選択したアプリ構成を通じて React ページが 1 つ描画される
 
 ### Phase 1: Database and Migrations
 
-Deliverables:
-- migration folder
-- initial schema migration
-- seed strategy for local development
+成果物:
+- migration フォルダ
+- 初期 schema migration
+- ローカル開発用の seed 方針
 - DB access module
 
-Important decisions:
-- use `google_sub`, not `google_id`
-- use `user_settings.timezone`, not `users.timezone`
-- keep habit deletion soft via `is_active = false`
+重要判断:
+- `google_id` ではなく `google_sub` を使う
+- `users.timezone` ではなく `user_settings.timezone` を使う
+- 習慣削除は `is_active = false` による soft delete とする
 
-Done when:
-- all 5 core tables migrate successfully
-- indexes and triggers exist
-- session and habit log uniqueness are enforced
+完了条件:
+- 5 つのコアテーブルがすべて migrate できる
+- index と trigger が存在する
+- session と habit log の一意性が強制される
 
 ### Phase 2: Shared Domain and Validation
 
-Deliverables:
+成果物:
 - schema validation layer
-- auth/session helpers
-- timezone/date helpers
-- frequency target-day helpers
+- auth/session helper
+- timezone/date helper
+- frequency target-day helper
 - progress-rate helper
 - streak helper
-- shared error response format
+- 共通エラーレスポンス形式
 
-Done when:
-- all request payloads can be validated centrally
-- all date logic is based on user timezone
-- aggregate rules match `SPEC.md`
+完了条件:
+- すべての request payload を集中的にバリデーションできる
+- すべての日付ロジックが user timezone ベースになる
+- 集計ルールが `SPEC.md` と一致する
 
 ### Phase 3: Authentication
 
-Deliverables:
+成果物:
 - `GET /auth/google/start`
 - `GET /auth/google/callback`
 - `GET /auth/me`
 - `POST /auth/logout`
 
-Implementation notes:
-- use state and PKCE
-- verify ID token server-side
-- create `users` and `user_settings` on first login
-- create DB session and opaque auth cookie on success
+実装メモ:
+- `state` と PKCE を使う
+- ID token はサーバー側で検証する
+- 初回ログイン時に `users` と `user_settings` を作成する
+- 成功時に DB session と opaque auth cookie を作成する
 
-Done when:
-- login works end to end
-- logout revokes the session
-- protected APIs can resolve `currentUser`
+完了条件:
+- ログインが end-to-end で動作する
+- ログアウトで session が失効する
+- 保護された API が `currentUser` を解決できる
 
 ### Phase 4: Onboarding and Templates
 
-Deliverables:
-- template definitions in code
+成果物:
+- コード上の template 定義
 - `POST /onboarding/templates/apply`
 - `POST /onboarding/complete`
 
-Done when:
-- a first-time user can receive starter habits
-- onboarding completion affects post-login redirect behavior
+完了条件:
+- 初回ユーザーが starter habits を受け取れる
+- onboarding 完了がログイン後の redirect 挙動に反映される
 
 ### Phase 5: Habit Management
 
-Deliverables:
+成果物:
 - `GET /habits`
 - `POST /habits`
 - `PATCH /habits/:habitId`
 - `POST /habits/reorder`
 
-Implementation notes:
-- reorder updates `display_order`
-- archive uses `is_active = false`
-- never expose cross-user habit access
+実装メモ:
+- reorder で `display_order` を更新する
+- archive は `is_active = false` で表現する
+- 他ユーザーの habit には絶対にアクセスさせない
 
-Done when:
-- habits can be listed, created, edited, reordered, and archived
+完了条件:
+- habit を一覧取得、作成、編集、並び替え、archive できる
 
 ### Phase 6: Habit Logs
 
-Deliverables:
+成果物:
 - `GET /logs`
 - `PUT /habits/:habitId/logs/:date`
 
-Implementation notes:
-- reject future dates
-- reject non-target weekdays
-- upsert by `user_id + habit_id + log_date`
+実装メモ:
+- 未来日は拒否する
+- 対象外曜日は拒否する
+- `user_id + habit_id + log_date` で upsert する
 
-Done when:
-- today and past logs can be written safely
-- monthly grid data can be fetched for a date range
+完了条件:
+- 今日と過去日のログを安全に書き込める
+- 月間グリッド用データを日付範囲で取得できる
 
 ### Phase 7: Dashboard Aggregates
 
-Deliverables:
+成果物:
 - `GET /dashboard/today`
 - `GET /dashboard/monthly`
 
-Implementation notes:
-- return screen-shaped payloads
-- compute from raw tables, not pre-aggregated tables
-- include only active habits in aggregate denominators
+実装メモ:
+- 画面単位の payload を返す
+- 集計は raw table から計算し、事前集計 table は使わない
+- 母数には active habit のみを含める
 
-Done when:
-- mobile today view can render from one API call
-- monthly view can render from one API call
+完了条件:
+- mobile の today view が 1 回の API 呼び出しで描画できる
+- monthly view が 1 回の API 呼び出しで描画できる
 
 ### Phase 8: Web UI
 
-Deliverables:
-- login screen
-- onboarding screen
-- dashboard screen
-- habit create/edit UI
-- settings screen shell
+成果物:
+- ログイン画面
+- オンボーディング画面
+- ダッシュボード画面
+- habit 作成/編集 UI
+- settings 画面の shell
 
-Priority order:
+優先順:
 1. login
 2. onboarding
 3. mobile today view
@@ -147,64 +147,64 @@ Priority order:
 5. habit editor
 6. settings
 
-Done when:
-- the full user journey works in browser without mocks
+完了条件:
+- モックなしでユーザージャーニー全体がブラウザ上で動作する
 
 ### Phase 9: Secondary Endpoints
 
-Deliverables:
+成果物:
 - `GET /settings`
 - `PATCH /settings`
 - `GET /dashboard/weekly`
 
-Done when:
-- settings are editable
-- weekly aggregate is available without changing core architecture
+完了条件:
+- settings を編集できる
+- コアアーキテクチャを変えずに weekly aggregate を提供できる
 
 ### Phase 10: QA and Deployment
 
-Deliverables:
-- unit tests for helpers
-- API tests for auth, habits, logs, and dashboard
-- manual test checklist
-- deploy config and secrets checklist
+成果物:
+- helper に対する unit test
+- auth、habits、logs、dashboard の API test
+- 手動テスト checklist
+- deploy 設定と secrets checklist
 
-High-risk areas to test:
-- OAuth callback edge cases
-- timezone day-boundary behavior
-- weekday-target validation
-- log upsert idempotency
-- streak calculation
-- archived habits in aggregates
+重点的に検証すべき高リスク領域:
+- OAuth callback の edge case
+- timezone またぎの日付境界挙動
+- 曜日 target バリデーション
+- log upsert の idempotency
+- streak 計算
+- archive 済み habit の集計除外
 
-Done when:
-- core acceptance criteria from `SPEC.md` pass
-- the deployed app can log in and persist data
+完了条件:
+- `SPEC.md` のコア受け入れ条件を満たす
+- deploy 後のアプリでログインとデータ保存ができる
 
-## Stop-the-Line Rules
+## Stop-the-Line ルール
 
-Do not continue feature work until these are settled in code:
-- timezone boundary logic
-- session cookie format and session lookup
-- streak definition
-- soft-delete behavior
+以下がコード上で固まるまで feature work を先に進めないこと:
+- timezone 境界ロジック
+- session cookie 形式と session lookup
+- streak 定義
+- soft-delete の挙動
 
-## Out of Scope Until Core MVP Works
+## コア MVP が動くまで対象外
 
-- badges, XP, game economy
-- notifications
-- AI features
-- social features
-- external integrations
-- PWA work
+- バッジ、XP、ゲーム経済
+- 通知
+- AI 機能
+- ソーシャル機能
+- 外部連携
+- PWA 対応
 
-## Recommended First Build Slice
+## 推奨する最初の縦切り実装
 
-Build this vertical slice first:
+まずは以下の縦切りを作る:
 1. schema
 2. auth
-3. create one habit
-4. toggle today's log
-5. render today's summary
+3. habit を 1 つ作成
+4. 今日の log を切り替える
+5. 今日の summary を描画する
 
-After that, build monthly aggregation and the rest of the UI.
+その後に monthly aggregate と残りの UI を作る。

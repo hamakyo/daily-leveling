@@ -11,6 +11,10 @@
     "dev:worker": "wrangler dev",
     "build": "vite build",
     "check": "tsc --noEmit",
+    "deploy": "pnpm run build && wrangler deploy",
+    "deploy:dry-run": "pnpm run build && wrangler deploy --dry-run",
+    "infra:fmt": "terraform -chdir=infra/terraform fmt -check -diff",
+    "infra:validate": "terraform -chdir=infra/terraform init -backend=false && terraform -chdir=infra/terraform validate",
     "test": "vitest run",
     "test:watch": "vitest",
     "types:generate": "wrangler types"
