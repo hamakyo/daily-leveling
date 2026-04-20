@@ -20,8 +20,20 @@ interface GoogleTokenInfoResponse {
   sub?: string;
 }
 
+function getRequiredEnvValue(
+  env: Env,
+  key: "APP_BASE_URL" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET",
+): string {
+  const value = env[key];
+  if (typeof value === "string" && value.trim().length > 0) {
+    return value;
+  }
+
+  throw new AppError(500, "ENV_MISCONFIGURED", `認証設定 ${key} が不足しています。`);
+}
+
 function getRedirectUri(env: Env): string {
-  return new URL("/auth/google/callback", env.APP_BASE_URL).toString();
+  return new URL("/auth/google/callback", getRequiredEnvValue(env, "APP_BASE_URL")).toString();
 }
 
 export async function createGoogleAuthorizationRequest(env: Env): Promise<{
@@ -32,7 +44,7 @@ export async function createGoogleAuthorizationRequest(env: Env): Promise<{
   const state = createOpaqueToken();
   const { codeVerifier, codeChallenge } = await createPkcePair();
   const params = new URLSearchParams({
-    client_id: env.GOOGLE_CLIENT_ID,
+    client_id: getRequiredEnvValue(env, "GOOGLE_CLIENT_ID"),
     redirect_uri: getRedirectUri(env),
     response_type: "code",
     scope: "openid email profile",
@@ -57,8 +69,8 @@ export async function exchangeAuthorizationCode(
 ): Promise<{ idToken: string }> {
   const body = new URLSearchParams({
     code,
-    client_id: env.GOOGLE_CLIENT_ID,
-    client_secret: env.GOOGLE_CLIENT_SECRET,
+    client_id: getRequiredEnvValue(env, "GOOGLE_CLIENT_ID"),
+    client_secret: getRequiredEnvValue(env, "GOOGLE_CLIENT_SECRET"),
     redirect_uri: getRedirectUri(env),
     grant_type: "authorization_code",
     code_verifier: codeVerifier,
@@ -105,7 +117,7 @@ export async function verifyGoogleIdToken(
     throw new AppError(401, "UNAUTHORIZED", "Google トークンの検証に失敗しました。");
   }
 
-  if (payload.aud !== env.GOOGLE_CLIENT_ID) {
+  if (payload.aud !== getRequiredEnvValue(env, "GOOGLE_CLIENT_ID")) {
     throw new AppError(401, "UNAUTHORIZED", "Google トークンの audience が一致しません。");
   }
 

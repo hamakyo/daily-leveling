@@ -23,8 +23,26 @@ run_worker_first = [
 [env.test]
 name = "daily-leveling-test"
 
+[env.test.vars]
+APP_BASE_URL = "https://daily-leveling-test.hamakyoh.workers.dev"
+DEFAULT_TIMEZONE = "Asia/Tokyo"
+SESSION_COOKIE_NAME = "dl_session_test"
+SESSION_TTL_SECONDS = "1209600"
+
 [env.staging]
 name = "daily-leveling-staging"
 
+[env.staging.vars]
+APP_BASE_URL = "https://daily-leveling-staging.hamakyoh.workers.dev"
+DEFAULT_TIMEZONE = "Asia/Tokyo"
+SESSION_COOKIE_NAME = "dl_session_staging"
+SESSION_TTL_SECONDS = "1209600"
+
 [env.production]
 name = "daily-leveling"
+
+[env.production.vars]
+APP_BASE_URL = "https://daily-leveling.hamakyoh.workers.dev"
+DEFAULT_TIMEZONE = "Asia/Tokyo"
+SESSION_COOKIE_NAME = "dl_session"
+SESSION_TTL_SECONDS = "1209600"

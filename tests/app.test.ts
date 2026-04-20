@@ -101,6 +101,21 @@ describe("worker app auth and log guards", () => {
     expect(repositoryMocks.getCurrentUserBySessionHash).not.toHaveBeenCalled();
   });
 
+  it("fails fast when google auth env is missing", async () => {
+    const response = await app.request("http://localhost/auth/google/start", undefined, {
+      ...env,
+      GOOGLE_CLIENT_ID: "",
+    });
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "ENV_MISCONFIGURED",
+        message: "認証設定 GOOGLE_CLIENT_ID が不足しています。",
+      },
+    });
+  });
+
   it("returns the current user when the session is valid", async () => {
     repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
       user: currentUser,

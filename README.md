@@ -181,6 +181,7 @@ pnpm dev:worker
 
 `wrangler.toml` には `env.test`, `env.staging`, `env.production` を定義しています。
 ローカル開発用の top-level 名は `daily-leveling-local` です。
+初期 bootstrap では各環境の `APP_BASE_URL` を `workers.dev` URL で持ち、custom domain 移行後に上書きします。
 
 ローカルの環境ファイル読み込み順:
 - `local`
@@ -263,6 +264,16 @@ Worker runtime 用の環境変数と secret は Cloudflare 側に環境ごとに
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
 - 必要に応じて `SESSION_COOKIE_NAME`, `SESSION_TTL_SECONDS`, `DEFAULT_TIMEZONE`
+
+初期 bootstrap 時点では、以下の非秘密値は `wrangler.toml` に定義しています。
+- `test`: `https://daily-leveling-test.hamakyoh.workers.dev`
+- `staging`: `https://daily-leveling-staging.hamakyoh.workers.dev`
+- `production`: `https://daily-leveling.hamakyoh.workers.dev`
+
+そのため Cloudflare 側で最初に投入すべき secret は以下です。
+- `DATABASE_URL`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
 
 本番デプロイ前に確認すること:
 1. `APP_BASE_URL` が本番の公開 URL と一致している
