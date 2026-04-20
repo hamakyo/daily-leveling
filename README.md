@@ -149,9 +149,15 @@ Cloudflare 操作の標準経路:
 
 ```bash
 pnpm run cf:whoami
+pnpm run cf:health:test
+pnpm run cf:health:staging
+pnpm run cf:health:production
 pnpm run cf:deployments:test
 pnpm run cf:deployments:staging
 pnpm run cf:deployments:production
+pnpm run cf:secrets:test
+pnpm run cf:secrets:staging
+pnpm run cf:secrets:production
 pnpm run deploy:test
 pnpm run deploy:staging
 pnpm run deploy:production
@@ -159,6 +165,7 @@ pnpm exec wrangler secret put DATABASE_URL --env staging
 ```
 
 `cf:deployments:*` は初回 deploy 前だと対象 Worker が存在せず失敗することがあります。
+`cf:health:*` は公開 URL の疎通確認、`cf:secrets:*` は Cloudflare 側の secret 投入状況の確認に使います。
 
 Terraform の土台は `infra/terraform` にあります。
 
