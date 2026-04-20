@@ -17,7 +17,9 @@
     "infra:validate": "terraform -chdir=infra/terraform init -backend=false && terraform -chdir=infra/terraform validate",
     "test": "vitest run",
     "test:watch": "vitest",
-    "types:generate": "wrangler types"
+    "types:generate": "wrangler types",
+    "verify": "pnpm run check && pnpm test && pnpm run build && pnpm run infra:fmt",
+    "verify:full": "pnpm run verify && pnpm run infra:validate && pnpm run deploy:dry-run"
   },
   "dependencies": {
     "hono": "^4.6.15",

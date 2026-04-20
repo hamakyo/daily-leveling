@@ -89,4 +89,31 @@ describe("dashboard helpers", () => {
 
     expect(streak).toBeGreaterThanOrEqual(1);
   });
+
+  it("excludes archived habits from monthly aggregates", () => {
+    const archivedHabit: HabitRecord = {
+      ...baseHabit,
+      id: "33333333-3333-3333-3333-333333333333",
+      name: "Archived",
+      isActive: false,
+      displayOrder: 1,
+    };
+
+    const monthly = buildMonthlyDashboard(
+      [baseHabit, archivedHabit],
+      [
+        makeLog("2026-04-01", true),
+        {
+          ...makeLog("2026-04-01", true),
+          habitId: archivedHabit.id,
+        },
+      ],
+      "2026-04",
+      "UTC",
+    );
+
+    expect(monthly.habits.map((habit) => habit.habitId)).toEqual([baseHabit.id]);
+    expect(monthly.logs.some((log) => log.habitId === archivedHabit.id)).toBe(true);
+    expect(monthly.habitStats.some((habit) => habit.habitId === archivedHabit.id)).toBe(false);
+  });
 });

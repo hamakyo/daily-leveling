@@ -61,6 +61,8 @@ pnpm run build
 pnpm run infra:fmt
 pnpm run infra:validate
 pnpm run deploy:dry-run
+pnpm run verify
+pnpm run verify:full
 ```
 
 ## 実行時メモ
@@ -105,6 +107,7 @@ pnpm dev:worker
 ローカルからの事前確認:
 
 ```bash
+pnpm run verify
 pnpm run deploy:dry-run
 ```
 
@@ -120,6 +123,38 @@ GitHub Actions からの deploy も可能です。`.github/workflows/deploy.yml`
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
 
+## 本番設定チェックリスト
+
+Cloudflare Workers 側で最低限必要な環境変数:
+- `DATABASE_URL`
+- `APP_BASE_URL`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+
+任意だが運用上は明示推奨の環境変数:
+- `SESSION_COOKIE_NAME`
+- `SESSION_TTL_SECONDS`
+- `DEFAULT_TIMEZONE`
+
+GitHub Actions の deploy で必要な Secrets:
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+
+本番デプロイ前に確認すること:
+1. `APP_BASE_URL` が本番の公開 URL と一致している
+2. Google OAuth の redirect URI に `/auth/google/callback` を含む本番 URL が登録されている
+3. PostgreSQL に `migrations/001_init.sql` が適用済みである
+4. session cookie を `Secure` で返せる HTTPS URL を使っている
+5. Cloudflare 側の Route または Custom Domain が Terraform で作成済みである
+6. `pnpm run verify:full` が通る
+
+Wrangler で本番 secret を設定する例:
+
+```bash
+wrangler secret put DATABASE_URL
+wrangler secret put GOOGLE_CLIENT_SECRET
+```
+
 ## CI
 
 GitHub Actions で以下を検証するようにしています。
@@ -129,6 +164,18 @@ GitHub Actions で以下を検証するようにしています。
 - Vite build
 - Terraform fmt
 - Terraform validate
+
+ローカルで CI 相当の検証をまとめて回したい場合は以下を使います。
+
+```bash
+pnpm run verify
+```
+
+Cloudflare/Terraform の確認まで含める場合は以下です。
+
+```bash
+pnpm run verify:full
+```
 
 ## 手動確認チェックリスト
 
