@@ -69,10 +69,16 @@ pnpm run db:migrate:plan
 pnpm run db:migrate
 pnpm run infra:fmt
 pnpm run infra:validate
-pnpm run deploy:dry-run
+pnpm run deploy:dry-run:test
+pnpm run deploy:dry-run:staging
+pnpm run deploy:dry-run:production
 pnpm run verify
-pnpm run verify:full
-pnpm run release:check
+pnpm run verify:full:test
+pnpm run verify:full:staging
+pnpm run verify:full:production
+pnpm run release:check:test
+pnpm run release:check:staging
+pnpm run release:check:production
 ```
 
 ## 実行時メモ
@@ -109,8 +115,30 @@ Worker コード側は以下で検証・デプロイします。
 ```bash
 pnpm run build
 pnpm dev:worker
-# 本番環境変数を設定した後は wrangler deploy を使う
+# 実デプロイは環境別 script を使う
 ```
+
+## 環境分離
+
+このプロジェクトは以下の 3 環境を前提に分けます。
+
+- `test`
+  接続確認や軽い検証用。Worker 名は `daily-leveling-test`
+- `staging`
+  `main` の確認環境。Worker 名は `daily-leveling-staging`
+- `production`
+  本番環境。Worker 名は `daily-leveling`
+
+分離するもの:
+- Cloudflare Worker 名
+- `APP_BASE_URL`
+- PostgreSQL
+- Google OAuth client / redirect URI
+- Cloudflare / GitHub Secrets
+- Terraform の `tfvars`
+
+`wrangler.toml` には `env.test`, `env.staging`, `env.production` を定義しています。
+ローカル開発用の top-level 名は `daily-leveling-local` です。
 
 ## デプロイ
 
@@ -120,17 +148,20 @@ pnpm dev:worker
 pnpm run env:check
 pnpm run db:migrate:plan
 pnpm run verify
-pnpm run deploy:dry-run
+pnpm run deploy:dry-run:staging
 ```
 
-実デプロイ:
+環境別の実デプロイ:
 
 ```bash
 pnpm run db:migrate
-pnpm run deploy
+pnpm run deploy:test
+pnpm run deploy:staging
+pnpm run deploy:production
 ```
 
 GitHub Actions からの deploy も可能です。`.github/workflows/deploy.yml` を使い、手動実行で Worker を Cloudflare に配備できます。
+実行時に `test / staging / production` を選択し、同名の GitHub Environment を使って secrets を解決します。
 
 必要な GitHub Secrets:
 - `CLOUDFLARE_API_TOKEN`
@@ -153,20 +184,44 @@ GitHub Actions の deploy で必要な Secrets:
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
 
+GitHub Environments の推奨構成:
+- `test`
+- `staging`
+- `production`
+
+各 GitHub Environment に最低限設定するもの:
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+
+Worker runtime 用の環境変数と secret は Cloudflare 側に環境ごとに設定します。
+- `DATABASE_URL`
+- `APP_BASE_URL`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- 必要に応じて `SESSION_COOKIE_NAME`, `SESSION_TTL_SECONDS`, `DEFAULT_TIMEZONE`
+
 本番デプロイ前に確認すること:
 1. `APP_BASE_URL` が本番の公開 URL と一致している
 2. Google OAuth の redirect URI に `/auth/google/callback` を含む本番 URL が登録されている
 3. PostgreSQL に `migrations/001_init.sql` が適用済みである
 4. session cookie を `Secure` で返せる HTTPS URL を使っている
 5. Cloudflare 側の Route または Custom Domain が Terraform で作成済みである
-6. `pnpm run verify:full` が通る
+6. `pnpm run verify:full:production` が通る
 
 Wrangler で本番 secret を設定する例:
 
 ```bash
-wrangler secret put DATABASE_URL
-wrangler secret put GOOGLE_CLIENT_ID
-wrangler secret put GOOGLE_CLIENT_SECRET
+wrangler secret put DATABASE_URL --env production
+wrangler secret put GOOGLE_CLIENT_ID --env production
+wrangler secret put GOOGLE_CLIENT_SECRET --env production
+```
+
+staging の例:
+
+```bash
+wrangler secret put DATABASE_URL --env staging
+wrangler secret put GOOGLE_CLIENT_ID --env staging
+wrangler secret put GOOGLE_CLIENT_SECRET --env staging
 ```
 
 ## CI
@@ -188,13 +243,13 @@ pnpm run verify
 Cloudflare/Terraform の確認まで含める場合は以下です。
 
 ```bash
-pnpm run verify:full
+pnpm run verify:full:staging
 ```
 
 本番投入前の総合チェックは以下です。
 
 ```bash
-pnpm run release:check
+pnpm run release:check:production
 ```
 
 ## DB migration
@@ -207,6 +262,23 @@ migration は `schema_migrations` テーブルで管理します。
   未適用 migration を順に適用します。
 
 どちらのコマンドも、まず `process.env` を見て、不足分だけ `.dev.vars`, `.env`, `.env.local` から読み込みます。
+
+## Terraform 環境ファイル
+
+`infra/terraform/environments/` に環境別の雛形を置いています。
+
+- `test.tfvars.example`
+- `staging.tfvars.example`
+- `production.tfvars.example`
+
+例:
+
+```bash
+cd infra/terraform
+cp environments/staging.tfvars.example staging.tfvars
+terraform plan -var-file=staging.tfvars
+terraform apply -var-file=staging.tfvars
+```
 
 ## 手動確認チェックリスト
 

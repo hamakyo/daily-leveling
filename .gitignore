@@ -8,3 +8,5 @@ coverage
 .env.*.local
 .dev.vars
 .terraform
+infra/terraform/*.tfvars
+infra/terraform/environments/*.tfvars

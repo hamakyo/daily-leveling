@@ -1,5 +1,5 @@
 "$schema" = "./node_modules/wrangler/config-schema.json"
-name = "daily-leveling"
+name = "daily-leveling-local"
 main = "src/worker/index.ts"
 compatibility_date = "2026-04-19"
 compatibility_flags = ["nodejs_compat"]
@@ -19,3 +19,12 @@ run_worker_first = [
   "/settings",
   "/settings/*"
 ]
+
+[env.test]
+name = "daily-leveling-test"
+
+[env.staging]
+name = "daily-leveling-staging"
+
+[env.production]
+name = "daily-leveling"
