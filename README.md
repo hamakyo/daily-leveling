@@ -30,10 +30,16 @@ cp .dev.vars.example .dev.vars
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
 
-4. 初期 migration を PostgreSQL に適用します。
+4. 環境変数を確認します。
 
 ```bash
-psql "$DATABASE_URL" -f migrations/001_init.sql
+pnpm run env:check
+```
+
+5. migration を PostgreSQL に適用します。
+
+```bash
+pnpm run db:migrate
 ```
 
 ## 開発
@@ -58,11 +64,15 @@ pnpm dev:worker
 pnpm run check
 pnpm test
 pnpm run build
+pnpm run env:check
+pnpm run db:migrate:plan
+pnpm run db:migrate
 pnpm run infra:fmt
 pnpm run infra:validate
 pnpm run deploy:dry-run
 pnpm run verify
 pnpm run verify:full
+pnpm run release:check
 ```
 
 ## 実行時メモ
@@ -107,6 +117,8 @@ pnpm dev:worker
 ローカルからの事前確認:
 
 ```bash
+pnpm run env:check
+pnpm run db:migrate:plan
 pnpm run verify
 pnpm run deploy:dry-run
 ```
@@ -114,6 +126,7 @@ pnpm run deploy:dry-run
 実デプロイ:
 
 ```bash
+pnpm run db:migrate
 pnpm run deploy
 ```
 
@@ -152,6 +165,7 @@ Wrangler で本番 secret を設定する例:
 
 ```bash
 wrangler secret put DATABASE_URL
+wrangler secret put GOOGLE_CLIENT_ID
 wrangler secret put GOOGLE_CLIENT_SECRET
 ```
 
@@ -176,6 +190,23 @@ Cloudflare/Terraform の確認まで含める場合は以下です。
 ```bash
 pnpm run verify:full
 ```
+
+本番投入前の総合チェックは以下です。
+
+```bash
+pnpm run release:check
+```
+
+## DB migration
+
+migration は `schema_migrations` テーブルで管理します。
+
+- `pnpm run db:migrate:plan`
+  未適用 migration の一覧だけ確認します。
+- `pnpm run db:migrate`
+  未適用 migration を順に適用します。
+
+どちらのコマンドも、まず `process.env` を見て、不足分だけ `.dev.vars`, `.env`, `.env.local` から読み込みます。
 
 ## 手動確認チェックリスト
 

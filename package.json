@@ -11,6 +11,9 @@
     "dev:worker": "wrangler dev",
     "build": "vite build",
     "check": "tsc --noEmit",
+    "env:check": "node scripts/check-env.mjs",
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:migrate:plan": "node scripts/migrate.mjs --plan",
     "deploy": "pnpm run build && wrangler deploy",
     "deploy:dry-run": "pnpm run build && wrangler deploy --dry-run",
     "infra:fmt": "terraform -chdir=infra/terraform fmt -check -diff",
@@ -19,7 +22,8 @@
     "test:watch": "vitest",
     "types:generate": "wrangler types",
     "verify": "pnpm run check && pnpm test && pnpm run build && pnpm run infra:fmt",
-    "verify:full": "pnpm run verify && pnpm run infra:validate && pnpm run deploy:dry-run"
+    "verify:full": "pnpm run verify && pnpm run infra:validate && pnpm run deploy:dry-run",
+    "release:check": "pnpm run env:check && pnpm run db:migrate:plan && pnpm run verify:full"
   },
   "dependencies": {
     "hono": "^4.6.15",
