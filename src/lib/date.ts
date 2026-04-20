@@ -46,7 +46,7 @@ export function isIsoMonth(value: string): boolean {
 
 export function assertIsoDate(value: string, fieldName = "date"): string {
   if (!isIsoDate(value)) {
-    throw new AppError(400, "INVALID_INPUT", `${fieldName} must be YYYY-MM-DD.`);
+    throw new AppError(400, "INVALID_INPUT", `${fieldName} は YYYY-MM-DD 形式で指定してください。`);
   }
 
   return value;
@@ -54,7 +54,7 @@ export function assertIsoDate(value: string, fieldName = "date"): string {
 
 export function assertIsoMonth(value: string): string {
   if (!isIsoMonth(value)) {
-    throw new AppError(400, "INVALID_INPUT", "month must be YYYY-MM.");
+    throw new AppError(400, "INVALID_INPUT", "month は YYYY-MM 形式で指定してください。");
   }
 
   return value;
@@ -91,7 +91,7 @@ export function enumerateDates(startDate: string, endDate: string): string[] {
   assertIsoDate(endDate, "to");
 
   if (compareIsoDates(startDate, endDate) > 0) {
-    throw new AppError(400, "INVALID_INPUT", "from must be before or equal to to.");
+    throw new AppError(400, "INVALID_INPUT", "from は to 以下の日付を指定してください。");
   }
 
   const dates: string[] = [];

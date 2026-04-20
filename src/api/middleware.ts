@@ -10,7 +10,7 @@ import type { AppEnv } from "./context";
 export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
   const sessionToken = getCookie(c, getSessionCookieName(c.env));
   if (!sessionToken) {
-    throw new AppError(401, "UNAUTHORIZED", "Authentication is required.");
+    throw new AppError(401, "UNAUTHORIZED", "認証が必要です。");
   }
 
   const sessionHash = await sha256Base64Url(sessionToken);
@@ -18,7 +18,7 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
   const sessionResult = await getCurrentUserBySessionHash(db, sessionHash);
 
   if (!sessionResult) {
-    throw new AppError(401, "UNAUTHORIZED", "Session is invalid or expired.");
+    throw new AppError(401, "UNAUTHORIZED", "セッションが無効か期限切れです。");
   }
 
   c.set("currentUser", sessionResult.user);

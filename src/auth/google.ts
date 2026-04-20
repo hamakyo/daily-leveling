@@ -77,7 +77,7 @@ export async function exchangeAuthorizationCode(
     throw new AppError(
       401,
       "UNAUTHORIZED",
-      payload.error_description || payload.error || "Failed to exchange authorization code.",
+      payload.error_description || payload.error || "認証コードの交換に失敗しました。",
     );
   }
 
@@ -102,19 +102,19 @@ export async function verifyGoogleIdToken(
   const payload = (await response.json()) as GoogleTokenInfoResponse;
 
   if (!response.ok) {
-    throw new AppError(401, "UNAUTHORIZED", "Google token verification failed.");
+    throw new AppError(401, "UNAUTHORIZED", "Google トークンの検証に失敗しました。");
   }
 
   if (payload.aud !== env.GOOGLE_CLIENT_ID) {
-    throw new AppError(401, "UNAUTHORIZED", "Google token audience mismatch.");
+    throw new AppError(401, "UNAUTHORIZED", "Google トークンの audience が一致しません。");
   }
 
   if (!payload.sub || !payload.email) {
-    throw new AppError(401, "UNAUTHORIZED", "Google token is missing identity fields.");
+    throw new AppError(401, "UNAUTHORIZED", "Google トークンに必要なユーザー情報がありません。");
   }
 
   if (payload.email_verified !== "true") {
-    throw new AppError(401, "UNAUTHORIZED", "Google email must be verified.");
+    throw new AppError(401, "UNAUTHORIZED", "Google アカウントのメール認証が必要です。");
   }
 
   return {

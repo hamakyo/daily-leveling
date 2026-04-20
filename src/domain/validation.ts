@@ -6,7 +6,7 @@ const uniqueWeekdays = (weekdays: number[]) => new Set(weekdays).size === weekda
 
 const normalizedWeekdaySchema = z
   .array(z.number().int().min(1).max(7))
-  .refine(uniqueWeekdays, "targetWeekdays must be unique.")
+  .refine(uniqueWeekdays, "targetWeekdays に重複した曜日は指定できません。")
   .transform((weekdays) => [...weekdays].sort((left, right) => left - right));
 
 export const habitCreateSchema = z
@@ -22,7 +22,7 @@ export const habitCreateSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["targetWeekdays"],
-        message: "targetWeekdays must be empty for daily habits.",
+        message: "daily の習慣では targetWeekdays を指定できません。",
       });
     }
 
@@ -30,7 +30,7 @@ export const habitCreateSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["targetWeekdays"],
-        message: "targetWeekdays is required for weekly_days habits.",
+        message: "weekly_days の習慣では targetWeekdays が必須です。",
       });
     }
   });
@@ -44,7 +44,7 @@ export const habitUpdateSchema = z
     targetWeekdays: normalizedWeekdaySchema.nullable().optional(),
     isActive: z.boolean().optional(),
   })
-  .refine((value) => Object.keys(value).length > 0, "At least one field is required.");
+  .refine((value) => Object.keys(value).length > 0, "少なくとも1項目は指定してください。");
 
 export const onboardingTemplateSchema = z.object({
   templateId: z.string().trim().min(1),
@@ -56,7 +56,7 @@ export const onboardingCompleteSchema = z.object({
 
 export const reorderHabitsSchema = z.object({
   habitIds: z.array(z.string().uuid()).min(1).refine((ids) => new Set(ids).size === ids.length, {
-    message: "habitIds must be unique.",
+    message: "habitIds に重複は指定できません。",
   }),
 });
 

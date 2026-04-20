@@ -64,7 +64,7 @@ import {
 import { AppError } from "../lib/errors";
 import { jsonError, jsonOk, normalizeError } from "../lib/http";
 
-const pathUuidSchema = z.string().uuid();
+const pathUuidSchema = z.string().uuid("UUID の形式が不正です。");
 
 function getOAuthCookieOptions(env: Env) {
   return {
@@ -91,13 +91,13 @@ export const app = new Hono<AppEnv>();
 
 app.onError((error, c) => {
   if (error instanceof ZodError) {
-    return jsonError(new AppError(400, "INVALID_INPUT", error.issues[0]?.message || "Invalid input."));
+    return jsonError(new AppError(400, "INVALID_INPUT", error.issues[0]?.message || "入力内容が不正です。"));
   }
 
   return jsonError(normalizeError(error));
 });
 
-app.notFound(() => jsonError(new AppError(404, "NOT_FOUND", "Route not found.")));
+app.notFound(() => jsonError(new AppError(404, "NOT_FOUND", "指定されたルートは存在しません。")));
 
 app.get("/healthz", () =>
   jsonOk({
@@ -123,11 +123,11 @@ app.get("/auth/google/callback", async (c) => {
   const codeVerifier = getCookie(c, GOOGLE_VERIFIER_COOKIE);
 
   if (!code || !state) {
-    throw new AppError(401, "UNAUTHORIZED", "Missing OAuth callback parameters.");
+    throw new AppError(401, "UNAUTHORIZED", "OAuth callback に必要なパラメータが不足しています。");
   }
 
   if (!expectedState || !codeVerifier || state !== expectedState) {
-    throw new AppError(401, "UNAUTHORIZED", "OAuth state validation failed.");
+    throw new AppError(401, "UNAUTHORIZED", "OAuth の state 検証に失敗しました。");
   }
 
   const tokens = await exchangeAuthorizationCode(c.env, code, codeVerifier);
@@ -164,7 +164,7 @@ app.post("/auth/logout", requireAuth, async (c) => {
 app.post("/onboarding/templates/apply", requireAuth, async (c) => {
   const payload = parseBody(onboardingTemplateSchema, await c.req.json());
   if (!isTemplateId(payload.templateId)) {
-    throw new AppError(400, "INVALID_INPUT", "Unknown templateId.");
+    throw new AppError(400, "INVALID_INPUT", "templateId が不正です。");
   }
 
   const createdHabits = await createHabitsFromTemplate(
@@ -210,7 +210,7 @@ app.patch("/habits/:habitId", requireAuth, async (c) => {
   const currentHabit = await getHabitById(db, c.get("currentUser").id, habitId);
 
   if (!currentHabit) {
-    throw new AppError(404, "NOT_FOUND", "Habit not found.");
+    throw new AppError(404, "NOT_FOUND", "習慣が見つかりません。");
   }
 
   const partialPayload = parseBody(habitUpdateSchema, await c.req.json());
@@ -230,7 +230,7 @@ app.patch("/habits/:habitId", requireAuth, async (c) => {
 
   const habit = await updateHabit(db, c.get("currentUser").id, habitId, partialPayload);
   if (!habit) {
-    throw new AppError(404, "NOT_FOUND", "Habit not found.");
+    throw new AppError(404, "NOT_FOUND", "習慣が見つかりません。");
   }
 
   return jsonOk({ habit });
@@ -241,7 +241,7 @@ app.post("/habits/reorder", requireAuth, async (c) => {
   const ok = await reorderHabits(getDb(c.env), c.get("currentUser").id, payload.habitIds);
 
   if (!ok) {
-    throw new AppError(400, "INVALID_INPUT", "habitIds must belong to the current user.");
+    throw new AppError(400, "INVALID_INPUT", "habitIds は現在のユーザーの習慣のみ指定できます。");
   }
 
   return jsonOk({ ok: true });
@@ -254,7 +254,7 @@ app.get("/logs", requireAuth, async (c) => {
   const days = enumerateDates(from, to);
 
   if (days.length > 62) {
-    throw new AppError(400, "INVALID_INPUT", "Range cannot exceed 62 days.");
+    throw new AppError(400, "INVALID_INPUT", "取得期間は 62 日以内で指定してください。");
   }
 
   const logs = await listLogsInRange(getDb(c.env), c.get("currentUser").id, from, to);
@@ -276,15 +276,15 @@ app.put("/habits/:habitId/logs/:date", requireAuth, async (c) => {
   const habit = await getHabitById(db, currentUser.id, habitId);
 
   if (!habit) {
-    throw new AppError(404, "NOT_FOUND", "Habit not found.");
+    throw new AppError(404, "NOT_FOUND", "習慣が見つかりません。");
   }
 
   if (compareIsoDates(date, getTodayInTimezone(currentUser.timezone)) > 0) {
-    throw new AppError(400, "INVALID_DATE", "Future dates are not allowed.");
+    throw new AppError(400, "INVALID_DATE", "未来日の記録はできません。");
   }
 
   if (!isHabitTargetDay(habit, date)) {
-    throw new AppError(400, "INVALID_DATE", "The habit is not scheduled for that day.");
+    throw new AppError(400, "INVALID_DATE", "その日はこの習慣の対象日ではありません。");
   }
 
   const log = await upsertHabitLog(db, currentUser.id, habitId, date, payload.status);
@@ -334,7 +334,7 @@ app.get("/dashboard/monthly", requireAuth, async (c) => {
 app.get("/settings", requireAuth, async (c) => {
   const settings = await getSettings(getDb(c.env), c.get("currentUser").id);
   if (!settings) {
-    throw new AppError(404, "NOT_FOUND", "Settings not found.");
+    throw new AppError(404, "NOT_FOUND", "設定が見つかりません。");
   }
 
   return jsonOk({ settings });
@@ -343,12 +343,12 @@ app.get("/settings", requireAuth, async (c) => {
 app.patch("/settings", requireAuth, async (c) => {
   const payload = parseBody(settingsSchema, await c.req.json());
   if (payload.timezone && !isValidTimezone(payload.timezone)) {
-    throw new AppError(400, "INVALID_INPUT", "timezone must be a valid IANA timezone.");
+    throw new AppError(400, "INVALID_INPUT", "timezone には有効な IANA timezone を指定してください。");
   }
 
   const settings = await updateSettings(getDb(c.env), c.get("currentUser").id, payload);
   if (!settings) {
-    throw new AppError(404, "NOT_FOUND", "Settings not found.");
+    throw new AppError(404, "NOT_FOUND", "設定が見つかりません。");
   }
 
   const refreshedUser = await getCurrentUserById(getDb(c.env), c.get("currentUser").id);

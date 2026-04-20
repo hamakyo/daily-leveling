@@ -6,7 +6,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { templates } from "../domain/templates";
+import { templateLabels, templates } from "../domain/templates";
 import type { CurrentUser, HabitRecord, MonthlyDashboard, TodayDashboard } from "../lib/types";
 import { enumerateDates, getMonthRange } from "../lib/date";
 import { apiFetch, ApiError } from "./api";
@@ -84,8 +84,8 @@ function LoadingShell() {
     <div className="page-shell">
       <div className="hero-card hero-card--loading">
         <p className="eyebrow">Daily Leveling</p>
-        <h1>Booting the habit board.</h1>
-        <p>Loading auth state and dashboard data.</p>
+        <h1>習慣ボードを読み込んでいます。</h1>
+        <p>認証状態とダッシュボードを確認中です。</p>
       </div>
     </div>
   );
@@ -95,27 +95,27 @@ function LoginScreen() {
   return (
     <div className="page-shell">
       <section className="hero-card">
-        <p className="eyebrow">Habit tracker MVP</p>
+        <p className="eyebrow">習慣トラッカー MVP</p>
         <h1>Daily Leveling</h1>
         <p className="lede">
-          A month-grid habit tracker with a fast daily loop and light game feel.
+          毎日の記録を素早く続けられる、月間グリッド中心の習慣トラッカーです。
         </p>
         <a className="primary-button" href="/auth/google/start">
-          Continue with Google
+          Google でログイン
         </a>
       </section>
       <section className="feature-ribbon">
         <article>
-          <strong>Today-first on mobile</strong>
-          <span>One-tap check-ins with progress feedback.</span>
+          <strong>モバイルは今日中心</strong>
+          <span>ワンタップで記録し、進捗をすぐ確認できます。</span>
         </article>
         <article>
-          <strong>Month-first on desktop</strong>
-          <span>Grid visibility across the whole month.</span>
+          <strong>デスクトップは月間中心</strong>
+          <span>月全体をグリッドで俯瞰できます。</span>
         </article>
         <article>
-          <strong>Soft restarts</strong>
-          <span>Misses are visible, but the UI stays easy to re-enter.</span>
+          <strong>再開しやすい設計</strong>
+          <span>抜けた日があっても、すぐに戻って続けられます。</span>
         </article>
       </section>
     </div>
@@ -145,7 +145,7 @@ function OnboardingScreen({
         method: "POST",
         body: JSON.stringify({ templateId }),
       });
-      setMessage(`Template "${templateId}" applied.`);
+      setMessage(`テンプレート「${templateLabels[templateId as keyof typeof templateLabels] ?? templateId}」を適用しました。`);
     } finally {
       setIsSubmitting(false);
     }
@@ -173,7 +173,7 @@ function OnboardingScreen({
         frequencyType: "daily",
         targetWeekdays: "",
       });
-      setMessage("Habit added.");
+      setMessage("習慣を追加しました。");
     } finally {
       setIsSubmitting(false);
     }
@@ -195,16 +195,16 @@ function OnboardingScreen({
   return (
     <div className="page-shell">
       <section className="hero-card">
-        <p className="eyebrow">First login</p>
-        <h1>Start with a small system.</h1>
+        <p className="eyebrow">初回ログイン</p>
+        <h1>まずは小さく始めましょう。</h1>
         <p className="lede">
-          Apply a template, add a custom habit, then move into the dashboard.
+          テンプレートを適用するか、自分の習慣を追加してダッシュボードに進みます。
         </p>
         {message ? <p className="status-text">{message}</p> : null}
       </section>
       <section className="panel-grid">
         <div className="panel">
-          <h2>Templates</h2>
+          <h2>テンプレート</h2>
           <div className="template-stack">
             {Object.entries(templates).map(([templateId, habits]) => (
               <button
@@ -216,26 +216,26 @@ function OnboardingScreen({
                 }}
                 type="button"
               >
-                <strong>{templateId}</strong>
+                <strong>{templateLabels[templateId as keyof typeof templateLabels] ?? templateId}</strong>
                 <span>{habits.map((habit) => habit.name).join(" / ")}</span>
               </button>
             ))}
           </div>
         </div>
         <div className="panel">
-          <h2>Manual habit</h2>
+          <h2>手動で追加</h2>
           <form className="stack-form" onSubmit={addHabit}>
             <label>
-              <span>Name</span>
+              <span>名前</span>
               <input
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                placeholder="Reading"
+                placeholder="読書"
                 required
               />
             </label>
             <label>
-              <span>Emoji</span>
+              <span>絵文字</span>
               <input
                 value={form.emoji}
                 onChange={(event) => setForm((current) => ({ ...current, emoji: event.target.value }))}
@@ -243,15 +243,15 @@ function OnboardingScreen({
               />
             </label>
             <label>
-              <span>Color</span>
+              <span>色</span>
               <input
                 value={form.color}
                 onChange={(event) => setForm((current) => ({ ...current, color: event.target.value }))}
-                placeholder="teal"
+                placeholder="teal または #0f766e"
               />
             </label>
             <label>
-              <span>Frequency</span>
+              <span>頻度</span>
               <select
                 value={form.frequencyType}
                 onChange={(event) =>
@@ -261,31 +261,31 @@ function OnboardingScreen({
                   }))
                 }
               >
-                <option value="daily">Daily</option>
-                <option value="weekly_days">Weekly days</option>
+                <option value="daily">毎日</option>
+                <option value="weekly_days">曜日指定</option>
               </select>
             </label>
             {form.frequencyType === "weekly_days" ? (
               <label>
-                <span>Target weekdays</span>
+                <span>対象曜日</span>
                 <input
                   value={form.targetWeekdays}
                   onChange={(event) =>
                     setForm((current) => ({ ...current, targetWeekdays: event.target.value }))
                   }
-                  placeholder="1,3,5"
+                  placeholder="1,3,5  （月・水・金）"
                 />
               </label>
             ) : null}
             <button className="secondary-button" disabled={isSubmitting} type="submit">
-              Add habit
+              習慣を追加
             </button>
           </form>
         </div>
       </section>
       <div className="action-row">
         <button className="primary-button" disabled={isSubmitting} onClick={() => void finishOnboarding()} type="button">
-          Start the dashboard
+          ダッシュボードを始める
         </button>
       </div>
     </div>
@@ -387,7 +387,7 @@ function DashboardScreen({
       frequencyType: "daily",
       targetWeekdays: "",
     });
-    await reloadAll("Habit created.");
+    await reloadAll("習慣を作成しました。");
   }
 
   async function archiveHabit(habitId: string) {
@@ -395,7 +395,7 @@ function DashboardScreen({
       method: "PATCH",
       body: JSON.stringify({ isActive: false }),
     });
-    await reloadAll("Habit archived.");
+    await reloadAll("習慣をアーカイブしました。");
   }
 
   async function moveHabit(habitId: string, direction: -1 | 1) {
@@ -421,7 +421,7 @@ function DashboardScreen({
       }),
     });
 
-    await reloadAll("Habit order updated.");
+    await reloadAll("習慣の並び順を更新しました。");
   }
 
   async function saveSettings(event: FormEvent<HTMLFormElement>) {
@@ -434,7 +434,7 @@ function DashboardScreen({
       method: "PATCH",
       body: JSON.stringify(settings),
     });
-    await reloadAll("Settings updated.");
+    await reloadAll("設定を更新しました。");
   }
 
   async function handleLogout() {
@@ -446,10 +446,10 @@ function DashboardScreen({
     <div className="page-shell">
       <section className="hero-card hero-card--compact">
         <div>
-          <p className="eyebrow">Signed in as {user.displayName}</p>
+          <p className="eyebrow">{user.displayName} としてログイン中</p>
           <h1>Daily Leveling</h1>
           <p className="lede">
-            Mobile stays anchored on today. Desktop stays anchored on the month.
+            モバイルでは今日、デスクトップでは月全体を中心に振り返れます。
           </p>
         </div>
         <div className="toolbar">
@@ -458,17 +458,17 @@ function DashboardScreen({
             onClick={() => setView("today")}
             type="button"
           >
-            Today
+            今日
           </button>
           <button
             className={view === "month" ? "pill pill--active" : "pill"}
             onClick={() => setView("month")}
             type="button"
           >
-            Month
+            月間
           </button>
           <button className="pill" onClick={() => void handleLogout()} type="button">
-            Logout
+            ログアウト
           </button>
         </div>
       </section>
@@ -480,10 +480,10 @@ function DashboardScreen({
           {view === "today" ? (
             <div className="stack-space">
               <header className="section-header">
-                <h2>Today view</h2>
+                <h2>今日の記録</h2>
                 {today ? (
                   <span>
-                    {today.summary.completedCount}/{today.summary.targetCount} complete
+                    {today.summary.completedCount}/{today.summary.targetCount} 達成
                   </span>
                 ) : null}
               </header>
@@ -501,7 +501,7 @@ function DashboardScreen({
                             {habit.emoji ? `${habit.emoji} ` : ""}
                             {habit.name}
                           </strong>
-                          <p>{habit.isTargetDay ? "Target day" : "Off day"}</p>
+                          <p>{habit.isTargetDay ? "対象日" : "休みの日"}</p>
                         </div>
                         <button
                           className={habit.status ? "toggle-button toggle-button--done" : "toggle-button"}
@@ -509,20 +509,20 @@ function DashboardScreen({
                           onClick={() => void toggleHabit(habit.habitId, !habit.status)}
                           type="button"
                         >
-                          {habit.status ? "Done" : "Mark"}
+                          {habit.status ? "達成" : "記録する"}
                         </button>
                       </article>
                     ))}
                   </div>
                 </>
               ) : (
-                <p>Loading today view.</p>
+                <p>今日の記録を読み込んでいます。</p>
               )}
             </div>
           ) : (
             <div className="stack-space">
               <header className="section-header">
-                <h2>Month view</h2>
+                <h2>月間ビュー</h2>
                 <div className="toolbar">
                   <button
                     className="pill"
@@ -531,7 +531,7 @@ function DashboardScreen({
                     }}
                     type="button"
                   >
-                    Prev
+                    前月
                   </button>
                   <span className="month-chip">{deferredMonth}</span>
                   <button
@@ -541,7 +541,7 @@ function DashboardScreen({
                     }}
                     type="button"
                   >
-                    Next
+                    次月
                   </button>
                 </div>
               </header>
@@ -550,19 +550,19 @@ function DashboardScreen({
                   <div className="summary-grid">
                     <article>
                       <strong>{monthly.summary.progressRate}%</strong>
-                      <span>Monthly progress</span>
+                      <span>月間達成率</span>
                     </article>
                     <article>
                       <strong>{monthly.summary.currentStreak}</strong>
-                      <span>Current streak</span>
+                      <span>現在の連続達成日数</span>
                     </article>
                     <article>
                       <strong>{monthly.summary.completedCount}</strong>
-                      <span>Completed slots</span>
+                      <span>達成数</span>
                     </article>
                   </div>
                   <div className="monthly-grid">
-                    <div className="monthly-grid__header monthly-grid__corner">Habit</div>
+                    <div className="monthly-grid__header monthly-grid__corner">習慣</div>
                     {monthDates.map((date) => (
                       <div className="monthly-grid__header" key={date}>
                         {date.slice(-2)}
@@ -594,7 +594,7 @@ function DashboardScreen({
                   </div>
                   <div className="stats-columns">
                     <div>
-                      <h3>Daily stats</h3>
+                      <h3>日別達成率</h3>
                       <ul className="data-list">
                         {monthly.dailyStats.map((stat) => (
                           <li key={stat.date}>
@@ -605,7 +605,7 @@ function DashboardScreen({
                       </ul>
                     </div>
                     <div>
-                      <h3>Habit stats</h3>
+                      <h3>習慣別達成率</h3>
                       <ul className="data-list">
                         {monthly.habitStats.map((stat) => (
                           <li key={stat.habitId}>
@@ -618,7 +618,7 @@ function DashboardScreen({
                   </div>
                 </>
               ) : (
-                <p>Loading month view.</p>
+                <p>月間ビューを読み込んでいます。</p>
               )}
             </div>
           )}
@@ -626,10 +626,10 @@ function DashboardScreen({
 
         <aside className="side-stack">
           <section className="panel">
-            <h2>New habit</h2>
+            <h2>新しい習慣</h2>
             <form className="stack-form" onSubmit={createNewHabit}>
               <label>
-                <span>Name</span>
+                <span>名前</span>
                 <input
                   required
                   value={form.name}
@@ -637,21 +637,21 @@ function DashboardScreen({
                 />
               </label>
               <label>
-                <span>Emoji</span>
+                <span>絵文字</span>
                 <input
                   value={form.emoji}
                   onChange={(event) => setForm((current) => ({ ...current, emoji: event.target.value }))}
                 />
               </label>
               <label>
-                <span>Color</span>
+                <span>色</span>
                 <input
                   value={form.color}
                   onChange={(event) => setForm((current) => ({ ...current, color: event.target.value }))}
                 />
               </label>
               <label>
-                <span>Frequency</span>
+                <span>頻度</span>
                 <select
                   value={form.frequencyType}
                   onChange={(event) =>
@@ -661,13 +661,13 @@ function DashboardScreen({
                     }))
                   }
                 >
-                  <option value="daily">Daily</option>
-                  <option value="weekly_days">Weekly days</option>
+                  <option value="daily">毎日</option>
+                  <option value="weekly_days">曜日指定</option>
                 </select>
               </label>
               {form.frequencyType === "weekly_days" ? (
                 <label>
-                  <span>Weekdays</span>
+                  <span>対象曜日</span>
                   <input
                     value={form.targetWeekdays}
                     onChange={(event) =>
@@ -678,13 +678,13 @@ function DashboardScreen({
                 </label>
               ) : null}
               <button className="secondary-button" type="submit">
-                Create
+                作成
               </button>
             </form>
           </section>
 
           <section className="panel">
-            <h2>Habit list</h2>
+            <h2>習慣一覧</h2>
             <div className="habit-admin-list">
               {habits
                 .slice()
@@ -696,7 +696,7 @@ function DashboardScreen({
                         {habit.emoji ? `${habit.emoji} ` : ""}
                         {habit.name}
                       </strong>
-                      <p>{habit.isActive ? "Active" : "Archived"}</p>
+                      <p>{habit.isActive ? "有効" : "アーカイブ済み"}</p>
                     </div>
                     <div className="toolbar">
                       <button className="pill" onClick={() => void moveHabit(habit.id, -1)} type="button">
@@ -707,7 +707,7 @@ function DashboardScreen({
                       </button>
                       {habit.isActive ? (
                         <button className="pill" onClick={() => void archiveHabit(habit.id)} type="button">
-                          Archive
+                          アーカイブ
                         </button>
                       ) : null}
                     </div>
@@ -717,11 +717,11 @@ function DashboardScreen({
           </section>
 
           <section className="panel">
-            <h2>Settings</h2>
+            <h2>設定</h2>
             {settings ? (
               <form className="stack-form" onSubmit={saveSettings}>
                 <label>
-                  <span>Timezone</span>
+                  <span>タイムゾーン</span>
                   <input
                     value={settings.timezone}
                     onChange={(event) =>
@@ -737,7 +737,7 @@ function DashboardScreen({
                   />
                 </label>
                 <label>
-                  <span>Default view</span>
+                  <span>初期表示</span>
                   <select
                     value={settings.defaultView}
                     onChange={(event) =>
@@ -751,16 +751,16 @@ function DashboardScreen({
                       )
                     }
                   >
-                    <option value="today">Today</option>
-                    <option value="month">Month</option>
+                    <option value="today">今日</option>
+                    <option value="month">月間</option>
                   </select>
                 </label>
                 <button className="secondary-button" type="submit">
-                  Save settings
+                  設定を保存
                 </button>
               </form>
             ) : (
-              <p>Loading settings.</p>
+              <p>設定を読み込んでいます。</p>
             )}
           </section>
         </aside>
@@ -784,7 +784,7 @@ export function App() {
       setScreen({ kind: "ready", user });
       setFatalError(null);
     } catch (error) {
-      setFatalError(error instanceof Error ? error.message : "Failed to load user.");
+      setFatalError(error instanceof Error ? error.message : "ユーザー情報の読み込みに失敗しました。");
     }
   }
 
@@ -796,11 +796,11 @@ export function App() {
     return (
       <div className="page-shell">
         <section className="hero-card">
-          <p className="eyebrow">Fatal error</p>
-          <h1>Unable to load the app.</h1>
+          <p className="eyebrow">エラー</p>
+          <h1>アプリを読み込めませんでした。</h1>
           <p className="lede">{fatalError}</p>
           <button className="primary-button" onClick={() => void refreshUser()} type="button">
-            Retry
+            再試行
           </button>
         </section>
       </div>

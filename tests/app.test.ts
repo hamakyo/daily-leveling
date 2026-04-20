@@ -95,7 +95,7 @@ describe("worker app auth and log guards", () => {
     await expect(response.json()).resolves.toEqual({
       error: {
         code: "UNAUTHORIZED",
-        message: "Authentication is required.",
+        message: "認証が必要です。",
       },
     });
     expect(repositoryMocks.getCurrentUserBySessionHash).not.toHaveBeenCalled();
@@ -140,7 +140,7 @@ describe("worker app auth and log guards", () => {
     await expect(response.json()).resolves.toEqual({
       error: {
         code: "INVALID_DATE",
-        message: "Future dates are not allowed.",
+        message: "未来日の記録はできません。",
       },
     });
     expect(repositoryMocks.upsertHabitLog).not.toHaveBeenCalled();
@@ -171,7 +171,7 @@ describe("worker app auth and log guards", () => {
     await expect(response.json()).resolves.toEqual({
       error: {
         code: "INVALID_DATE",
-        message: "The habit is not scheduled for that day.",
+        message: "その日はこの習慣の対象日ではありません。",
       },
     });
     expect(repositoryMocks.upsertHabitLog).not.toHaveBeenCalled();
@@ -201,7 +201,7 @@ describe("worker app auth and log guards", () => {
     await expect(response.json()).resolves.toEqual({
       error: {
         code: "INVALID_DATE",
-        message: "The habit is not scheduled for that day.",
+        message: "その日はこの習慣の対象日ではありません。",
       },
     });
     expect(repositoryMocks.upsertHabitLog).not.toHaveBeenCalled();
