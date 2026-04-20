@@ -262,6 +262,9 @@ GitHub Actions からの deploy も可能です。`.github/workflows/deploy.yml`
 DB migration は `.github/workflows/migrate.yml` から手動実行できます。
 `plan` と `apply` を選べるようにしてあり、まず `plan` で未適用 migration を確認し、その後 `apply` を実行する運用を想定しています。
 
+Cloudflare Worker secret の同期は `.github/workflows/sync-secrets.yml` から手動実行できます。
+`dry-run` で前提確認、`apply` で `DATABASE_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` を Cloudflare に反映します。
+
 必要な GitHub Secrets:
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
@@ -283,6 +286,13 @@ GitHub Actions の deploy で必要な Secrets:
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
 
+GitHub Actions の secret sync で必要な Secrets:
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+- `DATABASE_URL`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+
 GitHub Environments の推奨構成:
 - `test`
 - `staging`
@@ -292,6 +302,8 @@ GitHub Environments の推奨構成:
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
 - `DATABASE_URL`（migration workflow 用）
+- `GOOGLE_CLIENT_ID`（secret sync workflow 用）
+- `GOOGLE_CLIENT_SECRET`（secret sync workflow 用）
 
 Worker runtime 用の環境変数と secret は Cloudflare 側に環境ごとに設定します。
 - `DATABASE_URL`
