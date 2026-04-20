@@ -158,6 +158,9 @@ pnpm run cf:deployments:production
 pnpm run cf:secrets:test
 pnpm run cf:secrets:staging
 pnpm run cf:secrets:production
+pnpm run cf:status:test
+pnpm run cf:status:staging
+pnpm run cf:status:production
 pnpm run deploy:test
 pnpm run deploy:staging
 pnpm run deploy:production
@@ -166,6 +169,8 @@ pnpm exec wrangler secret put DATABASE_URL --env staging
 
 `cf:deployments:*` は初回 deploy 前だと対象 Worker が存在せず失敗することがあります。
 `cf:health:*` は公開 URL の疎通確認、`cf:secrets:*` は Cloudflare 側の secret 投入状況の確認に使います。
+`cf:status:*` は `deployments / healthz / secrets` をまとめて確認します。
+新規 deploy 直後は `workers.dev` 側の反映に数秒かかり、一時的に `404 There is nothing here yet` になることがあります。
 
 Terraform の土台は `infra/terraform` にあります。
 
