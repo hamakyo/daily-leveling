@@ -1,7 +1,15 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
+export const TARGET_ENVIRONMENTS = ["local", "test", "staging", "production"];
+
 const DEFAULT_ENV_FILES = [".dev.vars", ".env", ".env.local"];
+const ENVIRONMENT_FILES = {
+  local: DEFAULT_ENV_FILES,
+  test: [".dev.vars.test", ".env.test", ".dev.vars", ".env", ".env.local"],
+  staging: [".dev.vars.staging", ".env.staging", ".dev.vars", ".env", ".env.local"],
+  production: [".dev.vars.production", ".env.production", ".dev.vars", ".env", ".env.local"],
+};
 
 function stripWrappingQuotes(value) {
   if (
@@ -43,7 +51,7 @@ function parseEnvFile(contents) {
 
 export function loadEnvFiles(options = {}) {
   const cwd = options.cwd || process.cwd();
-  const files = options.files || DEFAULT_ENV_FILES;
+  const files = options.files || getEnvFilesForTarget(options.targetEnvironment);
   const loadedFiles = [];
 
   for (const filename of files) {
@@ -65,6 +73,31 @@ export function loadEnvFiles(options = {}) {
   }
 
   return loadedFiles;
+}
+
+export function getEnvFilesForTarget(targetEnvironment = "local") {
+  return ENVIRONMENT_FILES[targetEnvironment] || DEFAULT_ENV_FILES;
+}
+
+export function resolveTargetEnvironment(argv = process.argv.slice(2)) {
+  const envArgument = argv.find((item) => item.startsWith("--env"));
+  if (!envArgument) {
+    return "local";
+  }
+
+  const inlineValue = envArgument.startsWith("--env=") ? envArgument.slice("--env=".length) : null;
+  const value =
+    inlineValue ||
+    (() => {
+      const index = argv.indexOf("--env");
+      return index >= 0 ? argv[index + 1] : null;
+    })();
+
+  if (!value || !TARGET_ENVIRONMENTS.includes(value)) {
+    throw new Error(`--env には ${TARGET_ENVIRONMENTS.join(" / ")} のいずれかを指定してください。`);
+  }
+
+  return value;
 }
 
 function isNonEmptyString(value) {

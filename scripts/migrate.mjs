@@ -3,7 +3,13 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import postgres from "postgres";
-import { formatIssues, getRuntimeEnvIssues, loadEnvFiles } from "./shared/env.mjs";
+import {
+  formatIssues,
+  getRuntimeEnvIssues,
+  loadEnvFiles,
+  resolveTargetEnvironment,
+  TARGET_ENVIRONMENTS,
+} from "./shared/env.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,13 +22,16 @@ function printHelp() {
 Usage:
   node scripts/migrate.mjs
   node scripts/migrate.mjs --plan
+  node scripts/migrate.mjs --env production --plan
   pnpm run db:migrate
   pnpm run db:migrate:plan
 
 Behavior:
   - process.env を優先して読み込みます
-  - 不足分だけ .dev.vars, .env, .env.local から補完します
+  - --env 未指定時は local 扱いです
+  - 環境ごとの .dev.vars / .env を優先し、不足分だけ共通ファイルから補完します
   - schema_migrations テーブルで適用済み migration を管理します
+  - 対応環境: ${TARGET_ENVIRONMENTS.join(", ")}
 `);
 }
 
@@ -31,11 +40,20 @@ if (process.argv.includes("--help") || process.argv.includes("-h")) {
   process.exit(0);
 }
 
-const loadedFiles = loadEnvFiles();
+let targetEnvironment;
+
+try {
+  targetEnvironment = resolveTargetEnvironment();
+} catch (error) {
+  console.error(error instanceof Error ? error.message : "環境の解釈に失敗しました。");
+  process.exit(1);
+}
+
+const loadedFiles = loadEnvFiles({ targetEnvironment });
 const issues = getRuntimeEnvIssues();
 
 if (issues.length > 0) {
-  console.error("migration 実行前の環境変数チェックに失敗しました。");
+  console.error(`migration 実行前の環境変数チェックに失敗しました。対象環境: ${targetEnvironment}`);
   if (loadedFiles.length > 0) {
     console.error(`読み込んだファイル: ${loadedFiles.join(", ")}`);
   }
@@ -70,7 +88,7 @@ try {
   const pending = migrationFiles.filter((filename) => !applied.has(filename));
 
   if (isPlanOnly) {
-    console.log(`migration plan: ${pending.length} 件の未適用 migration`);
+    console.log(`migration plan (${targetEnvironment}): ${pending.length} 件の未適用 migration`);
     for (const filename of pending) {
       console.log(`- ${filename}`);
     }
@@ -94,7 +112,7 @@ try {
       `;
     });
 
-    console.log(`適用完了: ${filename}`);
+    console.log(`適用完了 (${targetEnvironment}): ${filename}`);
   }
 } finally {
   await sql.end({ timeout: 5 });

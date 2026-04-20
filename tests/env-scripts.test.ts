@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 const envModulePath = "../scripts/shared/env.mjs";
-const { getRuntimeEnvIssues } = await import(envModulePath);
+const { getEnvFilesForTarget, getRuntimeEnvIssues, resolveTargetEnvironment } = await import(envModulePath);
 
 describe("runtime env checks", () => {
   it("passes when required runtime env values are present", () => {
@@ -42,5 +42,21 @@ describe("runtime env checks", () => {
     expect(issues).toContain("DEFAULT_TIMEZONE は有効な IANA timezone を指定してください。");
     expect(issues).toContain("SESSION_COOKIE_NAME を指定する場合は空文字にできません。");
     expect(issues).toContain("SESSION_TTL_SECONDS は 0 より大きい数値を指定してください。");
+  });
+
+  it("returns environment-specific files before common files", () => {
+    expect(getEnvFilesForTarget("staging")).toEqual([
+      ".dev.vars.staging",
+      ".env.staging",
+      ".dev.vars",
+      ".env",
+      ".env.local",
+    ]);
+  });
+
+  it("resolves the target environment from cli args", () => {
+    expect(resolveTargetEnvironment(["--env", "production"])).toBe("production");
+    expect(resolveTargetEnvironment(["--env=test"])).toBe("test");
+    expect(resolveTargetEnvironment([])).toBe("local");
   });
 });

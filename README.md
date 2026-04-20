@@ -42,6 +42,13 @@ pnpm run env:check
 pnpm run db:migrate
 ```
 
+環境別に切りたい場合の example:
+
+```bash
+cp .dev.vars.staging.example .dev.vars.staging
+cp .env.staging.example .env.staging
+```
+
 ## 開発
 
 推奨するフルスタック開発コマンドは以下です。
@@ -59,14 +66,29 @@ pnpm dev
 個別に動かしたい場合は以下を使います。
 
 ```bash
+pnpm dev:test
+pnpm dev:staging
+pnpm dev:production
 pnpm dev:web
 pnpm dev:worker
+pnpm dev:worker:test
+pnpm dev:worker:staging
+pnpm dev:worker:production
 pnpm run check
 pnpm test
 pnpm run build
 pnpm run env:check
+pnpm run env:check:test
+pnpm run env:check:staging
+pnpm run env:check:production
 pnpm run db:migrate:plan
+pnpm run db:migrate:plan:test
+pnpm run db:migrate:plan:staging
+pnpm run db:migrate:plan:production
 pnpm run db:migrate
+pnpm run db:migrate:test
+pnpm run db:migrate:staging
+pnpm run db:migrate:production
 pnpm run infra:fmt
 pnpm run infra:validate
 pnpm run deploy:dry-run:test
@@ -140,6 +162,16 @@ pnpm dev:worker
 `wrangler.toml` には `env.test`, `env.staging`, `env.production` を定義しています。
 ローカル開発用の top-level 名は `daily-leveling-local` です。
 
+ローカルの環境ファイル読み込み順:
+- `local`
+  `.dev.vars` -> `.env` -> `.env.local`
+- `test`
+  `.dev.vars.test` -> `.env.test` -> 共通ファイル
+- `staging`
+  `.dev.vars.staging` -> `.env.staging` -> 共通ファイル
+- `production`
+  `.dev.vars.production` -> `.env.production` -> 共通ファイル
+
 ## デプロイ
 
 ローカルからの事前確認:
@@ -149,6 +181,14 @@ pnpm run env:check
 pnpm run db:migrate:plan
 pnpm run verify
 pnpm run deploy:dry-run:staging
+```
+
+環境別の事前確認例:
+
+```bash
+pnpm run env:check:staging
+pnpm run db:migrate:plan:staging
+pnpm run release:check:staging
 ```
 
 環境別の実デプロイ:
@@ -260,8 +300,12 @@ migration は `schema_migrations` テーブルで管理します。
   未適用 migration の一覧だけ確認します。
 - `pnpm run db:migrate`
   未適用 migration を順に適用します。
+- `pnpm run db:migrate:plan:staging`
+  staging 環境の未適用 migration を確認します。
+- `pnpm run db:migrate:production`
+  production 環境に migration を適用します。
 
-どちらのコマンドも、まず `process.env` を見て、不足分だけ `.dev.vars`, `.env`, `.env.local` から読み込みます。
+どのコマンドも、まず `process.env` を見て、不足分だけ環境別 `.dev.vars` / `.env` と共通ファイルから読み込みます。
 
 ## Terraform 環境ファイル
 

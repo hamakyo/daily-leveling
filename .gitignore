@@ -5,8 +5,16 @@ dist
 coverage
 .env
 .env.local
+.env.test
+.env.staging
+.env.production
 .env.*.local
 .dev.vars
+.dev.vars.local
+.dev.vars.test
+.dev.vars.staging
+.dev.vars.production
+.dev.vars.*.local
 .terraform
 infra/terraform/*.tfvars
 infra/terraform/environments/*.tfvars
