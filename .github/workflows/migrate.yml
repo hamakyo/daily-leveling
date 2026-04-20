@@ -1,0 +1,65 @@
+name: Run DB Migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "対象環境"
+        required: true
+        type: choice
+        default: staging
+        options:
+          - test
+          - staging
+          - production
+      mode:
+        description: "実行モード"
+        required: true
+        type: choice
+        default: plan
+        options:
+          - plan
+          - apply
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: ${{ inputs.environment }}
+    concurrency: migrate-${{ inputs.environment }}
+
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run migration command
+        run: |
+          case "${{ inputs.mode }}" in
+            plan)
+              pnpm run db:migrate:plan:${{ inputs.environment }}
+              ;;
+            apply)
+              pnpm run db:migrate:${{ inputs.environment }}
+              ;;
+            *)
+              echo "Unknown mode: ${{ inputs.mode }}"
+              exit 1
+              ;;
+          esac

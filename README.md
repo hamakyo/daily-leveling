@@ -203,6 +203,9 @@ pnpm run deploy:production
 GitHub Actions からの deploy も可能です。`.github/workflows/deploy.yml` を使い、手動実行で Worker を Cloudflare に配備できます。
 実行時に `test / staging / production` を選択し、同名の GitHub Environment を使って secrets を解決します。
 
+DB migration は `.github/workflows/migrate.yml` から手動実行できます。
+`plan` と `apply` を選べるようにしてあり、まず `plan` で未適用 migration を確認し、その後 `apply` を実行する運用を想定しています。
+
 必要な GitHub Secrets:
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
@@ -232,6 +235,7 @@ GitHub Environments の推奨構成:
 各 GitHub Environment に最低限設定するもの:
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
+- `DATABASE_URL`（migration workflow 用）
 
 Worker runtime 用の環境変数と secret は Cloudflare 側に環境ごとに設定します。
 - `DATABASE_URL`
@@ -306,6 +310,7 @@ migration は `schema_migrations` テーブルで管理します。
   production 環境に migration を適用します。
 
 どのコマンドも、まず `process.env` を見て、不足分だけ環境別 `.dev.vars` / `.env` と共通ファイルから読み込みます。
+migration コマンドで必須なのは `DATABASE_URL` のみです。
 
 ## Terraform 環境ファイル
 

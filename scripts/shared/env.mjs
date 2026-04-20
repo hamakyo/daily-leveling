@@ -113,6 +113,15 @@ function isValidAppBaseUrl(value) {
   }
 }
 
+function isValidDatabaseUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "postgres:" || url.protocol === "postgresql:";
+  } catch {
+    return false;
+  }
+}
+
 function isValidTimezone(value) {
   try {
     new Intl.DateTimeFormat("en-US", { timeZone: value });
@@ -127,6 +136,8 @@ export function getRuntimeEnvIssues(env = process.env) {
 
   if (!isNonEmptyString(env.DATABASE_URL)) {
     issues.push("DATABASE_URL が設定されていません。");
+  } else if (!isValidDatabaseUrl(env.DATABASE_URL)) {
+    issues.push("DATABASE_URL は postgres:// または postgresql:// 形式で指定してください。");
   }
 
   if (!isNonEmptyString(env.APP_BASE_URL)) {
@@ -156,6 +167,18 @@ export function getRuntimeEnvIssues(env = process.env) {
     if (!Number.isFinite(parsed) || parsed <= 0) {
       issues.push("SESSION_TTL_SECONDS は 0 より大きい数値を指定してください。");
     }
+  }
+
+  return issues;
+}
+
+export function getMigrationEnvIssues(env = process.env) {
+  const issues = [];
+
+  if (!isNonEmptyString(env.DATABASE_URL)) {
+    issues.push("DATABASE_URL が設定されていません。");
+  } else if (!isValidDatabaseUrl(env.DATABASE_URL)) {
+    issues.push("DATABASE_URL は postgres:// または postgresql:// 形式で指定してください。");
   }
 
   return issues;

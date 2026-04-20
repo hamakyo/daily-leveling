@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import postgres from "postgres";
 import {
   formatIssues,
-  getRuntimeEnvIssues,
+  getMigrationEnvIssues,
   loadEnvFiles,
   resolveTargetEnvironment,
   TARGET_ENVIRONMENTS,
@@ -31,6 +31,7 @@ Behavior:
   - --env 未指定時は local 扱いです
   - 環境ごとの .dev.vars / .env を優先し、不足分だけ共通ファイルから補完します
   - schema_migrations テーブルで適用済み migration を管理します
+  - migration 実行時は DATABASE_URL のみを必須とします
   - 対応環境: ${TARGET_ENVIRONMENTS.join(", ")}
 `);
 }
@@ -50,7 +51,7 @@ try {
 }
 
 const loadedFiles = loadEnvFiles({ targetEnvironment });
-const issues = getRuntimeEnvIssues();
+const issues = getMigrationEnvIssues();
 
 if (issues.length > 0) {
   console.error(`migration 実行前の環境変数チェックに失敗しました。対象環境: ${targetEnvironment}`);

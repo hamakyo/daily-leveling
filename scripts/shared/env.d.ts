@@ -14,4 +14,8 @@ export function getRuntimeEnvIssues(
   env?: Record<string, string | undefined>,
 ): string[];
 
+export function getMigrationEnvIssues(
+  env?: Record<string, string | undefined>,
+): string[];
+
 export function formatIssues(issues: string[]): string;

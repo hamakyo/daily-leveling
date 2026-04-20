@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 const envModulePath = "../scripts/shared/env.mjs";
-const { getEnvFilesForTarget, getRuntimeEnvIssues, resolveTargetEnvironment } = await import(envModulePath);
+const {
+  getEnvFilesForTarget,
+  getMigrationEnvIssues,
+  getRuntimeEnvIssues,
+  resolveTargetEnvironment,
+} = await import(envModulePath);
 
 describe("runtime env checks", () => {
   it("passes when required runtime env values are present", () => {
@@ -42,6 +47,22 @@ describe("runtime env checks", () => {
     expect(issues).toContain("DEFAULT_TIMEZONE は有効な IANA timezone を指定してください。");
     expect(issues).toContain("SESSION_COOKIE_NAME を指定する場合は空文字にできません。");
     expect(issues).toContain("SESSION_TTL_SECONDS は 0 より大きい数値を指定してください。");
+  });
+
+  it("checks migration env with DATABASE_URL only", () => {
+    expect(
+      getMigrationEnvIssues({
+        DATABASE_URL: "postgres://user:pass@localhost:5432/daily_leveling_staging",
+      }),
+    ).toEqual([]);
+  });
+
+  it("rejects invalid migration database urls", () => {
+    expect(
+      getMigrationEnvIssues({
+        DATABASE_URL: "https://example.com/db",
+      }),
+    ).toContain("DATABASE_URL は postgres:// または postgresql:// 形式で指定してください。");
   });
 
   it("returns environment-specific files before common files", () => {
