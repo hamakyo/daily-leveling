@@ -73,6 +73,32 @@
 - 制約による整合性担保
 - 集計クエリの実行
 
+## 2-3. 環境構成
+MVP 以降の運用を見据え、以下の 3 環境を前提とする。
+
+- test
+  接続確認や軽い検証に使う
+- staging
+  `main` 相当の確認に使う
+- production
+  本番公開に使う
+
+各環境で分離するもの:
+- Cloudflare Worker 名
+- 公開 URL
+- PostgreSQL
+- Google OAuth client / redirect URI
+- Cloudflare / GitHub 上の Secrets
+
+推奨する Worker 名:
+- test: `daily-leveling-test`
+- staging: `daily-leveling-staging`
+- production: `daily-leveling`
+
+注意点:
+- production の DB や OAuth 設定を test / staging と共有しない
+- Cookie の安全性を保つため、staging / production は HTTPS 前提とする
+
 ---
 
 ## 3. 認証設計
@@ -144,7 +170,13 @@ GET /auth/google/callback?code=...&state=...
 - sessions を revoke
 - セッション Cookie を削除
 
-## 3-4. セッション設計
+## 3-4. 環境別認証設定
+- `APP_BASE_URL` は環境ごとの公開 URL と一致させる
+- Google OAuth の redirect URI は環境ごとに別 URL を登録する
+- test / staging / production で client を分けることを推奨する
+- session cookie は環境ごとのドメインに閉じる
+
+## 3-5. セッション設計
 ### sessions テーブルで持つもの
 - `user_id`
 - `session_token_hash`

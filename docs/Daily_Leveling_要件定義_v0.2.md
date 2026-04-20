@@ -287,11 +287,17 @@ MVP では軽量なゲーム化のみ採用する。
 - 認証必須であること
 - API / BFF 層で他人のデータへアクセスできないこと
 - 通信は HTTPS 前提とする
+- test / staging / production の各環境で、DB・認証設定・Secrets を分離すること
 
 ### 9-4. UX
 - ワンタップ / ワンクリックで記録できること
 - 画面の主要情報がひと目で把握できること
 - 未達成時も再開しやすい心理的設計にすること
+
+### 9-5. 運用
+- test / staging / production の 3 環境を持てる構成であること
+- 各環境で Cloudflare Worker 名、公開 URL、DB、Google OAuth redirect URI を分離できること
+- staging で本番相当の接続確認を行ったうえで production に反映できること
 
 ---
 
@@ -299,10 +305,9 @@ MVP では軽量なゲーム化のみ採用する。
 
 ### 10-1. users
 - id
-- google_id
+- google_sub
 - email
 - display_name
-- timezone
 - onboarding_completed
 - created_at
 - updated_at
@@ -381,6 +386,16 @@ MVP では軽量なゲーム化のみ採用する。
 - 本体 DB は Postgres を採用し、リレーショナルな集計を素直に扱う
 - 集計は MVP 段階では都度クエリで計算する
 - 事前集計テーブルやキャッシュは必要になってから導入する
+
+### 12-3. 環境分離方針
+- ローカル開発用とは別に `test`、`staging`、`production` を用意する
+- 環境ごとに以下を分離する
+  - Cloudflare Worker 名
+  - `APP_BASE_URL`
+  - PostgreSQL 接続先
+  - Google OAuth client / redirect URI
+  - Cloudflare / GitHub 上の Secrets
+- production のデータや認証設定を test / staging と共有しない
 
 ---
 

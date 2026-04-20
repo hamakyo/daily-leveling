@@ -75,6 +75,12 @@
 - 週次集計は指定日を含む **月曜始まり** の週で計算する
 - 頻度対象外の日は分母に含めない
 
+## 2-7. 環境前提
+- API は `test`、`staging`、`production` の各環境で独立して配備できること
+- 各環境で `APP_BASE_URL`、`DATABASE_URL`、`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET` を個別に設定する
+- `/auth/google/callback` の redirect URI は環境ごとに一致している必要がある
+- production の DB や session を test / staging と共有しない
+
 ---
 
 ## 3. 認証 API
