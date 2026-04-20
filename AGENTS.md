@@ -105,6 +105,7 @@
 - フルスタック開発の標準コマンドは `pnpm dev`
 - コード変更が完了したら、Worker と build 済み asset の両方を確実に更新するため実行中の dev server を再起動する
 - Cloudflare 環境管理では、account-side resource は Terraform、Worker build/deploy は Wrangler を優先する
+- Cloudflare 上の Worker read/write は `wrangler` を標準経路とし、ダッシュボードやプラグインは補助確認に留める
 
 ## 完了条件
 

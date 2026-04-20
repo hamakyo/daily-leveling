@@ -98,6 +98,7 @@ MVP 以降の運用を見据え、以下の 3 環境を前提とする。
 注意点:
 - production の DB や OAuth 設定を test / staging と共有しない
 - Cookie の安全性を保つため、staging / production は HTTPS 前提とする
+- Cloudflare 上の Worker に対する read/write は Wrangler を標準経路とし、Route や Custom Domain など account-side resource は Terraform で管理する
 
 ---
 

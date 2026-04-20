@@ -116,9 +116,29 @@ pnpm run release:check:production
 
 推奨する責務分担は以下です。
 - Wrangler
-  ローカル開発、ビルド、Worker コードのデプロイ
+  ローカル開発、Worker の read/write、ビルド、コードのデプロイ
 - Terraform
   Cloudflare 側の Worker サービス定義、Custom Domain、Route などの管理
+
+Cloudflare 操作の標準経路:
+- Worker の read/write は `wrangler` を使う
+- account-side resource は Terraform を使う
+- Cloudflare ダッシュボードや Codex プラグインは補助的な確認用途に留める
+
+よく使う Wrangler コマンド:
+
+```bash
+pnpm run cf:whoami
+pnpm run cf:deployments:test
+pnpm run cf:deployments:staging
+pnpm run cf:deployments:production
+pnpm run deploy:test
+pnpm run deploy:staging
+pnpm run deploy:production
+pnpm exec wrangler secret put DATABASE_URL --env staging
+```
+
+`cf:deployments:*` は初回 deploy 前だと対象 Worker が存在せず失敗することがあります。
 
 Terraform の土台は `infra/terraform` にあります。
 
@@ -266,6 +286,12 @@ staging の例:
 wrangler secret put DATABASE_URL --env staging
 wrangler secret put GOOGLE_CLIENT_ID --env staging
 wrangler secret put GOOGLE_CLIENT_SECRET --env staging
+```
+
+Wrangler にログインしているかの確認:
+
+```bash
+pnpm run cf:whoami
 ```
 
 ## CI
