@@ -81,6 +81,14 @@ async function request(path: string, init?: RequestInit) {
   return app.request(`http://localhost${path}`, init, env);
 }
 
+function makeExecutionContext() {
+  return {
+    waitUntil: vi.fn(),
+    passThroughOnException: vi.fn(),
+    props: {},
+  } as NonNullable<Parameters<typeof app.request>[3]>;
+}
+
 describe("worker app auth and log guards", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -121,18 +129,37 @@ describe("worker app auth and log guards", () => {
       user: currentUser,
       session,
     });
+    const executionCtx = makeExecutionContext();
 
-    const response = await request("/auth/me", {
-      headers: {
-        cookie: "dl_session=valid-session-token",
+    const response = await app.request(
+      "http://localhost/auth/me",
+      {
+        headers: {
+          cookie: "dl_session=valid-session-token",
+        },
       },
-    });
+      env,
+      executionCtx,
+    );
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
       user: currentUser,
     });
     expect(repositoryMocks.touchSession).toHaveBeenCalledWith({ kind: "db" }, session.id);
+    expect(executionCtx.waitUntil).toHaveBeenCalledTimes(1);
+  });
+
+  it("starts google auth without requesting offline access", async () => {
+    const response = await request("/auth/google/start");
+
+    expect(response.status).toBe(302);
+    const location = response.headers.get("location");
+    expect(location).toBeTruthy();
+    const authorizationUrl = new URL(location as string);
+    expect(authorizationUrl.searchParams.get("scope")).toBe("openid email profile");
+    expect(authorizationUrl.searchParams.has("access_type")).toBe(false);
+    expect(authorizationUrl.searchParams.get("prompt")).toBe("select_account");
   });
 
   it("rejects future habit logs", async () => {

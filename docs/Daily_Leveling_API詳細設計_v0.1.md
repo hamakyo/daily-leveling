@@ -77,7 +77,9 @@
 
 ## 2-7. 環境前提
 - API は `test`、`staging`、`production` の各環境で独立して配備できること
-- 各環境で `APP_BASE_URL`、`DATABASE_URL`、`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET` を個別に設定する
+- 各環境で `APP_BASE_URL`、`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET` を個別に設定する
+- Worker runtime の DB 接続は `HYPERDRIVE` binding を優先する
+- `DATABASE_URL` は local dev、migration、Hyperdrive 作成元、fallback 用として維持する
 - `/auth/google/callback` の redirect URI は環境ごとに一致している必要がある
 - production の DB や session を test / staging と共有しない
 

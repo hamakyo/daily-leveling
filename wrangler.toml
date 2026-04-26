@@ -23,6 +23,11 @@ run_worker_first = [
 [env.test]
 name = "daily-leveling-test"
 
+[[env.test.hyperdrive]]
+binding = "HYPERDRIVE"
+# Replace with the Cloudflare Hyperdrive config ID for test before real deploy.
+id = "00000000-0000-0000-0000-000000000000"
+
 [env.test.vars]
 APP_BASE_URL = "https://daily-leveling-test.hamakyoh.workers.dev"
 DEFAULT_TIMEZONE = "Asia/Tokyo"
@@ -32,6 +37,11 @@ SESSION_TTL_SECONDS = "1209600"
 [env.staging]
 name = "daily-leveling-staging"
 
+[[env.staging.hyperdrive]]
+binding = "HYPERDRIVE"
+# Replace with the Cloudflare Hyperdrive config ID for staging before real deploy.
+id = "00000000-0000-0000-0000-000000000001"
+
 [env.staging.vars]
 APP_BASE_URL = "https://daily-leveling-staging.hamakyoh.workers.dev"
 DEFAULT_TIMEZONE = "Asia/Tokyo"
@@ -40,6 +50,11 @@ SESSION_TTL_SECONDS = "1209600"
 
 [env.production]
 name = "daily-leveling"
+
+[[env.production.hyperdrive]]
+binding = "HYPERDRIVE"
+# Replace with the Cloudflare Hyperdrive config ID for production before real deploy.
+id = "00000000-0000-0000-0000-000000000002"
 
 [env.production.vars]
 APP_BASE_URL = "https://daily-leveling.hamakyoh.workers.dev"

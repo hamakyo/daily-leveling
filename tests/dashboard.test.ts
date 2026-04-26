@@ -33,6 +33,12 @@ function makeLog(date: string, status: boolean): HabitLogRecord {
   };
 }
 
+function shiftIsoDate(date: string, deltaDays: number): string {
+  const next = new Date(`${date}T00:00:00.000Z`);
+  next.setUTCDate(next.getUTCDate() + deltaDays);
+  return next.toISOString().slice(0, 10);
+}
+
 describe("dashboard helpers", () => {
   it("computes progress rate with one decimal place", () => {
     expect(calculateProgressRate(7, 10)).toBe(70);
@@ -80,9 +86,10 @@ describe("dashboard helpers", () => {
   });
 
   it("counts a streak only while all target habits are completed", () => {
+    const today = new Date().toISOString().slice(0, 10);
     const streak = calculateCurrentStreak(
       [baseHabit],
-      [makeLog("2026-04-18", true), makeLog("2026-04-19", true), makeLog("2026-04-20", true)],
+      [makeLog(shiftIsoDate(today, -2), true), makeLog(shiftIsoDate(today, -1), true), makeLog(today, true)],
       "UTC",
       10,
     );

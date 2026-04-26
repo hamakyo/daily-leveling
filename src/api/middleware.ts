@@ -24,6 +24,14 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
   c.set("currentUser", sessionResult.user);
   c.set("session", sessionResult.session);
 
-  void touchSession(db, sessionResult.session.id);
+  const touchSessionPromise = touchSession(db, sessionResult.session.id).catch((error) => {
+    console.error("Failed to touch session", error);
+  });
+
+  try {
+    c.executionCtx.waitUntil(touchSessionPromise);
+  } catch {
+    void touchSessionPromise;
+  }
   await next();
 });

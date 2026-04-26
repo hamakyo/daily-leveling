@@ -1,0 +1,55 @@
+import { Hono } from "hono";
+import { requireAuth } from "../../api/middleware";
+import type { AppEnv } from "../../api/context";
+import { getDb } from "../../db/client";
+import { listHabits, listLogsInRange } from "../../db/repositories";
+import {
+  buildMonthlyDashboard,
+  buildTodayDashboard,
+  buildWeeklyDashboard,
+} from "../../domain/dashboard";
+import { monthQuerySchema, weekQuerySchema } from "../../domain/validation";
+import {
+  assertIsoDate,
+  assertIsoMonth,
+  getMonthRange,
+  getTodayInTimezone,
+  getWeekRange,
+} from "../../lib/date";
+import { jsonOk } from "../../lib/http";
+
+export const dashboardRoutes = new Hono<AppEnv>();
+
+dashboardRoutes.get("/dashboard/today", requireAuth, async (c) => {
+  const db = getDb(c.env);
+  const currentUser = c.get("currentUser");
+  const date = getTodayInTimezone(currentUser.timezone);
+  const habits = await listHabits(db, currentUser.id, { activeOnly: true });
+  const logs = await listLogsInRange(db, currentUser.id, date, date);
+
+  return jsonOk(buildTodayDashboard(habits, logs, currentUser.timezone));
+});
+
+dashboardRoutes.get("/dashboard/weekly", requireAuth, async (c) => {
+  const db = getDb(c.env);
+  const currentUser = c.get("currentUser");
+  const query = weekQuerySchema.parse(c.req.query());
+  const date = assertIsoDate(query.date);
+  const { startDate, endDate } = getWeekRange(date);
+  const habits = await listHabits(db, currentUser.id, { activeOnly: true });
+  const logs = await listLogsInRange(db, currentUser.id, startDate, endDate);
+
+  return jsonOk(buildWeeklyDashboard(habits, logs, date, currentUser.timezone));
+});
+
+dashboardRoutes.get("/dashboard/monthly", requireAuth, async (c) => {
+  const db = getDb(c.env);
+  const currentUser = c.get("currentUser");
+  const query = monthQuerySchema.parse(c.req.query());
+  const month = assertIsoMonth(query.month);
+  const { startDate, endDate } = getMonthRange(month);
+  const habits = await listHabits(db, currentUser.id, { activeOnly: true });
+  const logs = await listLogsInRange(db, currentUser.id, startDate, endDate);
+
+  return jsonOk(buildMonthlyDashboard(habits, logs, month, currentUser.timezone));
+});

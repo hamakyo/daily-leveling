@@ -29,7 +29,7 @@ Daily Leveling は次の体験に特化した習慣トラッカーです。
 - フロントエンド: React SPA
 - BFF/API: Hono on Cloudflare Workers
 - データベース: PostgreSQL
-- DB 接続経路: Hyperdrive
+- DB 接続経路: Cloudflare Hyperdrive。local dev、migration、fallback 用に `DATABASE_URL` も維持する
 - 認証プロバイダ: Google OAuth 2.0 / OpenID Connect のみ
 - セッション方式: DB-backed sessions と opaque cookie token
 
@@ -137,6 +137,7 @@ MVP のコア API:
 - Google auth start/callback 以外の全 API は認証必須
 - Session cookie は `HttpOnly`, `Secure`, `SameSite=Lax`
 - Session cookie に平文の session hash を入れてはならない
+- Session の `last_seen_at` 更新は `executionCtx.waitUntil()` で response をブロックしない
 - Session 有効判定には以下をすべて満たす必要がある
   - cookie が存在する
   - session record が存在する
@@ -144,6 +145,7 @@ MVP のコア API:
   - `expires_at > NOW()`
 - Habit スコープ API では所有権チェックを必須にする
 - API は scoping 用に client 提供の `userId` を受け取らない
+- Google OAuth では refresh token を保存しないため `access_type=offline` を要求しない
 
 ## UX 優先順位
 

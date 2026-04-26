@@ -181,6 +181,23 @@
 - `SPEC.md` のコア受け入れ条件を満たす
 - deploy 後のアプリでログインとデータ保存ができる
 
+### Phase 11: Consistency and Maintainability Hardening
+
+成果物:
+- `HYPERDRIVE` binding を優先する DB 接続解決
+- `executionCtx.waitUntil()` による session touch
+- Google OAuth start から不要な offline access 要求を削除
+- Hono route の `auth / onboarding / habits / logs / dashboard / settings` 分割
+- DB repository の `users / sessions / habits / logs / onboarding / settings` 分割
+- React UI の `pages / components / api.ts` 分割
+- README と docs の運用説明更新
+
+完了条件:
+- API URL、method、response shape を変えずに分割後のテストが通る
+- `HYPERDRIVE.connectionString` が `DATABASE_URL` より優先される
+- `DATABASE_URL` は local dev、migration、fallback として引き続き使える
+- UI は日本語、sans-serif、グラデーションなしの現行方針を維持する
+
 ## Stop-the-Line ルール
 
 以下がコード上で固まるまで feature work を先に進めないこと:

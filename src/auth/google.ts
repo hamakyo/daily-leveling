@@ -15,6 +15,8 @@ interface GoogleTokenInfoResponse {
   aud?: string;
   email?: string;
   email_verified?: string;
+  exp?: string;
+  iss?: string;
   name?: string;
   picture?: string;
   sub?: string;
@@ -51,7 +53,6 @@ export async function createGoogleAuthorizationRequest(env: Env): Promise<{
     state,
     code_challenge: codeChallenge,
     code_challenge_method: "S256",
-    access_type: "offline",
     prompt: "select_account",
   });
 
@@ -117,6 +118,25 @@ export async function verifyGoogleIdToken(
     throw new AppError(401, "UNAUTHORIZED", "Google トークンの検証に失敗しました。");
   }
 
+  validateGoogleTokenInfo(env, payload);
+
+  return {
+    googleSub: payload.sub as string,
+    email: payload.email as string,
+    displayName: payload.name || (payload.email as string),
+    avatarUrl: payload.picture || null,
+  };
+}
+
+function validateGoogleTokenInfo(env: Env, payload: GoogleTokenInfoResponse): void {
+  if (payload.iss && !["accounts.google.com", "https://accounts.google.com"].includes(payload.iss)) {
+    throw new AppError(401, "UNAUTHORIZED", "Google トークンの issuer が不正です。");
+  }
+
+  if (payload.exp && Number(payload.exp) <= Math.floor(Date.now() / 1000)) {
+    throw new AppError(401, "UNAUTHORIZED", "Google トークンの有効期限が切れています。");
+  }
+
   if (payload.aud !== getRequiredEnvValue(env, "GOOGLE_CLIENT_ID")) {
     throw new AppError(401, "UNAUTHORIZED", "Google トークンの audience が一致しません。");
   }
@@ -128,11 +148,4 @@ export async function verifyGoogleIdToken(
   if (payload.email_verified !== "true") {
     throw new AppError(401, "UNAUTHORIZED", "Google アカウントのメール認証が必要です。");
   }
-
-  return {
-    googleSub: payload.sub,
-    email: payload.email,
-    displayName: payload.name || payload.email,
-    avatarUrl: payload.picture || null,
-  };
 }

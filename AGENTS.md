@@ -27,6 +27,7 @@
 - クライアントには React SPA を使う
 - API/BFF には Cloudflare Workers 上の Hono を使う
 - 正本データストアは PostgreSQL とする
+- Worker runtime の DB 接続は Cloudflare Hyperdrive を優先する
 - セッションは DB-backed sessions を使う
 - 認証は Google OAuth のみ
 - パッケージマネージャーは `pnpm`
@@ -63,9 +64,11 @@
 - `src/api` に route handler
 - `src/auth` に OAuth と session code
 - `src/db` に query と migration wiring
+- `src/db/repositories` は domain 単位に分割する
 - `src/domain` に habits、logs、aggregate logic
 - `src/lib` に共通 utility
-- `src/web` に React UI
+- `src/worker/routes` に Hono route module
+- `src/web` に React UI。`pages`, `components`, `api.ts` に責務を分ける
 - `tests` に unit test と integration test
 - `migrations` に SQL migration
 
@@ -106,6 +109,8 @@
 - コード変更が完了したら、Worker と build 済み asset の両方を確実に更新するため実行中の dev server を再起動する
 - Cloudflare 環境管理では、account-side resource は Terraform、Worker build/deploy は Wrangler を優先する
 - Cloudflare 上の Worker read/write は `wrangler` を標準経路とし、ダッシュボードやプラグインは補助確認に留める
+- Hyperdrive binding 名は `HYPERDRIVE` で固定する
+- `DATABASE_URL` は local dev、migration、Hyperdrive 作成元、fallback 用として残す
 
 ## 完了条件
 
