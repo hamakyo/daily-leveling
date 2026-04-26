@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { requireAuth } from "../../api/middleware";
 import type { AppEnv } from "../../api/context";
-import { getDb } from "../../db/client";
 import {
   getCurrentUserById,
   getSettings,
@@ -16,7 +15,7 @@ import { parseBody } from "./helpers";
 export const settingsRoutes = new Hono<AppEnv>();
 
 settingsRoutes.get("/settings", requireAuth, async (c) => {
-  const settings = await getSettings(getDb(c.env), c.get("currentUser").id);
+  const settings = await getSettings(c.get("db"), c.get("currentUser").id);
   if (!settings) {
     throw new AppError(404, "NOT_FOUND", "設定が見つかりません。");
   }
@@ -30,7 +29,7 @@ settingsRoutes.patch("/settings", requireAuth, async (c) => {
     throw new AppError(400, "INVALID_INPUT", "timezone には有効な IANA timezone を指定してください。");
   }
 
-  const db = getDb(c.env);
+  const db = c.get("db");
   const settings = await updateSettings(db, c.get("currentUser").id, payload);
   if (!settings) {
     throw new AppError(404, "NOT_FOUND", "設定が見つかりません。");

@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { requireAuth } from "../../api/middleware";
 import type { AppEnv } from "../../api/context";
-import { getDb } from "../../db/client";
 import {
   completeOnboarding,
   createHabitsFromTemplate,
@@ -24,7 +23,7 @@ onboardingRoutes.post("/onboarding/templates/apply", requireAuth, async (c) => {
   }
 
   const createdHabits = await createHabitsFromTemplate(
-    getDb(c.env),
+    c.get("db"),
     c.get("currentUser").id,
     templates[payload.templateId],
   );
@@ -42,6 +41,6 @@ onboardingRoutes.post("/onboarding/templates/apply", requireAuth, async (c) => {
 
 onboardingRoutes.post("/onboarding/complete", requireAuth, async (c) => {
   parseBody(onboardingCompleteSchema, await c.req.json());
-  await completeOnboarding(getDb(c.env), c.get("currentUser").id);
+  await completeOnboarding(c.get("db"), c.get("currentUser").id);
   return jsonOk({ ok: true });
 });

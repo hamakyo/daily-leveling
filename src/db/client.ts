@@ -3,9 +3,6 @@ import { AppError } from "../lib/errors";
 
 export type DatabaseClient = ReturnType<typeof postgres>;
 
-let client: DatabaseClient | null = null;
-let clientUrl: string | null = null;
-
 export function resolveDatabaseUrl(env: Env): string {
   const databaseUrl = env.HYPERDRIVE?.connectionString || env.DATABASE_URL;
 
@@ -19,16 +16,9 @@ export function resolveDatabaseUrl(env: Env): string {
 export function getDb(env: Env): DatabaseClient {
   const databaseUrl = resolveDatabaseUrl(env);
 
-  if (client && clientUrl === databaseUrl) {
-    return client;
-  }
-
-  clientUrl = databaseUrl;
-  client = postgres(databaseUrl, {
+  return postgres(databaseUrl, {
     max: 1,
     prepare: false,
     idle_timeout: 10,
   });
-
-  return client;
 }

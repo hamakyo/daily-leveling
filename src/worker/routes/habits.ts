@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { requireAuth } from "../../api/middleware";
 import type { AppEnv } from "../../api/context";
-import { getDb } from "../../db/client";
 import {
   createHabit,
   getHabitById,
@@ -23,7 +22,7 @@ export const habitRoutes = new Hono<AppEnv>();
 
 habitRoutes.get("/habits", requireAuth, async (c) => {
   const query = activeOnlyQuerySchema.parse(c.req.query());
-  const habits = await listHabits(getDb(c.env), c.get("currentUser").id, {
+  const habits = await listHabits(c.get("db"), c.get("currentUser").id, {
     activeOnly: query.activeOnly === "true",
   });
   return jsonOk({ habits });
@@ -31,13 +30,13 @@ habitRoutes.get("/habits", requireAuth, async (c) => {
 
 habitRoutes.post("/habits", requireAuth, async (c) => {
   const payload = parseBody(habitCreateSchema, await c.req.json());
-  const habit = await createHabit(getDb(c.env), c.get("currentUser").id, payload);
+  const habit = await createHabit(c.get("db"), c.get("currentUser").id, payload);
   return jsonOk({ habit }, 201);
 });
 
 habitRoutes.patch("/habits/:habitId", requireAuth, async (c) => {
   const habitId = pathUuidSchema.parse(c.req.param("habitId"));
-  const db = getDb(c.env);
+  const db = c.get("db");
   const currentHabit = await getHabitById(db, c.get("currentUser").id, habitId);
 
   if (!currentHabit) {
@@ -69,7 +68,7 @@ habitRoutes.patch("/habits/:habitId", requireAuth, async (c) => {
 
 habitRoutes.post("/habits/reorder", requireAuth, async (c) => {
   const payload = parseBody(reorderHabitsSchema, await c.req.json());
-  const ok = await reorderHabits(getDb(c.env), c.get("currentUser").id, payload.habitIds);
+  const ok = await reorderHabits(c.get("db"), c.get("currentUser").id, payload.habitIds);
 
   if (!ok) {
     throw new AppError(400, "INVALID_INPUT", "habitIds は現在のユーザーの習慣のみ指定できます。");

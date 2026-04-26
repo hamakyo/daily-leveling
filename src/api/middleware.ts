@@ -1,6 +1,5 @@
 import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
-import { getDb } from "../db/client";
 import { getCurrentUserBySessionHash, touchSession } from "../db/repositories";
 import { getSessionCookieName } from "../lib/config";
 import { sha256Base64Url } from "../lib/crypto";
@@ -14,7 +13,7 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
   }
 
   const sessionHash = await sha256Base64Url(sessionToken);
-  const db = getDb(c.env);
+  const db = c.get("db");
   const sessionResult = await getCurrentUserBySessionHash(db, sessionHash);
 
   if (!sessionResult) {
@@ -28,10 +27,6 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
     console.error("Failed to touch session", error);
   });
 
-  try {
-    c.executionCtx.waitUntil(touchSessionPromise);
-  } catch {
-    void touchSessionPromise;
-  }
+  c.get("backgroundTasks").push(touchSessionPromise);
   await next();
 });

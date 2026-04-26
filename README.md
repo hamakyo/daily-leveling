@@ -100,6 +100,9 @@ pnpm dev:worker:staging
 pnpm dev:worker:production
 pnpm run check
 pnpm test
+pnpm run test:e2e
+pnpm run test:e2e:headed
+pnpm run test:e2e:ui
 pnpm run build
 pnpm run env:check
 pnpm run env:check:test
@@ -136,11 +139,41 @@ pnpm run release:check:production
 - セッション Cookie は Worker 側で管理し、`HttpOnly` です。
 - UI のフォントスタックは sans-serif のみを使用します。
 
+## E2E テスト
+
+Playwright CLI による E2E テストを `tests/e2e` に置いています。
+
+初回だけ Chromium をインストールします。
+
+```bash
+pnpm exec playwright install chromium
+```
+
+ローカル PostgreSQL に migration を適用したうえで、以下を実行します。
+
+```bash
+pnpm run test:e2e
+```
+
+`pnpm run test:e2e` は Playwright の `webServer` 経由で `pnpm dev:e2e` を起動します。
+E2E 用 Worker は `http://127.0.0.1:8788` で動き、`.dev.vars` と `config/e2e.vars` を読み込みます。
+`config/e2e.vars` では `E2E_TEST_MODE=true` を設定し、`/__e2e/*` のテスト補助 API を有効化します。
+この補助 API は `E2E_TEST_MODE=true` 以外では `404` を返し、通常の dev/staging/production では使いません。
+
+確認範囲:
+- ログイン画面の表示
+- Google OAuth start URL の生成
+- オンボーディングテンプレート適用
+- 習慣作成
+- Today view のログ更新
+- Monthly view の集計表示
+
 ## 詳細ドキュメント
 
 - [アーキテクチャ](docs/architecture.md)
 - [セキュリティ設計](docs/security.md)
 - [デプロイ手順](docs/deployment.md)
+- [テスト方針](docs/testing.md)
 
 ## Cloudflare の IaC
 
@@ -383,6 +416,8 @@ GitHub Actions で以下を検証するようにしています。
 - Vite build
 - Terraform fmt
 - Terraform validate
+
+Playwright E2E はローカル PostgreSQL と `.dev.vars` を前提にするため、現時点ではローカル確認コマンドとして扱います。
 
 ローカルで CI 相当の検証をまとめて回したい場合は以下を使います。
 

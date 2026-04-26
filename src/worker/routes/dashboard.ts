@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { requireAuth } from "../../api/middleware";
 import type { AppEnv } from "../../api/context";
-import { getDb } from "../../db/client";
 import { listHabits, listLogsInRange } from "../../db/repositories";
 import {
   buildMonthlyDashboard,
@@ -21,7 +20,7 @@ import { jsonOk } from "../../lib/http";
 export const dashboardRoutes = new Hono<AppEnv>();
 
 dashboardRoutes.get("/dashboard/today", requireAuth, async (c) => {
-  const db = getDb(c.env);
+  const db = c.get("db");
   const currentUser = c.get("currentUser");
   const date = getTodayInTimezone(currentUser.timezone);
   const habits = await listHabits(db, currentUser.id, { activeOnly: true });
@@ -31,7 +30,7 @@ dashboardRoutes.get("/dashboard/today", requireAuth, async (c) => {
 });
 
 dashboardRoutes.get("/dashboard/weekly", requireAuth, async (c) => {
-  const db = getDb(c.env);
+  const db = c.get("db");
   const currentUser = c.get("currentUser");
   const query = weekQuerySchema.parse(c.req.query());
   const date = assertIsoDate(query.date);
@@ -43,7 +42,7 @@ dashboardRoutes.get("/dashboard/weekly", requireAuth, async (c) => {
 });
 
 dashboardRoutes.get("/dashboard/monthly", requireAuth, async (c) => {
-  const db = getDb(c.env);
+  const db = c.get("db");
   const currentUser = c.get("currentUser");
   const query = monthQuerySchema.parse(c.req.query());
   const month = assertIsoMonth(query.month);

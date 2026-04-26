@@ -8,16 +8,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION is_valid_weekday_array(values smallint[])
+CREATE OR REPLACE FUNCTION is_valid_weekday_array(weekday_values smallint[])
 RETURNS boolean AS $$
 DECLARE
   day_value smallint;
 BEGIN
-  IF values IS NULL THEN
+  IF weekday_values IS NULL THEN
     RETURN true;
   END IF;
 
-  FOREACH day_value IN ARRAY values
+  FOREACH day_value IN ARRAY weekday_values
   LOOP
     IF day_value < 1 OR day_value > 7 THEN
       RETURN false;

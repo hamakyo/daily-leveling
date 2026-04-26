@@ -166,6 +166,7 @@
 成果物:
 - helper に対する unit test
 - auth、habits、logs、dashboard の API test
+- Playwright CLI によるブラウザ E2E test
 - 手動テスト checklist
 - deploy 設定と secrets checklist
 
@@ -176,10 +177,12 @@
 - log upsert の idempotency
 - streak 計算
 - archive 済み habit の集計除外
+- ログイン後の onboarding / today / monthly のブラウザ導線
 
 完了条件:
 - `SPEC.md` のコア受け入れ条件を満たす
 - deploy 後のアプリでログインとデータ保存ができる
+- `pnpm run test:e2e` で主要ブラウザ導線が通る
 
 ### Phase 11: Consistency and Maintainability Hardening
 

@@ -11,6 +11,7 @@ interface Env {
   APP_BASE_URL: string;
   DATABASE_URL?: string;
   DEFAULT_TIMEZONE?: string;
+  E2E_TEST_MODE?: string;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
   HYPERDRIVE?: HyperdriveBinding;

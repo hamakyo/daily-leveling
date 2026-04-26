@@ -70,6 +70,7 @@
 - `src/worker/routes` に Hono route module
 - `src/web` に React UI。`pages`, `components`, `api.ts` に責務を分ける
 - `tests` に unit test と integration test
+- `tests/e2e` に Playwright CLI の E2E test
 - `migrations` に SQL migration
 
 必要に応じて命名は調整してよいが、責務境界は明確に保つこと。
@@ -100,8 +101,11 @@
 - monthly aggregate correctness
 - streak correctness
 - archive behavior
+- browser journey with Playwright
 
 時間が限られる場合は、UI より先に domain logic をテストすること。
+E2E は `pnpm run test:e2e` で実行し、Playwright spec は Vitest の対象に含めないこと。
+E2E 用の `__e2e` 補助 API は `E2E_TEST_MODE=true` のときだけ有効にする。
 
 ## ローカル開発ルール
 
@@ -111,6 +115,8 @@
 - Cloudflare 上の Worker read/write は `wrangler` を標準経路とし、ダッシュボードやプラグインは補助確認に留める
 - Hyperdrive binding 名は `HYPERDRIVE` で固定する
 - `DATABASE_URL` は local dev、migration、Hyperdrive 作成元、fallback 用として残す
+- E2E の標準コマンドは `pnpm run test:e2e`
+- E2E 用 Worker は `pnpm dev:e2e` で `127.0.0.1:8788` に起動する
 
 ## 完了条件
 

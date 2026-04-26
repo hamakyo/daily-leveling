@@ -10,7 +10,6 @@ import {
   verifyGoogleIdToken,
 } from "../../auth/google";
 import { clearSessionCookie, setSessionCookie } from "../../auth/session";
-import { getDb } from "../../db/client";
 import {
   createSession,
   revokeSession,
@@ -50,7 +49,7 @@ authRoutes.get("/auth/google/callback", async (c) => {
 
   const tokens = await exchangeAuthorizationCode(c.env, code, codeVerifier);
   const identity = await verifyGoogleIdToken(c.env, tokens.idToken);
-  const db = getDb(c.env);
+  const db = c.get("db");
   const user = await upsertGoogleUser(db, identity, getDefaultTimezone(c.env));
   const sessionToken = createOpaqueToken();
   const sessionHash = await sha256Base64Url(sessionToken);
@@ -73,7 +72,7 @@ authRoutes.get("/auth/me", requireAuth, async (c) => {
 });
 
 authRoutes.post("/auth/logout", requireAuth, async (c) => {
-  const db = getDb(c.env);
+  const db = c.get("db");
   await revokeSession(db, c.get("session").id);
   clearSessionCookie(c);
   return jsonOk({ ok: true });

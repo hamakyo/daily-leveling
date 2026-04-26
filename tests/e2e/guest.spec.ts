@@ -1,0 +1,31 @@
+import { expect, test } from "@playwright/test";
+
+test("guest can see the login screen", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByRole("heading", { name: "Daily Leveling" })).toBeVisible();
+  await expect(page.getByText("毎日の記録を素早く続けられる")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Google でログイン" })).toHaveAttribute(
+    "href",
+    "/auth/google/start",
+  );
+});
+
+test("google auth start emits the expected OAuth redirect", async ({ baseURL, request }) => {
+  const response = await request.get("/auth/google/start", {
+    maxRedirects: 0,
+  });
+
+  expect(response.status()).toBe(302);
+
+  const location = response.headers().location;
+  expect(location).toBeTruthy();
+
+  const authorizationUrl = new URL(location as string);
+  expect(authorizationUrl.origin).toBe("https://accounts.google.com");
+  expect(authorizationUrl.searchParams.get("scope")).toBe("openid email profile");
+  expect(authorizationUrl.searchParams.get("redirect_uri")).toBe(
+    `${baseURL}/auth/google/callback`,
+  );
+  expect(authorizationUrl.searchParams.has("access_type")).toBe(false);
+});

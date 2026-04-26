@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { requireAuth } from "../../api/middleware";
 import type { AppEnv } from "../../api/context";
-import { getDb } from "../../db/client";
 import {
   getHabitById,
   listLogsInRange,
@@ -31,7 +30,7 @@ logRoutes.get("/logs", requireAuth, async (c) => {
     throw new AppError(400, "INVALID_INPUT", "取得期間は 62 日以内で指定してください。");
   }
 
-  const logs = await listLogsInRange(getDb(c.env), c.get("currentUser").id, from, to);
+  const logs = await listLogsInRange(c.get("db"), c.get("currentUser").id, from, to);
   return jsonOk({
     logs: logs.map((log) => ({
       habitId: log.habitId,
@@ -45,7 +44,7 @@ logRoutes.put("/habits/:habitId/logs/:date", requireAuth, async (c) => {
   const habitId = pathUuidSchema.parse(c.req.param("habitId"));
   const date = assertIsoDate(c.req.param("date"));
   const payload = parseBody(logBodySchema, await c.req.json());
-  const db = getDb(c.env);
+  const db = c.get("db");
   const currentUser = c.get("currentUser");
   const habit = await getHabitById(db, currentUser.id, habitId);
 

@@ -33,7 +33,7 @@ export type HabitLogRow = {
   id: string;
   user_id: string;
   habit_id: string;
-  log_date: string;
+  log_date: Date | string;
   status: boolean;
   created_at: string;
   updated_at: string;
@@ -80,7 +80,7 @@ export function mapLog(row: HabitLogRow): HabitLogRecord {
     id: row.id,
     userId: row.user_id,
     habitId: row.habit_id,
-    date: row.log_date,
+    date: normalizeDate(row.log_date),
     status: row.status,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -103,4 +103,12 @@ export function toWeekdayLiteral(weekdays: number[] | null): string | null {
   }
 
   return `{${weekdays.join(",")}}`;
+}
+
+function normalizeDate(value: Date | string): string {
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  return value.slice(0, 10);
 }
