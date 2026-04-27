@@ -324,6 +324,16 @@ button {
   border: 1px solid var(--color-line);
 }
 
+.today-card {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+.today-card--celebrate {
+  animation: card-celebrate 620ms ease;
+  border-color: rgba(32, 199, 189, 0.36);
+  box-shadow: 0 10px 22px rgba(32, 199, 189, 0.14);
+}
+
 .today-card p,
 .habit-admin-row p,
 .status-text {
@@ -334,8 +344,10 @@ button {
 .checkbox-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 0.85rem;
+  justify-content: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  padding: 0;
   border-radius: 999px;
   border: 1px solid rgba(47, 125, 240, 0.16);
   background: var(--color-soft-blue);
@@ -352,14 +364,10 @@ button {
   opacity: 0.55;
 }
 
-.checkbox-toggle__text {
-  font-weight: 700;
-}
-
 .checkbox-indicator {
-  width: 1.1rem;
-  height: 1.1rem;
-  border-radius: 0.3rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
   border: 2px solid rgba(47, 125, 240, 0.32);
   background: white;
   display: inline-flex;
@@ -373,6 +381,10 @@ button {
   background: var(--color-cyan);
 }
 
+.checkbox-indicator--celebrate {
+  animation: checkbox-pop 620ms ease;
+}
+
 .checkbox-indicator--checked::after {
   content: "";
   width: 0.3rem;
@@ -380,6 +392,33 @@ button {
   border-right: 2px solid white;
   border-bottom: 2px solid white;
   transform: rotate(45deg) translate(-1px, -1px);
+}
+
+@keyframes checkbox-pop {
+  0% {
+    transform: scale(0.72);
+    box-shadow: 0 0 0 0 rgba(32, 199, 189, 0.28);
+  }
+  40% {
+    transform: scale(1.14);
+    box-shadow: 0 0 0 10px rgba(32, 199, 189, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(32, 199, 189, 0);
+  }
+}
+
+@keyframes card-celebrate {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    transform: translateY(-2px) scale(1.01);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
 }
 
 .summary-grid {
