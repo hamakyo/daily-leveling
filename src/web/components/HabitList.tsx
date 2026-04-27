@@ -8,7 +8,7 @@ function formatFrequency(habit: HabitRecord): string {
   }
 
   if (habit.frequencyType === "every_n_days") {
-    return habit.intervalDays ? `${habit.intervalDays}日ごと` : "日数間隔";
+    return habit.intervalDays ? `${habit.intervalDays}日間隔` : "日数間隔";
   }
 
   const weekdays = (habit.targetWeekdays ?? [])

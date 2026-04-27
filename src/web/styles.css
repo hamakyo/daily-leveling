@@ -655,12 +655,23 @@ button {
   gap: 0.55rem;
 }
 
+.interval-builder {
+  display: grid;
+  gap: 0.7rem;
+}
+
 .weekday-picker legend {
   padding: 0;
   font-weight: 600;
 }
 
 .weekday-picker__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.interval-builder__presets {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
@@ -676,7 +687,20 @@ button {
   transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease, transform 140ms ease;
 }
 
+.interval-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(47, 125, 240, 0.18);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 0.5rem 0.8rem;
+  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
 .weekday-chip:hover {
+  transform: translateY(-1px);
+}
+
+.interval-chip:hover {
   transform: translateY(-1px);
 }
 
@@ -686,10 +710,40 @@ button {
   transform: none;
 }
 
+.interval-chip:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
 .weekday-chip--selected {
   border-color: rgba(47, 125, 240, 0.3);
   background: var(--color-soft-blue);
   color: var(--color-ink);
+}
+
+.interval-chip--selected {
+  border-color: rgba(47, 125, 240, 0.3);
+  background: var(--color-soft-blue);
+  color: var(--color-ink);
+}
+
+.schedule-preview {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 16px;
+  border: 1px solid rgba(47, 125, 240, 0.14);
+  background: var(--color-panel);
+}
+
+.schedule-preview strong {
+  color: var(--color-ink);
+}
+
+.schedule-preview span {
+  color: var(--color-muted);
+  font-size: 0.9rem;
 }
 
 .weekday-picker__hint,

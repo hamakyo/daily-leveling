@@ -1,6 +1,6 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useId, useState } from "react";
 import type { CreateHabitInput } from "../types";
-import { weekdayOptions } from "../utils/habitForm";
+import { buildIntervalSchedulePreview, intervalPresetOptions, parseIntervalDays, weekdayOptions } from "../utils/habitForm";
 
 export function HabitForm({
   form,
@@ -16,8 +16,11 @@ export function HabitForm({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  const intervalInputId = useId();
+  const intervalHintId = useId();
   const requiresWeekdays = form.frequencyType === "weekly_days";
   const requiresIntervalDays = form.frequencyType === "every_n_days";
+  const intervalPreview = requiresIntervalDays ? buildIntervalSchedulePreview(form.intervalDays) : null;
 
   function toggleWeekday(weekday: number) {
     const isSelected = form.targetWeekdays.includes(weekday);
@@ -39,8 +42,8 @@ export function HabitForm({
     }
 
     if (requiresIntervalDays) {
-      const intervalDays = Number.parseInt(form.intervalDays, 10);
-      if (!Number.isInteger(intervalDays) || intervalDays < 2 || intervalDays > 365) {
+      const intervalDays = parseIntervalDays(form.intervalDays);
+      if (intervalDays === null || intervalDays < 2 || intervalDays > 365) {
         event.preventDefault();
         setValidationMessage("間隔日数は 2 から 365 の整数で指定してください。");
         return;
@@ -64,7 +67,7 @@ export function HabitForm({
         />
       </label>
       <label>
-        <span>頻度</span>
+        <span>繰り返し方</span>
         <select
           disabled={disabled}
           value={form.frequencyType}
@@ -79,8 +82,8 @@ export function HabitForm({
           }}
         >
           <option value="daily">毎日</option>
-          <option value="weekly_days">曜日指定</option>
-          <option value="every_n_days">n日ごと</option>
+          <option value="weekly_days">曜日を選ぶ</option>
+          <option value="every_n_days">日数間隔で繰り返す</option>
         </select>
       </label>
       {requiresWeekdays ? (
@@ -109,9 +112,13 @@ export function HabitForm({
         </fieldset>
       ) : null}
       {requiresIntervalDays ? (
-        <label>
-          <span>間隔日数</span>
+        <div className="interval-builder">
+          <label htmlFor={intervalInputId}>
+            <span>何日間隔ですか</span>
+          </label>
           <input
+            id={intervalInputId}
+            aria-describedby={intervalHintId}
             disabled={disabled}
             inputMode="numeric"
             min="2"
@@ -124,8 +131,37 @@ export function HabitForm({
             }}
             placeholder="3"
           />
-          <small className="field-hint">作成日を起点に、指定した日数ごとに対象日になります。</small>
-        </label>
+          <div className="interval-builder__presets" role="group" aria-label="間隔日数プリセット">
+            {intervalPresetOptions.map((preset) => {
+              const isSelected = form.intervalDays === String(preset);
+
+              return (
+                <button
+                  key={preset}
+                  aria-pressed={isSelected}
+                  className={isSelected ? "interval-chip interval-chip--selected" : "interval-chip"}
+                  disabled={disabled}
+                  onClick={() => {
+                    setValidationMessage(null);
+                    onChange({ ...form, intervalDays: String(preset) });
+                  }}
+                  type="button"
+                >
+                  {preset}日
+                </button>
+              );
+            })}
+          </div>
+          <small className="field-hint" id={intervalHintId}>
+            洗濯のように、数日おきで続けたい習慣に向いています。
+          </small>
+          {intervalPreview ? (
+            <div className="schedule-preview" aria-live="polite">
+              <strong>{intervalPreview.description}</strong>
+              <span>対象日の例: {intervalPreview.targetDateLabels.join(" / ")}</span>
+            </div>
+          ) : null}
+        </div>
       ) : null}
       {validationMessage ? <p className="weekday-picker__error">{validationMessage}</p> : null}
       <button className="secondary-button" disabled={disabled} type="submit">

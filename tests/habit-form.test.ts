@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { createEmptyHabitForm, normalizeWeekdays, toHabitPayload } from "../src/web/utils/habitForm";
+import {
+  buildIntervalSchedulePreview,
+  createEmptyHabitForm,
+  normalizeWeekdays,
+  toHabitPayload,
+} from "../src/web/utils/habitForm";
 
 describe("habit form helpers", () => {
   it("creates an empty form without color input state", () => {
@@ -66,6 +71,19 @@ describe("habit form helpers", () => {
       frequencyType: "every_n_days",
       targetWeekdays: null,
       intervalDays: 3,
+    });
+  });
+
+  it("builds a human-readable interval preview", () => {
+    expect(
+      buildIntervalSchedulePreview("3", {
+        baseDate: new Date("2026-04-27T00:00:00.000Z"),
+        timeZone: "UTC",
+      }),
+    ).toEqual({
+      intervalDays: 3,
+      description: "作成すると、今日を起点に 3 日間隔で対象日になります。",
+      targetDateLabels: ["今日", "4/30(木)", "5/3(日)", "5/6(水)"],
     });
   });
 });
