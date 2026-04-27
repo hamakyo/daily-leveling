@@ -647,6 +647,65 @@ button {
   gap: 0.35rem;
 }
 
+.weekday-picker {
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.weekday-picker legend {
+  padding: 0;
+  font-weight: 600;
+}
+
+.weekday-picker__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.weekday-chip {
+  min-width: 2.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(47, 125, 240, 0.18);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 0.55rem 0.8rem;
+  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.weekday-chip:hover {
+  transform: translateY(-1px);
+}
+
+.weekday-chip:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
+.weekday-chip--selected {
+  border-color: rgba(47, 125, 240, 0.3);
+  background: var(--color-soft-blue);
+  color: var(--color-ink);
+}
+
+.weekday-picker__hint,
+.weekday-picker__error {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.weekday-picker__hint {
+  color: var(--color-muted);
+}
+
+.weekday-picker__error {
+  color: #b34747;
+}
+
 .stack-form input,
 .stack-form select {
   border-radius: 12px;

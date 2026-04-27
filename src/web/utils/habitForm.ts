@@ -1,40 +1,33 @@
 import type { CreateHabitInput, HabitPayload } from "../types";
 
-export const habitColorOptions = [
-  { value: "cyan", label: "シアン" },
-  { value: "blue", label: "ブルー" },
-  { value: "violet", label: "バイオレット" },
-  { value: "teal", label: "ティール" },
-  { value: "indigo", label: "インディゴ" },
+export const weekdayOptions = [
+  { value: 1, label: "月" },
+  { value: 2, label: "火" },
+  { value: 3, label: "水" },
+  { value: 4, label: "木" },
+  { value: 5, label: "金" },
+  { value: 6, label: "土" },
+  { value: 7, label: "日" },
 ] as const;
 
 export function createEmptyHabitForm(): CreateHabitInput {
   return {
     name: "",
-    color: "cyan",
     frequencyType: "daily",
-    targetWeekdays: "",
+    targetWeekdays: [],
   };
 }
 
-export function toWeekdaysInput(value: string): number[] | null {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  return trimmed
-    .split(",")
-    .map((item) => Number(item.trim()))
-    .filter((item) => Number.isFinite(item));
+export function normalizeWeekdays(weekdays: number[]): number[] {
+  return [...new Set(weekdays.filter((weekday) => weekday >= 1 && weekday <= 7))].sort((left, right) => left - right);
 }
 
 export function toHabitPayload(form: CreateHabitInput): HabitPayload {
   return {
-    name: form.name,
+    name: form.name.trim(),
     emoji: null,
-    color: form.color,
+    color: null,
     frequencyType: form.frequencyType,
-    targetWeekdays: form.frequencyType === "weekly_days" ? toWeekdaysInput(form.targetWeekdays) : null,
+    targetWeekdays: form.frequencyType === "weekly_days" ? normalizeWeekdays(form.targetWeekdays) : null,
   };
 }

@@ -12,9 +12,8 @@ export type ScreenState =
 
 export type CreateHabitInput = {
   name: string;
-  color: string;
   frequencyType: "daily" | "weekly_days";
-  targetWeekdays: string;
+  targetWeekdays: number[];
 };
 
 export type HabitPayload = {
