@@ -68,6 +68,9 @@ Worker runtime で必要な secret:
 - `GOOGLE_CLIENT_SECRET`
 - fallback が必要な場合のみ `DATABASE_URL`
 
+ローカル CLI から Cloudflare secrets を同期する場合は、対象環境ごとの `.env.<env>` または `.dev.vars.<env>` を使います。
+`.dev.vars` だけを fallback として読む状態、または `DATABASE_URL` が `localhost` / `127.0.0.1` の状態では、誤同期防止のため sync script が失敗します。
+
 GitHub Actions で必要な secret:
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`

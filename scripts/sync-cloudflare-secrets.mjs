@@ -40,6 +40,10 @@ function isDryRun(argv = process.argv.slice(2)) {
   return argv.includes("--dry-run");
 }
 
+function allowsLocalDatabaseUrl(argv = process.argv.slice(2)) {
+  return argv.includes("--allow-local-database-url");
+}
+
 function resolveEnvironment(argv = process.argv.slice(2)) {
   if (argv.includes("--help") || argv.includes("-h")) {
     printHelp();
@@ -56,6 +60,35 @@ function resolveEnvironment(argv = process.argv.slice(2)) {
 
 function buildSecretsPayload(env = process.env) {
   return Object.fromEntries(REQUIRED_SECRET_KEYS.map((key) => [key, env[key]]));
+}
+
+function isLocalDatabaseUrl(value) {
+  try {
+    const url = new URL(value);
+    return ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function getSafetyIssues(targetEnvironment, loadedFiles, env = process.env, argv = process.argv.slice(2)) {
+  const issues = [];
+  const loadedBasenames = loadedFiles.map((filename) => path.basename(filename));
+  const hasEnvironmentSpecificFile = loadedBasenames.some((filename) => {
+    return filename.endsWith(`.${targetEnvironment}`) || filename.includes(`.${targetEnvironment}.`);
+  });
+
+  if (!hasEnvironmentSpecificFile) {
+    issues.push(`${targetEnvironment} 用の .dev.vars.${targetEnvironment} または .env.${targetEnvironment} が見つかりません。`);
+  }
+
+  if (isLocalDatabaseUrl(env.DATABASE_URL) && !allowsLocalDatabaseUrl(argv)) {
+    issues.push(
+      "DATABASE_URL が localhost/127.0.0.1 を指しています。Cloudflare から接続できないため同期を拒否しました。",
+    );
+  }
+
+  return issues;
 }
 
 function runSecretBulk(targetEnvironment, payload) {
@@ -83,13 +116,14 @@ function main() {
   const targetEnvironment = resolveEnvironment(argv);
   const loadedFiles = loadEnvFiles({ targetEnvironment });
   const issues = getSecretIssues();
+  const safetyIssues = getSafetyIssues(targetEnvironment, loadedFiles, process.env, argv);
 
-  if (issues.length > 0) {
+  if (issues.length > 0 || safetyIssues.length > 0) {
     console.error(`Cloudflare secret sync の前提が不足しています。対象環境: ${targetEnvironment}`);
     if (loadedFiles.length > 0) {
       console.error(`読み込んだファイル: ${loadedFiles.join(", ")}`);
     }
-    console.error(formatIssues(issues));
+    console.error(formatIssues([...issues, ...safetyIssues]));
     process.exit(1);
   }
 
