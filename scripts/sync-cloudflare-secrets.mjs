@@ -6,7 +6,8 @@ import { spawnSync } from "node:child_process";
 import { formatIssues, loadEnvFiles, resolveTargetEnvironment } from "./shared/env.mjs";
 
 const SUPPORTED_ENVIRONMENTS = new Set(["test", "staging", "production"]);
-const REQUIRED_SECRET_KEYS = ["DATABASE_URL", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"];
+const REQUIRED_SECRET_KEYS = ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"];
+const OPTIONAL_SECRET_KEYS = ["DATABASE_URL"];
 
 function printHelp() {
   console.log(`Cloudflare secrets sync
@@ -18,7 +19,8 @@ Usage:
 
 Behavior:
   - 対象環境の .dev.vars / .env を読み込みます
-  - DATABASE_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET を対象にします
+  - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET を必須対象にします
+  - DATABASE_URL は fallback が必要な場合だけ同期します
   - wrangler secret bulk で Cloudflare に反映します
 `);
 }
@@ -59,7 +61,8 @@ function resolveEnvironment(argv = process.argv.slice(2)) {
 }
 
 function buildSecretsPayload(env = process.env) {
-  return Object.fromEntries(REQUIRED_SECRET_KEYS.map((key) => [key, env[key]]));
+  const keys = [...REQUIRED_SECRET_KEYS, ...OPTIONAL_SECRET_KEYS.filter((key) => env[key])];
+  return Object.fromEntries(keys.map((key) => [key, env[key]]));
 }
 
 function isLocalDatabaseUrl(value) {
@@ -82,7 +85,7 @@ function getSafetyIssues(targetEnvironment, loadedFiles, env = process.env, argv
     issues.push(`${targetEnvironment} 用の .dev.vars.${targetEnvironment} または .env.${targetEnvironment} が見つかりません。`);
   }
 
-  if (isLocalDatabaseUrl(env.DATABASE_URL) && !allowsLocalDatabaseUrl(argv)) {
+  if (env.DATABASE_URL && isLocalDatabaseUrl(env.DATABASE_URL) && !allowsLocalDatabaseUrl(argv)) {
     issues.push(
       "DATABASE_URL が localhost/127.0.0.1 を指しています。Cloudflare から接続できないため同期を拒否しました。",
     );

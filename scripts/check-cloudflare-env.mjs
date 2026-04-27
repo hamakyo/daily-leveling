@@ -16,7 +16,8 @@ const ENVIRONMENTS = {
   },
 };
 
-const REQUIRED_SECRETS = ["DATABASE_URL", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"];
+const REQUIRED_SECRETS = ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"];
+const OPTIONAL_SECRETS = ["DATABASE_URL"];
 
 function printHelp() {
   console.log(`Cloudflare environment status checker
@@ -177,6 +178,7 @@ async function main() {
 
   const secretNames = secretsResult.ok ? normalizeSecretNames(secretsResult.value) : [];
   const missingSecrets = REQUIRED_SECRETS.filter((name) => !secretNames.includes(name));
+  const missingOptionalSecrets = OPTIONAL_SECRETS.filter((name) => !secretNames.includes(name));
 
   const summary = {
     environment,
@@ -190,6 +192,7 @@ async function main() {
       ? {
           configured: secretNames,
           missingRequired: missingSecrets,
+          missingOptional: missingOptionalSecrets,
         }
       : {
           error: secretsResult.message,
@@ -234,6 +237,11 @@ async function main() {
   console.log(
     `  required missing: ${
       summary.secrets.missingRequired.length > 0 ? summary.secrets.missingRequired.join(", ") : "none"
+    }`,
+  );
+  console.log(
+    `  optional missing: ${
+      summary.secrets.missingOptional.length > 0 ? summary.secrets.missingOptional.join(", ") : "none"
     }`,
   );
 }

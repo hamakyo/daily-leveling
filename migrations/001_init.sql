@@ -6,7 +6,8 @@ BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql
+SET search_path = public, pg_temp;
 
 CREATE OR REPLACE FUNCTION is_valid_weekday_array(weekday_values smallint[])
 RETURNS boolean AS $$
@@ -26,7 +27,8 @@ BEGIN
 
   RETURN true;
 END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+$$ LANGUAGE plpgsql IMMUTABLE
+SET search_path = public, pg_temp;
 
 CREATE TABLE users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -164,14 +166,16 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql
+SET search_path = public, pg_temp;
 
 CREATE TRIGGER trg_habit_logs_user_match
 BEFORE INSERT OR UPDATE ON habit_logs
 FOR EACH ROW
 EXECUTE FUNCTION enforce_habit_log_user_match();
 
-CREATE OR REPLACE VIEW active_sessions AS
+CREATE OR REPLACE VIEW active_sessions
+WITH (security_invoker = true) AS
 SELECT *
 FROM sessions
 WHERE revoked_at IS NULL

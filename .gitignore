@@ -10,6 +10,7 @@ test-results
 .env.test
 .env.staging
 .env.production
+.env.supabase.*
 .env.*.local
 .dev.vars
 .dev.vars.local
@@ -18,5 +19,6 @@ test-results
 .dev.vars.production
 .dev.vars.*.local
 .terraform
+supabase/.temp
 infra/terraform/*.tfvars
 infra/terraform/environments/*.tfvars

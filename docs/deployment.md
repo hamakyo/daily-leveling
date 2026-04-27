@@ -70,6 +70,19 @@ Worker runtime で必要な secret:
 
 ローカル CLI から Cloudflare secrets を同期する場合は、対象環境ごとの `.env.<env>` または `.dev.vars.<env>` を使います。
 `.dev.vars` だけを fallback として読む状態、または `DATABASE_URL` が `localhost` / `127.0.0.1` の状態では、誤同期防止のため sync script が失敗します。
+Hyperdrive を使う通常運用では、Cloudflare Worker secret の `DATABASE_URL` は必須ではありません。
+
+## Supabase PostgreSQL
+
+Daily Leveling 用の Supabase project は以下です。
+
+- project name: `daily-leveling`
+- project ref: `djfqflkxsyzazuvtnqqm`
+- region: `ap-northeast-1` / Northeast Asia (Tokyo)
+- Cloudflare Hyperdrive test config: `5d5eb906286148e18f97904118daa682`
+
+このアプリは Supabase client をブラウザから使わず、Cloudflare Workers が PostgreSQL に接続します。
+そのため Supabase の `anon` / `authenticated` 経路から app table を直接読ませない前提で、app table には RLS を有効化し、public policy は作りません。
 
 GitHub Actions で必要な secret:
 - `CLOUDFLARE_API_TOKEN`

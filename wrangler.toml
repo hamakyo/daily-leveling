@@ -26,8 +26,7 @@ name = "daily-leveling-test"
 
 [[env.test.hyperdrive]]
 binding = "HYPERDRIVE"
-# Replace with the Cloudflare Hyperdrive config ID for test before real deploy.
-id = "00000000-0000-0000-0000-000000000000"
+id = "5d5eb906286148e18f97904118daa682"
 
 [env.test.vars]
 APP_BASE_URL = "https://daily-leveling-test.hamakyoh.workers.dev"
