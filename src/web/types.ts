@@ -12,7 +12,6 @@ export type ScreenState =
 
 export type CreateHabitInput = {
   name: string;
-  emoji: string;
   color: string;
   frequencyType: "daily" | "weekly_days";
   targetWeekdays: string;

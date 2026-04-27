@@ -1,5 +1,6 @@
 import type { FormEvent } from "react";
 import type { CreateHabitInput } from "../types";
+import { habitColorOptions } from "../utils/habitForm";
 
 export function HabitForm({
   form,
@@ -26,20 +27,17 @@ export function HabitForm({
         />
       </label>
       <label>
-        <span>絵文字</span>
-        <input
-          value={form.emoji}
-          onChange={(event) => onChange({ ...form, emoji: event.target.value })}
-          placeholder="📚"
-        />
-      </label>
-      <label>
         <span>色</span>
-        <input
+        <select
           value={form.color}
           onChange={(event) => onChange({ ...form, color: event.target.value })}
-          placeholder="teal または #0f766e"
-        />
+        >
+          {habitColorOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </label>
       <label>
         <span>頻度</span>

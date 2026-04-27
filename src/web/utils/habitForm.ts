@@ -1,10 +1,17 @@
 import type { CreateHabitInput, HabitPayload } from "../types";
 
+export const habitColorOptions = [
+  { value: "cyan", label: "シアン" },
+  { value: "blue", label: "ブルー" },
+  { value: "violet", label: "バイオレット" },
+  { value: "teal", label: "ティール" },
+  { value: "indigo", label: "インディゴ" },
+] as const;
+
 export function createEmptyHabitForm(): CreateHabitInput {
   return {
     name: "",
-    emoji: "",
-    color: "teal",
+    color: "cyan",
     frequencyType: "daily",
     targetWeekdays: "",
   };
@@ -25,8 +32,8 @@ export function toWeekdaysInput(value: string): number[] | null {
 export function toHabitPayload(form: CreateHabitInput): HabitPayload {
   return {
     name: form.name,
-    emoji: form.emoji || null,
-    color: form.color || null,
+    emoji: null,
+    color: form.color,
     frequencyType: form.frequencyType,
     targetWeekdays: form.frequencyType === "weekly_days" ? toWeekdaysInput(form.targetWeekdays) : null,
   };
