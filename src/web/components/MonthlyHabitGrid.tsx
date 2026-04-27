@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, type CSSProperties } from "react";
 import type { MonthlyDashboard } from "../../lib/types";
 import { enumerateDates, getMonthRange } from "../../lib/date";
 import { isTargetDay } from "../utils/month";
@@ -18,6 +18,9 @@ export function MonthlyHabitGrid({
   const range = getMonthRange(month);
   const monthDates = enumerateDates(range.startDate, range.endDate);
   const logLookup = new Map(monthly.logs.map((log) => [`${log.habitId}:${log.date}`, log.status]));
+  const gridStyle = {
+    "--month-days": monthDates.length,
+  } as CSSProperties;
 
   return (
     <>
@@ -26,7 +29,7 @@ export function MonthlyHabitGrid({
         <MetricCard label="現在の連続達成日数" value={monthly.summary.currentStreak} />
         <MetricCard label="達成数" value={monthly.summary.completedCount} />
       </div>
-      <div className="monthly-grid">
+      <div className="monthly-grid" style={gridStyle}>
         <div className="monthly-grid__header monthly-grid__corner">習慣</div>
         {monthDates.map((date) => (
           <div className="monthly-grid__header" key={date}>

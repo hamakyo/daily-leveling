@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { TodayDashboard } from "../../lib/types";
 
+const XP_PER_COMPLETION = 10;
+
 export function TodayHabitList({
   today,
   isBusy,
@@ -11,12 +13,18 @@ export function TodayHabitList({
   onToggle: (habitId: string, status: boolean) => void;
 }) {
   const [celebratingHabitId, setCelebratingHabitId] = useState<string | null>(null);
+  const [xpBursts, setXpBursts] = useState<Array<{ id: number; habitId: string }>>([]);
+  const burstIdRef = useRef(0);
+  const burstTimeoutIdsRef = useRef<number[]>([]);
   const timeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     return () => {
       if (timeoutRef.current !== null) {
         window.clearTimeout(timeoutRef.current);
+      }
+      for (const timeoutId of burstTimeoutIdsRef.current) {
+        window.clearTimeout(timeoutId);
       }
     };
   }, []);
@@ -35,6 +43,17 @@ export function TodayHabitList({
       setCelebratingHabitId((current) => (current === habitId ? null : current));
       timeoutRef.current = null;
     }, 700);
+  }
+
+  function spawnXpBurst(habitId: string) {
+    const burstId = burstIdRef.current + 1;
+    burstIdRef.current = burstId;
+    setXpBursts((current) => [...current, { id: burstId, habitId }]);
+    const timeoutId = window.setTimeout(() => {
+      setXpBursts((current) => current.filter((burst) => burst.id !== burstId));
+      burstTimeoutIdsRef.current = burstTimeoutIdsRef.current.filter((id) => id !== timeoutId);
+    }, 900);
+    burstTimeoutIdsRef.current = [...burstTimeoutIdsRef.current, timeoutId];
   }
 
   return (
@@ -67,6 +86,7 @@ export function TodayHabitList({
                   const nextStatus = !habit.status;
                   if (nextStatus) {
                     triggerCelebrate(habit.habitId);
+                    spawnXpBurst(habit.habitId);
                   }
                   onToggle(habit.habitId, nextStatus);
                 }}
@@ -82,6 +102,15 @@ export function TodayHabitList({
                 }
               />
             </label>
+            <div className="xp-burst-layer" aria-hidden="true">
+              {xpBursts
+                .filter((burst) => burst.habitId === habit.habitId)
+                .map((burst) => (
+                  <span className="xp-burst" key={burst.id}>
+                    +{XP_PER_COMPLETION} XP
+                  </span>
+                ))}
+            </div>
           </article>
         ))}
       </div>

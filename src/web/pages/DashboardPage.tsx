@@ -1,4 +1,4 @@
-import { type FormEvent, startTransition, useDeferredValue, useEffect, useState } from "react";
+import { type FormEvent, startTransition, useDeferredValue, useEffect, useRef, useState } from "react";
 import type { CurrentUser, HabitRecord, MonthlyDashboard, TodayDashboard } from "../../lib/types";
 import {
   archiveHabit as archiveHabitApi,
@@ -37,15 +37,23 @@ export function DashboardPage({
   const [notice, setNotice] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [form, setForm] = useState<CreateHabitInput>(createEmptyHabitForm);
+  const [displayedLevelProgress, setDisplayedLevelProgress] = useState(0);
+  const [levelUpState, setLevelUpState] = useState<{ id: number; level: number } | null>(null);
+  const [streakToast, setStreakToast] = useState<{ id: number; streak: number } | null>(null);
+  const [todayCompleteState, setTodayCompleteState] = useState<{ id: number } | null>(null);
+  const feedbackIdRef = useRef(0);
+  const levelTransitionTimeoutRef = useRef<number | null>(null);
+  const previousLevelRef = useRef<{ level: number; progressRate: number } | null>(null);
 
-  async function refreshDashboardData() {
+  async function refreshDashboardData(month = deferredMonth) {
     setIsBusy(true);
     try {
-      const data = await loadDashboardData(deferredMonth);
+      const data = await loadDashboardData(month);
       setToday(data.today);
       setMonthly(data.monthly);
       setHabits(data.habits);
       setSettings(data.settings);
+      return data;
     } finally {
       setIsBusy(false);
     }
@@ -55,6 +63,92 @@ export function DashboardPage({
     void refreshDashboardData();
   }, [deferredMonth]);
 
+  useEffect(() => {
+    if (!today) {
+      return;
+    }
+
+    const previous = previousLevelRef.current;
+    if (!previous) {
+      setDisplayedLevelProgress(today.level.progressRate);
+      previousLevelRef.current = {
+        level: today.level.level,
+        progressRate: today.level.progressRate,
+      };
+      return;
+    }
+
+    if (levelTransitionTimeoutRef.current !== null) {
+      window.clearTimeout(levelTransitionTimeoutRef.current);
+      levelTransitionTimeoutRef.current = null;
+    }
+
+    if (today.level.level > previous.level) {
+      setDisplayedLevelProgress(100);
+      levelTransitionTimeoutRef.current = window.setTimeout(() => {
+        setDisplayedLevelProgress(today.level.progressRate);
+        levelTransitionTimeoutRef.current = null;
+      }, 260);
+    } else {
+      setDisplayedLevelProgress(today.level.progressRate);
+    }
+
+    previousLevelRef.current = {
+      level: today.level.level,
+      progressRate: today.level.progressRate,
+    };
+  }, [today]);
+
+  useEffect(() => {
+    return () => {
+      if (levelTransitionTimeoutRef.current !== null) {
+        window.clearTimeout(levelTransitionTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!levelUpState) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setLevelUpState((current) => (current?.id === levelUpState.id ? null : current));
+    }, 1800);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [levelUpState]);
+
+  useEffect(() => {
+    if (!streakToast) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setStreakToast((current) => (current?.id === streakToast.id ? null : current));
+    }, 2400);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [streakToast]);
+
+  useEffect(() => {
+    if (!todayCompleteState) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setTodayCompleteState((current) => (current?.id === todayCompleteState.id ? null : current));
+    }, 2200);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [todayCompleteState]);
+
   async function reloadAll(message?: string) {
     await Promise.all([refreshDashboardData(), onUserReload()]);
     if (message) {
@@ -63,12 +157,50 @@ export function DashboardPage({
   }
 
   async function toggleHabit(habitId: string, status: boolean) {
-    if (!today) {
+    if (!today || !monthly) {
       return;
     }
 
+    const previousToday = today;
+    const feedbackMonth = currentMonthString();
+
     await toggleHabitLog(habitId, today.date, status);
-    await refreshDashboardData();
+    if (selectedMonth !== feedbackMonth) {
+      startTransition(() => setSelectedMonth(feedbackMonth));
+    }
+
+    const nextData = await refreshDashboardData(feedbackMonth);
+    if (!status) {
+      return;
+    }
+
+    const nextFeedbackId = feedbackIdRef.current + 1;
+    feedbackIdRef.current = nextFeedbackId;
+
+    if (nextData.today.level.level > previousToday.level.level) {
+      setLevelUpState({
+        id: nextFeedbackId,
+        level: nextData.today.level.level,
+      });
+    }
+
+    const previousCompleted =
+      previousToday.summary.targetCount > 0 &&
+      previousToday.summary.completedCount === previousToday.summary.targetCount;
+    const nextCompleted =
+      nextData.today.summary.targetCount > 0 &&
+      nextData.today.summary.completedCount === nextData.today.summary.targetCount;
+
+    if (!previousCompleted && nextCompleted && nextData.monthly.summary.currentStreak > 0) {
+      setStreakToast({
+        id: nextFeedbackId,
+        streak: nextData.monthly.summary.currentStreak,
+      });
+    }
+
+    if (!previousCompleted && nextCompleted) {
+      setTodayCompleteState({ id: nextFeedbackId });
+    }
   }
 
   async function createNewHabit(event: FormEvent<HTMLFormElement>) {
@@ -149,6 +281,7 @@ export function DashboardPage({
             </button>
           </div>
           <section className="level-panel" aria-label="レベル進捗">
+            {levelUpState ? <div className="level-up-badge">LEVEL UP! Lv {levelUpState.level}</div> : null}
             <div className="level-panel__heading">
               <span className="eyebrow">Level</span>
               <strong>{today ? `レベル ${today.level.level}` : "読み込み中"}</strong>
@@ -159,8 +292,8 @@ export function DashboardPage({
             </div>
             <div className="level-meter" aria-hidden="true">
               <span
-                className="level-meter__fill"
-                style={{ width: `${today?.level.progressRate ?? 0}%` }}
+                className={levelUpState ? "level-meter__fill level-meter__fill--level-up" : "level-meter__fill"}
+                style={{ width: `${displayedLevelProgress}%` }}
               />
             </div>
             <p className="level-panel__note">
@@ -171,6 +304,9 @@ export function DashboardPage({
       </section>
 
       {notice ? <p className="status-text">{notice}</p> : null}
+      <div aria-live="polite" className="toast-stack">
+        {streakToast ? <div className="toast-card">連続達成 {streakToast.streak} 日</div> : null}
+      </div>
 
       <section className="panel-grid panel-grid--dashboard">
         <div className="panel panel--wide">
@@ -184,6 +320,12 @@ export function DashboardPage({
                   </span>
                 ) : null}
               </header>
+              {todayCompleteState ? (
+                <div className="today-complete-banner">
+                  <strong>今日の習慣をすべて達成しました</strong>
+                  <span>そのまま streak と XP を積み上げましょう。</span>
+                </div>
+              ) : null}
               <TodayHabitList
                 isBusy={isBusy}
                 onToggle={(habitId, status) => void toggleHabit(habitId, status)}
