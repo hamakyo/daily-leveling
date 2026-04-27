@@ -128,24 +128,45 @@ export function DashboardPage({
             モバイルでは今日、デスクトップでは月全体を中心に振り返れます。
           </p>
         </div>
-        <div className="toolbar">
-          <button
-            className={view === "today" ? "pill pill--active" : "pill"}
-            onClick={() => setView("today")}
-            type="button"
-          >
-            今日
-          </button>
-          <button
-            className={view === "month" ? "pill pill--active" : "pill"}
-            onClick={() => setView("month")}
-            type="button"
-          >
-            月間
-          </button>
-          <button className="pill" onClick={() => void handleLogout()} type="button">
-            ログアウト
-          </button>
+        <div className="dashboard-hero-side">
+          <div className="toolbar">
+            <button
+              className={view === "today" ? "pill pill--active" : "pill"}
+              onClick={() => setView("today")}
+              type="button"
+            >
+              今日
+            </button>
+            <button
+              className={view === "month" ? "pill pill--active" : "pill"}
+              onClick={() => setView("month")}
+              type="button"
+            >
+              月間
+            </button>
+            <button className="pill" onClick={() => void handleLogout()} type="button">
+              ログアウト
+            </button>
+          </div>
+          <section className="level-panel" aria-label="レベル進捗">
+            <div className="level-panel__heading">
+              <span className="eyebrow">Level</span>
+              <strong>{today ? `レベル ${today.level.level}` : "読み込み中"}</strong>
+            </div>
+            <div className="level-panel__stats">
+              <span>{today ? `${today.level.totalXp} XP` : "-- XP"}</span>
+              <span>{today ? `次まで ${today.level.xpToNextLevel} XP` : "--"}</span>
+            </div>
+            <div className="level-meter" aria-hidden="true">
+              <span
+                className="level-meter__fill"
+                style={{ width: `${today?.level.progressRate ?? 0}%` }}
+              />
+            </div>
+            <p className="level-panel__note">
+              {today ? `累計達成 ${today.level.completedCount} 回` : "レベルを計算しています。"}
+            </p>
+          </section>
         </div>
       </section>
 

@@ -62,6 +62,13 @@ button {
   gap: 1rem;
 }
 
+.dashboard-hero-side {
+  display: grid;
+  gap: 0.9rem;
+  justify-items: end;
+  min-width: min(360px, 100%);
+}
+
 .hero-card--loading {
   min-height: 220px;
   display: grid;
@@ -241,6 +248,55 @@ button {
   color: var(--color-ink);
 }
 
+.level-panel {
+  width: min(360px, 100%);
+  padding: 1rem 1.1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(47, 125, 240, 0.16);
+  background: var(--color-panel);
+}
+
+.level-panel__heading,
+.level-panel__stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.level-panel__heading strong {
+  font-size: 1.25rem;
+  color: var(--color-ink);
+}
+
+.level-panel__stats {
+  margin-top: 0.45rem;
+  color: var(--color-muted);
+  font-size: 0.92rem;
+}
+
+.level-meter {
+  margin-top: 0.75rem;
+  width: 100%;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: rgba(47, 125, 240, 0.12);
+  overflow: hidden;
+}
+
+.level-meter__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-blue);
+}
+
+.level-panel__note {
+  margin: 0.55rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+}
+
 .summary-band {
   display: flex;
   align-items: baseline;
@@ -275,17 +331,55 @@ button {
   color: var(--color-muted);
 }
 
-.toggle-button {
-  border: none;
+.checkbox-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
   border-radius: 999px;
+  border: 1px solid rgba(47, 125, 240, 0.16);
   background: var(--color-soft-blue);
   color: var(--color-ink);
-  padding: 0.7rem 1rem;
 }
 
-.toggle-button--done {
+.checkbox-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.checkbox-toggle--disabled {
+  opacity: 0.55;
+}
+
+.checkbox-toggle__text {
+  font-weight: 700;
+}
+
+.checkbox-indicator {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 0.3rem;
+  border: 2px solid rgba(47, 125, 240, 0.32);
+  background: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.checkbox-indicator--checked {
+  border-color: var(--color-cyan);
   background: var(--color-cyan);
-  color: white;
+}
+
+.checkbox-indicator--checked::after {
+  content: "";
+  width: 0.3rem;
+  height: 0.55rem;
+  border-right: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: rotate(45deg) translate(-1px, -1px);
 }
 
 .summary-grid {
@@ -399,6 +493,15 @@ button {
   .habit-admin-row {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .dashboard-hero-side {
+    width: 100%;
+    justify-items: stretch;
+  }
+
+  .level-panel {
+    width: 100%;
   }
 
   .monthly-grid {

@@ -6,6 +6,7 @@ const clientMocks = vi.hoisted(() => ({
 }));
 
 const repositoryMocks = vi.hoisted(() => ({
+  countCompletedHabitLogs: vi.fn(),
   completeOnboarding: vi.fn(),
   createHabit: vi.fn(),
   createHabitsFromTemplate: vi.fn(),
@@ -93,6 +94,7 @@ describe("worker app auth and log guards", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clientMocks.getDb.mockReturnValue({ kind: "db" });
+    repositoryMocks.countCompletedHabitLogs.mockResolvedValue(0);
     repositoryMocks.touchSession.mockResolvedValue(undefined);
   });
 
@@ -160,6 +162,32 @@ describe("worker app auth and log guards", () => {
     expect(authorizationUrl.searchParams.get("scope")).toBe("openid email profile");
     expect(authorizationUrl.searchParams.has("access_type")).toBe(false);
     expect(authorizationUrl.searchParams.get("prompt")).toBe("select_account");
+  });
+
+  it("returns level progress in today dashboard", async () => {
+    repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
+      user: currentUser,
+      session,
+    });
+    repositoryMocks.listHabits.mockResolvedValue([makeHabit()]);
+    repositoryMocks.listLogsInRange.mockResolvedValue([]);
+    repositoryMocks.countCompletedHabitLogs.mockResolvedValue(12);
+
+    const response = await request("/dashboard/today", {
+      headers: {
+        cookie: "dl_session=valid-session-token",
+      },
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      date: expect.any(String),
+      level: {
+        level: 2,
+        completedCount: 12,
+        totalXp: 120,
+      },
+    });
   });
 
   it("rejects future habit logs", async () => {

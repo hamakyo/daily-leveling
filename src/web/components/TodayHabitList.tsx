@@ -29,14 +29,18 @@ export function TodayHabitList({
               </strong>
               <p>{habit.isTargetDay ? "対象日" : "休みの日"}</p>
             </div>
-            <button
-              className={habit.status ? "toggle-button toggle-button--done" : "toggle-button"}
-              disabled={!habit.isTargetDay || isBusy}
-              onClick={() => onToggle(habit.habitId, !habit.status)}
-              type="button"
-            >
-              {habit.status ? "達成" : "記録する"}
-            </button>
+            <label className={!habit.isTargetDay ? "checkbox-toggle checkbox-toggle--disabled" : "checkbox-toggle"}>
+              <input
+                checked={habit.status === true}
+                disabled={!habit.isTargetDay || isBusy}
+                onChange={() => onToggle(habit.habitId, !habit.status)}
+                type="checkbox"
+              />
+              <span className={habit.status ? "checkbox-indicator checkbox-indicator--checked" : "checkbox-indicator"} />
+              <span className="checkbox-toggle__text">
+                {!habit.isTargetDay ? "対象外" : habit.status ? "達成" : "未達"}
+              </span>
+            </label>
           </article>
         ))}
       </div>

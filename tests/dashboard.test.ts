@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   buildMonthlyDashboard,
+  buildTodayDashboard,
+  calculateLevelProgress,
   calculateCurrentStreak,
   calculateProgressRate,
   isHabitTargetDay,
@@ -83,6 +85,33 @@ describe("dashboard helpers", () => {
     expect(monthly.habits).toHaveLength(2);
     expect(monthly.summary.targetCount).toBeGreaterThan(0);
     expect(monthly.dailyStats.find((day) => day.date === "2026-04-01")?.completedCount).toBe(1);
+  });
+
+  it("builds level progress from completed logs", () => {
+    expect(calculateLevelProgress(0)).toMatchObject({
+      level: 1,
+      totalXp: 0,
+      xpIntoLevel: 0,
+      xpToNextLevel: 100,
+    });
+
+    expect(calculateLevelProgress(15)).toMatchObject({
+      level: 2,
+      totalXp: 150,
+      xpIntoLevel: 50,
+      xpToNextLevel: 50,
+      progressRate: 50,
+    });
+  });
+
+  it("includes level progress in today dashboard", () => {
+    const today = buildTodayDashboard([baseHabit], [makeLog("2026-04-27", true)], "UTC", 11);
+
+    expect(today.level).toMatchObject({
+      level: 2,
+      completedCount: 11,
+      totalXp: 110,
+    });
   });
 
   it("counts a streak only while all target habits are completed", () => {

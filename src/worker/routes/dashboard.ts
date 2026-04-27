@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { requireAuth } from "../../api/middleware";
 import type { AppEnv } from "../../api/context";
-import { listHabits, listLogsInRange } from "../../db/repositories";
+import { countCompletedHabitLogs, listHabits, listLogsInRange } from "../../db/repositories";
 import {
   buildMonthlyDashboard,
   buildTodayDashboard,
@@ -23,10 +23,13 @@ dashboardRoutes.get("/dashboard/today", requireAuth, async (c) => {
   const db = c.get("db");
   const currentUser = c.get("currentUser");
   const date = getTodayInTimezone(currentUser.timezone);
-  const habits = await listHabits(db, currentUser.id, { activeOnly: true });
-  const logs = await listLogsInRange(db, currentUser.id, date, date);
+  const [habits, logs, completedLogCount] = await Promise.all([
+    listHabits(db, currentUser.id, { activeOnly: true }),
+    listLogsInRange(db, currentUser.id, date, date),
+    countCompletedHabitLogs(db, currentUser.id),
+  ]);
 
-  return jsonOk(buildTodayDashboard(habits, logs, currentUser.timezone));
+  return jsonOk(buildTodayDashboard(habits, logs, currentUser.timezone, completedLogCount));
 });
 
 dashboardRoutes.get("/dashboard/weekly", requireAuth, async (c) => {

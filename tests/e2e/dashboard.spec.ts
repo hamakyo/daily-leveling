@@ -16,13 +16,14 @@ test("authenticated user can create and complete a habit", async ({ page }, test
 
     await expect(page.getByText("習慣を作成しました。")).toBeVisible();
     await expect(page.getByText(habitName).first()).toBeVisible();
+    await expect(page.getByText(/レベル \d+/).first()).toBeVisible();
 
     const logResponse = page.waitForResponse((response) => {
       return response.request().method() === "PUT" && response.url().includes("/logs/");
     });
-    await page.getByRole("button", { name: "記録する" }).first().click();
+    await page.locator(".checkbox-toggle").first().click();
     expect((await logResponse).ok()).toBe(true);
-    await expect(page.getByRole("button", { name: "達成" }).first()).toBeVisible();
+    await expect(page.getByText("達成").first()).toBeVisible();
 
     await page.getByRole("button", { name: "月間" }).click();
     await expect(page.getByRole("heading", { name: "月間ビュー" })).toBeVisible();

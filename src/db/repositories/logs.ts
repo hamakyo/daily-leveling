@@ -26,6 +26,17 @@ export async function listLogsInRange(
   return rows.map(mapLog);
 }
 
+export async function countCompletedHabitLogs(db: DatabaseClient, userId: string): Promise<number> {
+  const rows = await db<Array<{ completed_count: number | string }>>`
+    SELECT COUNT(*)::int AS completed_count
+    FROM habit_logs
+    WHERE user_id = ${userId}
+      AND status = true
+  `;
+
+  return Number(rows[0]?.completed_count ?? 0);
+}
+
 export async function upsertHabitLog(
   db: DatabaseClient,
   userId: string,

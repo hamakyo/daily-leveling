@@ -58,6 +58,16 @@ export interface HabitStat {
   progressRate: number;
 }
 
+export interface LevelProgress {
+  level: number;
+  completedCount: number;
+  totalXp: number;
+  xpIntoLevel: number;
+  xpPerLevel: number;
+  xpToNextLevel: number;
+  progressRate: number;
+}
+
 export interface MonthlyDashboard {
   month: string;
   summary: {
@@ -100,6 +110,7 @@ export interface WeeklyDashboard {
 
 export interface TodayDashboard {
   date: string;
+  level: LevelProgress;
   summary: {
     completedCount: number;
     targetCount: number;

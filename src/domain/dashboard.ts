@@ -2,6 +2,7 @@ import type {
   HabitRecord,
   HabitStat,
   HabitLogRecord,
+  LevelProgress,
   MonthlyDashboard,
   TodayDashboard,
   WeeklyDashboard,
@@ -15,6 +16,9 @@ import {
   getWeekRange,
   getWeekdayFromIsoDate,
 } from "../lib/date";
+
+const XP_PER_COMPLETION = 10;
+const XP_PER_LEVEL = 100;
 
 function createLogKey(habitId: string, date: string): string {
   return `${habitId}:${date}`;
@@ -30,6 +34,22 @@ export function calculateProgressRate(completedCount: number, targetCount: numbe
   }
 
   return Math.round((completedCount / targetCount) * 1000) / 10;
+}
+
+export function calculateLevelProgress(completedCount: number): LevelProgress {
+  const totalXp = completedCount * XP_PER_COMPLETION;
+  const level = Math.floor(totalXp / XP_PER_LEVEL) + 1;
+  const xpIntoLevel = totalXp % XP_PER_LEVEL;
+
+  return {
+    level,
+    completedCount,
+    totalXp,
+    xpIntoLevel,
+    xpPerLevel: XP_PER_LEVEL,
+    xpToNextLevel: XP_PER_LEVEL - xpIntoLevel,
+    progressRate: calculateProgressRate(xpIntoLevel, XP_PER_LEVEL),
+  };
 }
 
 export function isHabitTargetDay(habit: HabitRecord, date: string): boolean {
@@ -136,6 +156,7 @@ export function buildTodayDashboard(
   habits: HabitRecord[],
   logs: HabitLogRecord[],
   timezone: string,
+  completedLogCount: number,
 ): TodayDashboard {
   const date = getTodayInTimezone(timezone);
   const activeHabits = habits.filter((habit) => habit.isActive).sort((left, right) => left.displayOrder - right.displayOrder);
@@ -159,6 +180,7 @@ export function buildTodayDashboard(
 
   return {
     date,
+    level: calculateLevelProgress(completedLogCount),
     summary: {
       completedCount: summary.completedCount,
       targetCount: summary.targetCount,
