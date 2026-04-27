@@ -19,6 +19,7 @@ export async function listHabits(
       color,
       frequency_type,
       target_weekdays,
+      interval_days,
       is_active,
       display_order,
       created_at,
@@ -46,6 +47,7 @@ export async function getHabitById(
       color,
       frequency_type,
       target_weekdays,
+      interval_days,
       is_active,
       display_order,
       created_at,
@@ -80,6 +82,7 @@ export async function createHabit(
         color,
         frequency_type,
         target_weekdays,
+        interval_days,
         is_active,
         display_order
       )
@@ -90,6 +93,7 @@ export async function createHabit(
         ${input.color ?? null},
         ${input.frequencyType},
         ${weekdayLiteral ? trx.unsafe(`'${weekdayLiteral}'::smallint[]`) : null},
+        ${input.intervalDays ?? null},
         true,
         ${nextOrder}
       )
@@ -101,6 +105,7 @@ export async function createHabit(
         color,
         frequency_type,
         target_weekdays,
+        interval_days,
         is_active,
         display_order,
         created_at,
@@ -127,16 +132,24 @@ export async function updateHabit(
     emoji: input.emoji === undefined ? currentHabit.emoji : input.emoji,
     color: input.color === undefined ? currentHabit.color : input.color,
     frequencyType: input.frequencyType ?? currentHabit.frequencyType,
-    targetWeekdays:
-      input.frequencyType === "daily"
-        ? null
-        : input.targetWeekdays === undefined
-          ? currentHabit.targetWeekdays
-          : input.targetWeekdays,
     isActive: input.isActive ?? currentHabit.isActive,
   };
 
-  const weekdayLiteral = toWeekdayLiteral(nextHabit.targetWeekdays ?? null);
+  const nextTargetWeekdays =
+    nextHabit.frequencyType === "weekly_days"
+      ? input.targetWeekdays === undefined
+        ? currentHabit.targetWeekdays
+        : input.targetWeekdays
+      : null;
+
+  const nextIntervalDays =
+    nextHabit.frequencyType === "every_n_days"
+      ? input.intervalDays === undefined
+        ? currentHabit.intervalDays
+        : input.intervalDays
+      : null;
+
+  const weekdayLiteral = toWeekdayLiteral(nextTargetWeekdays ?? null);
 
   const rows = await db<HabitRow[]>`
     UPDATE habits
@@ -146,6 +159,7 @@ export async function updateHabit(
       color = ${nextHabit.color},
       frequency_type = ${nextHabit.frequencyType},
       target_weekdays = ${weekdayLiteral ? db.unsafe(`'${weekdayLiteral}'::smallint[]`) : null},
+      interval_days = ${nextIntervalDays},
       is_active = ${nextHabit.isActive}
     WHERE id = ${habitId}
       AND user_id = ${userId}
@@ -157,6 +171,7 @@ export async function updateHabit(
       color,
       frequency_type,
       target_weekdays,
+      interval_days,
       is_active,
       display_order,
       created_at,

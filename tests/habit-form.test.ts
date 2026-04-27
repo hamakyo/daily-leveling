@@ -7,6 +7,7 @@ describe("habit form helpers", () => {
       name: "",
       frequencyType: "daily",
       targetWeekdays: [],
+      intervalDays: "3",
     });
   });
 
@@ -20,6 +21,7 @@ describe("habit form helpers", () => {
         name: "  読書  ",
         frequencyType: "weekly_days",
         targetWeekdays: [5, 1, 3, 3],
+        intervalDays: "3",
       }),
     ).toEqual({
       name: "読書",
@@ -27,6 +29,7 @@ describe("habit form helpers", () => {
       color: null,
       frequencyType: "weekly_days",
       targetWeekdays: [1, 3, 5],
+      intervalDays: null,
     });
   });
 
@@ -36,6 +39,7 @@ describe("habit form helpers", () => {
         name: "筋トレ",
         frequencyType: "daily",
         targetWeekdays: [1, 3, 5],
+        intervalDays: "4",
       }),
     ).toEqual({
       name: "筋トレ",
@@ -43,6 +47,25 @@ describe("habit form helpers", () => {
       color: null,
       frequencyType: "daily",
       targetWeekdays: null,
+      intervalDays: null,
+    });
+  });
+
+  it("builds an every_n_days payload with parsed interval days", () => {
+    expect(
+      toHabitPayload({
+        name: "洗濯",
+        frequencyType: "every_n_days",
+        targetWeekdays: [1, 3, 5],
+        intervalDays: "3",
+      }),
+    ).toEqual({
+      name: "洗濯",
+      emoji: null,
+      color: null,
+      frequencyType: "every_n_days",
+      targetWeekdays: null,
+      intervalDays: 3,
     });
   });
 });

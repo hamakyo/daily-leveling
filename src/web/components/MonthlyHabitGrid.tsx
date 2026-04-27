@@ -7,9 +7,11 @@ import { MetricCard } from "./MetricCard";
 export function MonthlyHabitGrid({
   monthly,
   month,
+  timezone,
 }: {
   monthly: MonthlyDashboard | null;
   month: string;
+  timezone: string;
 }) {
   if (!monthly) {
     return <p>月間ビューを読み込んでいます。</p>;
@@ -43,7 +45,7 @@ export function MonthlyHabitGrid({
               {habit.name}
             </div>
             {monthDates.map((date) => {
-              const isScheduled = isTargetDay(habit, date);
+              const isScheduled = isTargetDay(habit, date, timezone);
               const isDone = logLookup.get(`${habit.habitId}:${date}`) === true;
               const className = isDone
                 ? "grid-cell grid-cell--done"

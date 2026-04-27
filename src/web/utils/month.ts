@@ -1,3 +1,5 @@
+import { compareIsoDates, diffIsoDays, formatDateInTimezone, getWeekdayFromIsoDate } from "../../lib/date";
+
 export function currentMonthString() {
   return new Date().toISOString().slice(0, 7);
 }
@@ -10,16 +12,27 @@ export function shiftMonth(month: string, delta: number): string {
 
 export function isTargetDay(
   habit: {
-    frequencyType: "daily" | "weekly_days";
+    frequencyType: "daily" | "weekly_days" | "every_n_days";
     targetWeekdays: number[] | null;
+    intervalDays: number | null;
+    createdAt: string;
   },
   date: string,
+  timezone: string,
 ): boolean {
+  const startDate = formatDateInTimezone(new Date(habit.createdAt), timezone);
+  if (compareIsoDates(date, startDate) < 0) {
+    return false;
+  }
+
   if (habit.frequencyType === "daily") {
     return true;
   }
 
-  const jsDate = new Date(`${date}T12:00:00Z`);
-  const weekday = jsDate.getUTCDay() === 0 ? 7 : jsDate.getUTCDay();
+  if (habit.frequencyType === "every_n_days") {
+    return habit.intervalDays != null && diffIsoDays(startDate, date) % habit.intervalDays === 0;
+  }
+
+  const weekday = getWeekdayFromIsoDate(date);
   return habit.targetWeekdays?.includes(weekday) ?? false;
 }

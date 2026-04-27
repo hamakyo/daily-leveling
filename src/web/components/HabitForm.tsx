@@ -15,8 +15,9 @@ export function HabitForm({
   onChange: (form: CreateHabitInput) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
-  const [showWeekdayError, setShowWeekdayError] = useState(false);
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const requiresWeekdays = form.frequencyType === "weekly_days";
+  const requiresIntervalDays = form.frequencyType === "every_n_days";
 
   function toggleWeekday(weekday: number) {
     const isSelected = form.targetWeekdays.includes(weekday);
@@ -26,17 +27,27 @@ export function HabitForm({
 
     onChange({ ...form, targetWeekdays: nextWeekdays });
     if (nextWeekdays.length > 0) {
-      setShowWeekdayError(false);
+      setValidationMessage(null);
     }
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     if (requiresWeekdays && form.targetWeekdays.length === 0) {
       event.preventDefault();
-      setShowWeekdayError(true);
+      setValidationMessage("1つ以上の曜日を選択してください。");
       return;
     }
 
+    if (requiresIntervalDays) {
+      const intervalDays = Number.parseInt(form.intervalDays, 10);
+      if (!Number.isInteger(intervalDays) || intervalDays < 2 || intervalDays > 365) {
+        event.preventDefault();
+        setValidationMessage("間隔日数は 2 から 365 の整数で指定してください。");
+        return;
+      }
+    }
+
+    setValidationMessage(null);
     onSubmit(event);
   }
 
@@ -58,16 +69,18 @@ export function HabitForm({
           disabled={disabled}
           value={form.frequencyType}
           onChange={(event) => {
-            setShowWeekdayError(false);
+            const frequencyType = event.target.value as CreateHabitInput["frequencyType"];
+            setValidationMessage(null);
             onChange({
               ...form,
-              frequencyType: event.target.value as CreateHabitInput["frequencyType"],
-              targetWeekdays: event.target.value === "weekly_days" ? form.targetWeekdays : [],
+              frequencyType,
+              targetWeekdays: frequencyType === "weekly_days" ? form.targetWeekdays : [],
             });
           }}
         >
           <option value="daily">毎日</option>
           <option value="weekly_days">曜日指定</option>
+          <option value="every_n_days">n日ごと</option>
         </select>
       </label>
       {requiresWeekdays ? (
@@ -93,9 +106,28 @@ export function HabitForm({
             })}
           </div>
           <p className="weekday-picker__hint">繰り返したい曜日を選択してください。</p>
-          {showWeekdayError ? <p className="weekday-picker__error">1つ以上の曜日を選択してください。</p> : null}
         </fieldset>
       ) : null}
+      {requiresIntervalDays ? (
+        <label>
+          <span>間隔日数</span>
+          <input
+            disabled={disabled}
+            inputMode="numeric"
+            min="2"
+            max="365"
+            pattern="[0-9]*"
+            value={form.intervalDays}
+            onChange={(event) => {
+              setValidationMessage(null);
+              onChange({ ...form, intervalDays: event.target.value });
+            }}
+            placeholder="3"
+          />
+          <small className="field-hint">作成日を起点に、指定した日数ごとに対象日になります。</small>
+        </label>
+      ) : null}
+      {validationMessage ? <p className="weekday-picker__error">{validationMessage}</p> : null}
       <button className="secondary-button" disabled={disabled} type="submit">
         {buttonLabel}
       </button>

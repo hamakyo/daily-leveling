@@ -67,11 +67,12 @@ function makeHabit(overrides: Partial<HabitRecord> = {}): HabitRecord {
     userId: currentUser.id,
     name: "Read",
     emoji: "📚",
-    color: "blue",
-    frequencyType: "daily",
-    targetWeekdays: null,
-    isActive: true,
-    displayOrder: 0,
+  color: "blue",
+  frequencyType: "daily",
+  targetWeekdays: null,
+  intervalDays: null,
+  isActive: true,
+  displayOrder: 0,
     createdAt: "2026-04-20T00:00:00.000Z",
     updatedAt: "2026-04-20T00:00:00.000Z",
     ...overrides,
@@ -190,6 +191,43 @@ describe("worker app auth and log guards", () => {
     });
   });
 
+  it("creates an every_n_days habit with intervalDays", async () => {
+    repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
+      user: currentUser,
+      session,
+    });
+    repositoryMocks.createHabit.mockResolvedValue(
+      makeHabit({
+        name: "Laundry",
+        frequencyType: "every_n_days",
+        targetWeekdays: null,
+        intervalDays: 3,
+      }),
+    );
+
+    const response = await request("/habits", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        cookie: "dl_session=valid-session-token",
+      },
+      body: JSON.stringify({
+        name: "Laundry",
+        frequencyType: "every_n_days",
+        targetWeekdays: null,
+        intervalDays: 3,
+      }),
+    });
+
+    expect(response.status).toBe(201);
+    expect(repositoryMocks.createHabit).toHaveBeenCalledWith({ kind: "db" }, currentUser.id, {
+      name: "Laundry",
+      frequencyType: "every_n_days",
+      targetWeekdays: null,
+      intervalDays: 3,
+    });
+  });
+
   it("rejects future habit logs", async () => {
     repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
       user: currentUser,
@@ -229,6 +267,41 @@ describe("worker app auth and log guards", () => {
     );
 
     const response = await request(`/habits/${habitId}/logs/2026-04-14`, {
+      method: "PUT",
+      headers: {
+        "content-type": "application/json",
+        cookie: "dl_session=valid-session-token",
+      },
+      body: JSON.stringify({ status: true }),
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "INVALID_DATE",
+        message: "その日はこの習慣の対象日ではありません。",
+      },
+    });
+    expect(repositoryMocks.upsertHabitLog).not.toHaveBeenCalled();
+  });
+
+  it("rejects logs on non-target every_n_days dates", async () => {
+    repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
+      user: currentUser,
+      session,
+    });
+    repositoryMocks.getHabitById.mockResolvedValue(
+      makeHabit({
+        name: "Laundry",
+        frequencyType: "every_n_days",
+        targetWeekdays: null,
+        intervalDays: 3,
+        createdAt: "2026-04-20T00:00:00.000Z",
+        updatedAt: "2026-04-20T00:00:00.000Z",
+      }),
+    );
+
+    const response = await request(`/habits/${habitId}/logs/2026-04-21`, {
       method: "PUT",
       headers: {
         "content-type": "application/json",

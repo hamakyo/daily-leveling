@@ -40,7 +40,7 @@ Daily Leveling は次の体験に特化した習慣トラッカーです。
 - ユーザーの timezone は `user_settings.timezone` に保持する
 - MVP における習慣削除は `is_active = false` による archive を意味する
 - 通常 UI フローでは習慣の物理削除は行わない
-- 習慣頻度タイプは `daily` と `weekly_days` のみ
+- 習慣頻度タイプは `daily`、`weekly_days`、`every_n_days`
 - 曜日表現は `1=Mon ... 7=Sun`
 - 習慣ログは `user_id + habit_id + log_date` で一意
 - 未来日は表示してよいが書き込みは禁止
@@ -112,7 +112,7 @@ MVP のコア API:
 - `user_settings.user_id` は一意
 - `sessions.session_token_hash` は一意
 - `habit_logs(user_id, habit_id, log_date)` は一意
-- `habits.frequency_type` は `daily` または `weekly_days`
+- `habits.frequency_type` は `daily`、`weekly_days`、`every_n_days`
 
 実装メモ:
 - SQL 草案の weekday array バリデーションは、
@@ -121,12 +121,17 @@ MVP のコア API:
 ## バリデーションルール
 
 - `name`: 必須、trim 後で 1 文字以上 100 文字以下
-- `frequencyType`: 必須、`daily | weekly_days`
+- `frequencyType`: 必須、`daily | weekly_days | every_n_days`
 - `targetWeekdays`:
   - `daily` のときは未指定または null でなければならない
   - `weekly_days` のときは必須
+  - `every_n_days` のときは未指定または null でなければならない
   - `1..7` の重複しない整数でなければならない
   - 昇順に正規化する
+- `intervalDays`:
+  - `every_n_days` のときは必須
+  - `2..365` の整数でなければならない
+  - `daily` と `weekly_days` のときは未指定または null でなければならない
 - `date`: `YYYY-MM-DD`
 - `month`: `YYYY-MM`
 - `defaultView`: `today | month`

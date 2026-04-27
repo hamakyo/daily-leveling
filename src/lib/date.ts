@@ -70,6 +70,12 @@ export function compareIsoDates(left: string, right: string): number {
   return 0;
 }
 
+export function diffIsoDays(startDate: string, endDate: string): number {
+  const start = isoDateToUtcDate(startDate);
+  const end = isoDateToUtcDate(endDate);
+  return Math.round((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
+}
+
 export function parseIsoDate(value: string): { year: number; month: number; day: number } {
   assertIsoDate(value);
   const [year, month, day] = value.split("-").map(Number);

@@ -15,6 +15,7 @@ export function createEmptyHabitForm(): CreateHabitInput {
     name: "",
     frequencyType: "daily",
     targetWeekdays: [],
+    intervalDays: "3",
   };
 }
 
@@ -23,11 +24,15 @@ export function normalizeWeekdays(weekdays: number[]): number[] {
 }
 
 export function toHabitPayload(form: CreateHabitInput): HabitPayload {
+  const parsedIntervalDays = Number.parseInt(form.intervalDays, 10);
+
   return {
     name: form.name.trim(),
     emoji: null,
     color: null,
     frequencyType: form.frequencyType,
     targetWeekdays: form.frequencyType === "weekly_days" ? normalizeWeekdays(form.targetWeekdays) : null,
+    intervalDays:
+      form.frequencyType === "every_n_days" && Number.isInteger(parsedIntervalDays) ? parsedIntervalDays : null,
   };
 }

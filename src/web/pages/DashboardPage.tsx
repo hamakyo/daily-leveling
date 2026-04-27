@@ -358,7 +358,11 @@ export function DashboardPage({
                   </button>
                 </div>
               </header>
-              <MonthlyHabitGrid month={deferredMonth} monthly={monthly} />
+              <MonthlyHabitGrid
+                month={deferredMonth}
+                monthly={monthly}
+                timezone={settings?.timezone ?? user.timezone}
+              />
             </div>
           )}
         </div>

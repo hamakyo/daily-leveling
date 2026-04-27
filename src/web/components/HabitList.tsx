@@ -1,5 +1,24 @@
 import type { HabitRecord } from "../../lib/types";
 
+const weekdayLabels = ["月", "火", "水", "木", "金", "土", "日"];
+
+function formatFrequency(habit: HabitRecord): string {
+  if (habit.frequencyType === "daily") {
+    return "毎日";
+  }
+
+  if (habit.frequencyType === "every_n_days") {
+    return habit.intervalDays ? `${habit.intervalDays}日ごと` : "日数間隔";
+  }
+
+  const weekdays = (habit.targetWeekdays ?? [])
+    .map((weekday) => weekdayLabels[weekday - 1])
+    .filter(Boolean)
+    .join("・");
+
+  return weekdays ? `毎週 ${weekdays}` : "曜日指定";
+}
+
 export function HabitList({
   habits,
   onArchive,
@@ -21,7 +40,7 @@ export function HabitList({
                 {habit.emoji ? `${habit.emoji} ` : ""}
                 {habit.name}
               </strong>
-              <p>{habit.isActive ? "有効" : "アーカイブ済み"}</p>
+              <p>{habit.isActive ? `有効 ・ ${formatFrequency(habit)}` : "アーカイブ済み"}</p>
             </div>
             <div className="toolbar">
               <button className="pill" onClick={() => onMove(habit.id, -1)} type="button">

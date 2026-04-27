@@ -12,16 +12,18 @@ export type ScreenState =
 
 export type CreateHabitInput = {
   name: string;
-  frequencyType: "daily" | "weekly_days";
+  frequencyType: "daily" | "weekly_days" | "every_n_days";
   targetWeekdays: number[];
+  intervalDays: string;
 };
 
 export type HabitPayload = {
   name: string;
   emoji: string | null;
   color: string | null;
-  frequencyType: "daily" | "weekly_days";
+  frequencyType: "daily" | "weekly_days" | "every_n_days";
   targetWeekdays: number[] | null;
+  intervalDays: number | null;
 };
 
 export type DashboardData = {

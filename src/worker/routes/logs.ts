@@ -56,7 +56,7 @@ logRoutes.put("/habits/:habitId/logs/:date", requireAuth, async (c) => {
     throw new AppError(400, "INVALID_DATE", "未来日の記録はできません。");
   }
 
-  if (!isHabitTargetDay(habit, date)) {
+  if (!isHabitTargetDay(habit, date, currentUser.timezone)) {
     throw new AppError(400, "INVALID_DATE", "その日はこの習慣の対象日ではありません。");
   }
 

@@ -17,6 +17,7 @@ const baseHabit: HabitRecord = {
   color: "blue",
   frequencyType: "daily",
   targetWeekdays: null,
+  intervalDays: null,
   isActive: true,
   displayOrder: 0,
   createdAt: "2026-04-20T00:00:00.000Z",
@@ -58,12 +59,35 @@ describe("dashboard helpers", () => {
     expect(isHabitTargetDay(weeklyHabit, "2026-04-21")).toBe(false);
   });
 
+  it("marks every_n_days habits from the created day anchor", () => {
+    const intervalHabit: HabitRecord = {
+      ...baseHabit,
+      name: "Laundry",
+      frequencyType: "every_n_days",
+      targetWeekdays: null,
+      intervalDays: 3,
+      createdAt: "2026-04-20T08:00:00.000Z",
+      updatedAt: "2026-04-20T08:00:00.000Z",
+    };
+
+    expect(isHabitTargetDay(intervalHabit, "2026-04-20")).toBe(true);
+    expect(isHabitTargetDay(intervalHabit, "2026-04-21")).toBe(false);
+    expect(isHabitTargetDay(intervalHabit, "2026-04-23")).toBe(true);
+    expect(isHabitTargetDay(intervalHabit, "2026-04-19")).toBe(false);
+  });
+
   it("builds monthly stats using target days only", () => {
+    const aprilStartHabit: HabitRecord = {
+      ...baseHabit,
+      createdAt: "2026-04-01T00:00:00.000Z",
+      updatedAt: "2026-04-01T00:00:00.000Z",
+    };
+
     const monthly = buildMonthlyDashboard(
       [
-        baseHabit,
+        aprilStartHabit,
         {
-          ...baseHabit,
+          ...aprilStartHabit,
           id: "22222222-2222-2222-2222-222222222222",
           name: "Workout",
           frequencyType: "weekly_days",

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const frequencyTypeSchema = z.enum(["daily", "weekly_days"]);
+const frequencyTypeSchema = z.enum(["daily", "weekly_days", "every_n_days"]);
 
 const uniqueWeekdays = (weekdays: number[]) => new Set(weekdays).size === weekdays.length;
 
@@ -9,6 +9,8 @@ const normalizedWeekdaySchema = z
   .refine(uniqueWeekdays, "targetWeekdays に重複した曜日は指定できません。")
   .transform((weekdays) => [...weekdays].sort((left, right) => left - right));
 
+const intervalDaysSchema = z.number().int().min(2).max(365);
+
 export const habitCreateSchema = z
   .object({
     name: z.string().trim().min(1).max(100),
@@ -16,6 +18,7 @@ export const habitCreateSchema = z
     color: z.string().trim().min(1).max(32).nullable().optional(),
     frequencyType: frequencyTypeSchema,
     targetWeekdays: normalizedWeekdaySchema.nullable().optional(),
+    intervalDays: intervalDaysSchema.nullable().optional(),
   })
   .superRefine((value, ctx) => {
     if (value.frequencyType === "daily" && value.targetWeekdays) {
@@ -26,11 +29,43 @@ export const habitCreateSchema = z
       });
     }
 
+    if (value.frequencyType === "daily" && value.intervalDays != null) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["intervalDays"],
+        message: "daily の習慣では intervalDays を指定できません。",
+      });
+    }
+
     if (value.frequencyType === "weekly_days" && (!value.targetWeekdays || value.targetWeekdays.length === 0)) {
       ctx.addIssue({
         code: "custom",
         path: ["targetWeekdays"],
         message: "weekly_days の習慣では targetWeekdays が必須です。",
+      });
+    }
+
+    if (value.frequencyType === "weekly_days" && value.intervalDays != null) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["intervalDays"],
+        message: "weekly_days の習慣では intervalDays を指定できません。",
+      });
+    }
+
+    if (value.frequencyType === "every_n_days" && value.targetWeekdays) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["targetWeekdays"],
+        message: "every_n_days の習慣では targetWeekdays を指定できません。",
+      });
+    }
+
+    if (value.frequencyType === "every_n_days" && value.intervalDays == null) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["intervalDays"],
+        message: "every_n_days の習慣では intervalDays が必須です。",
       });
     }
   });
@@ -42,6 +77,7 @@ export const habitUpdateSchema = z
     color: z.string().trim().min(1).max(32).nullable().optional(),
     frequencyType: frequencyTypeSchema.optional(),
     targetWeekdays: normalizedWeekdaySchema.nullable().optional(),
+    intervalDays: intervalDaysSchema.nullable().optional(),
     isActive: z.boolean().optional(),
   })
   .refine((value) => Object.keys(value).length > 0, "少なくとも1項目は指定してください。");

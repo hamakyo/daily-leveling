@@ -1,4 +1,4 @@
-export type FrequencyType = "daily" | "weekly_days";
+export type FrequencyType = "daily" | "weekly_days" | "every_n_days";
 export type DefaultView = "today" | "month";
 
 export interface CurrentUser {
@@ -19,6 +19,7 @@ export interface HabitRecord {
   color: string | null;
   frequencyType: FrequencyType;
   targetWeekdays: number[] | null;
+  intervalDays: number | null;
   isActive: boolean;
   displayOrder: number;
   createdAt: string;
@@ -83,7 +84,9 @@ export interface MonthlyDashboard {
     color: string | null;
     frequencyType: FrequencyType;
     targetWeekdays: number[] | null;
+    intervalDays: number | null;
     displayOrder: number;
+    createdAt: string;
   }>;
   logs: Array<{
     habitId: string;
@@ -124,5 +127,6 @@ export interface TodayDashboard {
     status: boolean | null;
     isTargetDay: boolean;
     frequencyType: FrequencyType;
+    intervalDays: number | null;
   }>;
 }

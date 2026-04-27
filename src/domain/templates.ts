@@ -6,6 +6,7 @@ export interface HabitTemplate {
   color: string | null;
   frequencyType: FrequencyType;
   targetWeekdays: number[] | null;
+  intervalDays: number | null;
 }
 
 export const templates = {
@@ -16,6 +17,7 @@ export const templates = {
       color: "teal",
       frequencyType: "daily",
       targetWeekdays: null,
+      intervalDays: null,
     },
     {
       name: "ストレッチ",
@@ -23,6 +25,7 @@ export const templates = {
       color: "amber",
       frequencyType: "daily",
       targetWeekdays: null,
+      intervalDays: null,
     },
     {
       name: "運動する",
@@ -30,6 +33,7 @@ export const templates = {
       color: "rose",
       frequencyType: "weekly_days",
       targetWeekdays: [1, 3, 5],
+      intervalDays: null,
     },
   ],
   focus_basic: [
@@ -39,6 +43,7 @@ export const templates = {
       color: "blue",
       frequencyType: "daily",
       targetWeekdays: null,
+      intervalDays: null,
     },
     {
       name: "20分読書する",
@@ -46,6 +51,7 @@ export const templates = {
       color: "violet",
       frequencyType: "daily",
       targetWeekdays: null,
+      intervalDays: null,
     },
     {
       name: "週次レビュー",
@@ -53,6 +59,7 @@ export const templates = {
       color: "indigo",
       frequencyType: "weekly_days",
       targetWeekdays: [7],
+      intervalDays: null,
     },
   ],
 } satisfies Record<string, HabitTemplate[]>;

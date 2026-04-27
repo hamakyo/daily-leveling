@@ -36,6 +36,7 @@ export async function createHabitsFromTemplate(
           color,
           frequency_type,
           target_weekdays,
+          interval_days,
           is_active,
           display_order
         )
@@ -46,6 +47,7 @@ export async function createHabitsFromTemplate(
           ${habit.color},
           ${habit.frequencyType},
           ${weekdayLiteral ? trx.unsafe(`'${weekdayLiteral}'::smallint[]`) : null},
+          ${habit.intervalDays},
           true,
           ${displayOrder}
         )
@@ -57,6 +59,7 @@ export async function createHabitsFromTemplate(
           color,
           frequency_type,
           target_weekdays,
+          interval_days,
           is_active,
           display_order,
           created_at,

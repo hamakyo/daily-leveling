@@ -70,3 +70,25 @@ test("authenticated user sees a level-up effect after enough completions", async
     await resetE2eUser(page, testId);
   }
 });
+
+test("authenticated user can create an every_n_days habit", async ({ page }, testInfo) => {
+  const testId = makeTestId(testInfo);
+  const habitName = `E2E 洗濯 ${Date.now()}`;
+
+  await loginAsE2eUser(page, testId, { onboardingCompleted: true });
+  try {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "今日の記録" })).toBeVisible();
+
+    await page.getByLabel("名前").fill(habitName);
+    await page.getByLabel("頻度").selectOption("every_n_days");
+    await page.getByLabel("間隔日数").fill("3");
+    await page.getByRole("button", { name: "作成" }).click();
+
+    await expect(page.getByText("習慣を作成しました。")).toBeVisible();
+    await expect(page.getByText(habitName).first()).toBeVisible();
+    await expect(page.getByText("有効 ・ 3日ごと")).toBeVisible();
+  } finally {
+    await resetE2eUser(page, testId);
+  }
+});

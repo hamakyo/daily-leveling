@@ -21,8 +21,9 @@ export type HabitRow = {
   name: string;
   emoji: string | null;
   color: string | null;
-  frequency_type: "daily" | "weekly_days";
+  frequency_type: "daily" | "weekly_days" | "every_n_days";
   target_weekdays: number[] | null;
+  interval_days: number | null;
   is_active: boolean;
   display_order: number;
   created_at: string;
@@ -68,6 +69,7 @@ export function mapHabit(row: HabitRow): HabitRecord {
     color: row.color,
     frequencyType: row.frequency_type,
     targetWeekdays: row.target_weekdays,
+    intervalDays: row.interval_days,
     isActive: row.is_active,
     displayOrder: row.display_order,
     createdAt: row.created_at,

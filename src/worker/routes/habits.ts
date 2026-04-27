@@ -44,17 +44,24 @@ habitRoutes.patch("/habits/:habitId", requireAuth, async (c) => {
   }
 
   const partialPayload = parseBody(habitUpdateSchema, await c.req.json());
+  const nextFrequencyType = partialPayload.frequencyType ?? currentHabit.frequencyType;
   const mergedPayload = {
     name: partialPayload.name ?? currentHabit.name,
     emoji: partialPayload.emoji === undefined ? currentHabit.emoji : partialPayload.emoji,
     color: partialPayload.color === undefined ? currentHabit.color : partialPayload.color,
-    frequencyType: partialPayload.frequencyType ?? currentHabit.frequencyType,
+    frequencyType: nextFrequencyType,
     targetWeekdays:
-      partialPayload.frequencyType === "daily"
-        ? null
-        : partialPayload.targetWeekdays === undefined
+      nextFrequencyType === "weekly_days"
+        ? partialPayload.targetWeekdays === undefined
           ? currentHabit.targetWeekdays
-          : partialPayload.targetWeekdays,
+          : partialPayload.targetWeekdays
+        : null,
+    intervalDays:
+      nextFrequencyType === "every_n_days"
+        ? partialPayload.intervalDays === undefined
+          ? currentHabit.intervalDays
+          : partialPayload.intervalDays
+        : null,
   };
   habitCreateSchema.parse(mergedPayload);
 

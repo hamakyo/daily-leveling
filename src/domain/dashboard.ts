@@ -10,7 +10,9 @@ import type {
 import {
   clampRangeEndToToday,
   compareIsoDates,
+  diffIsoDays,
   enumerateDates,
+  formatDateInTimezone,
   getMonthRange,
   getTodayInTimezone,
   getWeekRange,
@@ -52,8 +54,17 @@ export function calculateLevelProgress(completedCount: number): LevelProgress {
   };
 }
 
-export function isHabitTargetDay(habit: HabitRecord, date: string): boolean {
+function getHabitStartDate(habit: HabitRecord, timezone: string): string {
+  return formatDateInTimezone(new Date(habit.createdAt), timezone);
+}
+
+export function isHabitTargetDay(habit: HabitRecord, date: string, timezone = "UTC"): boolean {
   if (!habit.isActive) {
+    return false;
+  }
+
+  const habitStartDate = getHabitStartDate(habit, timezone);
+  if (compareIsoDates(date, habitStartDate) < 0) {
     return false;
   }
 
@@ -61,16 +72,25 @@ export function isHabitTargetDay(habit: HabitRecord, date: string): boolean {
     return true;
   }
 
+  if (habit.frequencyType === "every_n_days") {
+    return habit.intervalDays != null && diffIsoDays(habitStartDate, date) % habit.intervalDays === 0;
+  }
+
   const weekday = getWeekdayFromIsoDate(date);
   return habit.targetWeekdays?.includes(weekday) ?? false;
 }
 
-function buildDayStat(habits: HabitRecord[], logLookup: Map<string, HabitLogRecord>, date: string) {
+function buildDayStat(
+  habits: HabitRecord[],
+  logLookup: Map<string, HabitLogRecord>,
+  date: string,
+  timezone: string,
+) {
   let completedCount = 0;
   let targetCount = 0;
 
   for (const habit of habits) {
-    if (!isHabitTargetDay(habit, date)) {
+    if (!isHabitTargetDay(habit, date, timezone)) {
       continue;
     }
 
@@ -88,12 +108,17 @@ function buildDayStat(habits: HabitRecord[], logLookup: Map<string, HabitLogReco
   };
 }
 
-function buildHabitStat(habit: HabitRecord, dates: string[], logLookup: Map<string, HabitLogRecord>): HabitStat {
+function buildHabitStat(
+  habit: HabitRecord,
+  dates: string[],
+  logLookup: Map<string, HabitLogRecord>,
+  timezone: string,
+): HabitStat {
   let completedCount = 0;
   let targetCount = 0;
 
   for (const date of dates) {
-    if (!isHabitTargetDay(habit, date)) {
+    if (!isHabitTargetDay(habit, date, timezone)) {
       continue;
     }
 
@@ -136,7 +161,7 @@ export function calculateCurrentStreak(
 
   for (let index = allDates.length - 1; index >= 0; index -= 1) {
     const date = allDates[index];
-    const stat = buildDayStat(activeHabits, logLookup, date);
+    const stat = buildDayStat(activeHabits, logLookup, date, timezone);
 
     if (stat.targetCount === 0) {
       continue;
@@ -163,7 +188,7 @@ export function buildTodayDashboard(
   const logLookup = createLogLookup(logs);
 
   const habitEntries = activeHabits.map((habit) => {
-    const isTargetDay = isHabitTargetDay(habit, date);
+    const isTargetDay = isHabitTargetDay(habit, date, timezone);
 
     return {
       habitId: habit.id,
@@ -173,10 +198,11 @@ export function buildTodayDashboard(
       status: logLookup.get(createLogKey(habit.id, date))?.status ?? null,
       isTargetDay,
       frequencyType: habit.frequencyType,
+      intervalDays: habit.intervalDays,
     };
   });
 
-  const summary = buildDayStat(activeHabits, logLookup, date);
+  const summary = buildDayStat(activeHabits, logLookup, date, timezone);
 
   return {
     date,
@@ -201,8 +227,8 @@ export function buildMonthlyDashboard(
   const effectiveRange = clampRangeEndToToday(startDate, endDate, timezone);
   const dates = effectiveRange ? enumerateDates(effectiveRange.startDate, effectiveRange.endDate) : [];
   const logLookup = createLogLookup(logs);
-  const dailyStats = dates.map((date) => buildDayStat(activeHabits, logLookup, date));
-  const habitStats = activeHabits.map((habit) => buildHabitStat(habit, dates, logLookup));
+  const dailyStats = dates.map((date) => buildDayStat(activeHabits, logLookup, date, timezone));
+  const habitStats = activeHabits.map((habit) => buildHabitStat(habit, dates, logLookup, timezone));
   const completedCount = dailyStats.reduce((sum, stat) => sum + stat.completedCount, 0);
   const targetCount = dailyStats.reduce((sum, stat) => sum + stat.targetCount, 0);
 
@@ -221,7 +247,9 @@ export function buildMonthlyDashboard(
       color: habit.color,
       frequencyType: habit.frequencyType,
       targetWeekdays: habit.targetWeekdays,
+      intervalDays: habit.intervalDays,
       displayOrder: habit.displayOrder,
+      createdAt: habit.createdAt,
     })),
     logs: logs
       .filter((log) => compareIsoDates(log.date, startDate) >= 0 && compareIsoDates(log.date, endDate) <= 0)
@@ -246,8 +274,8 @@ export function buildWeeklyDashboard(
   const effectiveRange = clampRangeEndToToday(startDate, endDate, timezone);
   const dates = effectiveRange ? enumerateDates(effectiveRange.startDate, effectiveRange.endDate) : [];
   const logLookup = createLogLookup(logs);
-  const dailyStats = dates.map((currentDate) => buildDayStat(activeHabits, logLookup, currentDate));
-  const habitStats = activeHabits.map((habit) => buildHabitStat(habit, dates, logLookup));
+  const dailyStats = dates.map((currentDate) => buildDayStat(activeHabits, logLookup, currentDate, timezone));
+  const habitStats = activeHabits.map((habit) => buildHabitStat(habit, dates, logLookup, timezone));
   const completedCount = dailyStats.reduce((sum, stat) => sum + stat.completedCount, 0);
   const targetCount = dailyStats.reduce((sum, stat) => sum + stat.targetCount, 0);
 

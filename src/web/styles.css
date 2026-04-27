@@ -693,12 +693,14 @@ button {
 }
 
 .weekday-picker__hint,
-.weekday-picker__error {
+.weekday-picker__error,
+.field-hint {
   margin: 0;
   font-size: 0.9rem;
 }
 
-.weekday-picker__hint {
+.weekday-picker__hint,
+.field-hint {
   color: var(--color-muted);
 }
 
