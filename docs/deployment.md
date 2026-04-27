@@ -3,13 +3,14 @@
 ## 環境
 
 このプロジェクトは `test`、`staging`、`production` を分けて運用します。
-各環境で分離するものは Worker 名、`APP_BASE_URL`、PostgreSQL、Hyperdrive config、Google OAuth client、Cloudflare/GitHub secrets です。
+各環境で分離するものは Worker 名、`APP_BASE_URL`、Google OAuth redirect URI、Cookie 名、Cloudflare/GitHub secrets です。
+Supabase Free plan の現時点では PostgreSQL と Hyperdrive は production のみ接続します。
 
 ## Hyperdrive
 
 Worker runtime の DB 接続は `HYPERDRIVE` binding を使います。
-`wrangler.toml` の `[[env.<env>.hyperdrive]]` に環境ごとの config ID を設定します。
-現在の placeholder ID は、実際の Cloudflare Hyperdrive config 作成後に差し替えてください。
+`wrangler.toml` の `[[env.production.hyperdrive]]` に production 用 config ID を設定します。
+`test` と `staging` は本番 DB への誤接続を避けるため、現時点では `HYPERDRIVE` binding を持たせません。
 
 `DATABASE_URL` は次の用途で残します。
 - local dev
@@ -31,7 +32,7 @@ pnpm run cf:status:staging
 ```
 
 `deploy:dry-run:*` は Worker bundle と Wrangler config の整合性確認に使います。
-本番 deploy 前には、Hyperdrive config ID が対象環境の PostgreSQL を指していることを確認してください。
+本番 deploy 前には、Hyperdrive config ID が production 用 PostgreSQL を指していることを確認してください。
 
 ## Cloud CLI
 
@@ -74,12 +75,16 @@ Hyperdrive を使う通常運用では、Cloudflare Worker secret の `DATABASE_
 
 ## Supabase PostgreSQL
 
-Daily Leveling 用の Supabase project は以下です。
+Daily Leveling 用の Supabase project は、Free plan の上限に合わせて production DB として扱います。
 
 - project name: `daily-leveling`
 - project ref: `djfqflkxsyzazuvtnqqm`
 - region: `ap-northeast-1` / Northeast Asia (Tokyo)
-- Cloudflare Hyperdrive test config: `5d5eb906286148e18f97904118daa682`
+- Cloudflare Hyperdrive production config: `5d5eb906286148e18f97904118daa682`
+
+`test` / `staging` / `production` の Worker、`APP_BASE_URL`、cookie 名、Google OAuth redirect URI はコード上で分離します。
+ただし Supabase Free plan では project を追加できないため、DB は production のみ接続します。
+`test` と `staging` は DB binding を持たせず、DB を使う実データ検証は production または将来の別 DB 作成後に行います。
 
 このアプリは Supabase client をブラウザから使わず、Cloudflare Workers が PostgreSQL に接続します。
 そのため Supabase の `anon` / `authenticated` 経路から app table を直接読ませない前提で、app table には RLS を有効化し、public policy は作りません。

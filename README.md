@@ -214,7 +214,7 @@ pnpm run cloud:status
 pnpm run deploy:test
 pnpm run deploy:staging
 pnpm run deploy:production
-pnpm exec wrangler secret put DATABASE_URL --env staging
+pnpm exec wrangler secret put DATABASE_URL --env production
 ```
 
 `cf:deployments:*` は初回 deploy 前だと対象 Worker が存在せず失敗することがあります。
@@ -259,6 +259,11 @@ Daily Leveling 用 Supabase project:
 - project name: `daily-leveling`
 - project ref: `djfqflkxsyzazuvtnqqm`
 - region: `ap-northeast-1` / Northeast Asia (Tokyo)
+- 用途: production DB
+- Hyperdrive production config: `5d5eb906286148e18f97904118daa682`
+
+Supabase Free plan では project 追加ができないため、DB は production のみ接続します。
+`test` / `staging` / `production` の Worker、URL、cookie、Google OAuth redirect URI はコード上で分離し、将来 project を追加できる場合は環境別 Supabase project と Hyperdrive config に差し替えます。
 
 Terraform の土台は `infra/terraform` にあります。
 
@@ -295,7 +300,9 @@ pnpm dev:worker
 - Cloudflare Worker 名
 - `APP_BASE_URL`
 - PostgreSQL
+  Free plan の現時点では production のみ接続する。将来、環境別 project を作れる場合に分離する。
 - Hyperdrive config
+  現時点では production のみ設定する。`test` / `staging` は DB binding を持たせない。
 - Google OAuth client / redirect URI
 - Cloudflare / GitHub Secrets
 - Terraform の `tfvars`
@@ -400,7 +407,7 @@ Worker runtime 用の環境変数と secret は Cloudflare 側に環境ごとに
 - `APP_BASE_URL`
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
-- `HYPERDRIVE` binding
+- `HYPERDRIVE` binding（現時点では production のみ）
 - fallback が必要な場合のみ `DATABASE_URL`
 - 必要に応じて `SESSION_COOKIE_NAME`, `SESSION_TTL_SECONDS`, `DEFAULT_TIMEZONE`
 
@@ -410,11 +417,11 @@ Worker runtime 用の環境変数と secret は Cloudflare 側に環境ごとに
 - `production`: `https://daily-leveling.hamakyoh.workers.dev`
 
 そのため Cloudflare 側で最初に投入すべき secret は以下です。
-- `DATABASE_URL`
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
 
-加えて、各環境の Hyperdrive config ID を作成後に `wrangler.toml` の `id` に差し替えます。
+`DATABASE_URL` は Hyperdrive fallback が必要な場合だけ投入します。
+加えて、production の Hyperdrive config ID を `wrangler.toml` の `env.production.hyperdrive` に設定します。
 
 本番デプロイ前に確認すること:
 1. `APP_BASE_URL` が本番の公開 URL と一致している

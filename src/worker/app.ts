@@ -14,6 +14,13 @@ import { settingsRoutes } from "./routes/settings";
 
 export const app = new Hono<AppEnv>();
 
+app.get("/healthz", () =>
+  jsonOk({
+    ok: true,
+    service: "daily-leveling",
+  }),
+);
+
 app.use("*", async (c, next) => {
   const db = getDb(c.env);
   const backgroundTasks: Promise<unknown>[] = [];
@@ -51,13 +58,6 @@ app.onError((error) => {
 });
 
 app.notFound(() => jsonError(new AppError(404, "NOT_FOUND", "指定されたルートは存在しません。")));
-
-app.get("/healthz", () =>
-  jsonOk({
-    ok: true,
-    service: "daily-leveling",
-  }),
-);
 
 app.route("/", authRoutes);
 app.route("/", onboardingRoutes);
