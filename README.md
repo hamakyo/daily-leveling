@@ -174,6 +174,7 @@ E2E 用 Worker は `http://127.0.0.1:8788` で動き、`.dev.vars` と `config/e
 - [セキュリティ設計](docs/security.md)
 - [デプロイ手順](docs/deployment.md)
 - [テスト方針](docs/testing.md)
+- [デザイン方針](DESIGN.md)
 
 ## Cloudflare の IaC
 
