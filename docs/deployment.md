@@ -20,6 +20,7 @@ Worker runtime の DB 接続は `HYPERDRIVE` binding を使います。
 ## 事前検証
 
 ```bash
+pnpm run cloud:status
 pnpm run check
 pnpm test
 pnpm run build
@@ -31,6 +32,34 @@ pnpm run cf:status:staging
 
 `deploy:dry-run:*` は Worker bundle と Wrangler config の整合性確認に使います。
 本番 deploy 前には、Hyperdrive config ID が対象環境の PostgreSQL を指していることを確認してください。
+
+## Cloud CLI
+
+このプロジェクトで使うクラウド CLI は以下です。
+
+- `gcloud`
+  Google OAuth client、GCP project、必要に応じた GCP resource の確認に使います。
+- `supabase`
+  Supabase PostgreSQL を使う場合の project と DB connection の確認に使います。
+- `pnpm exec wrangler`
+  Cloudflare Workers、secrets、deploy、Hyperdrive の確認に使います。
+
+状態確認:
+
+```bash
+pnpm run cloud:status
+```
+
+未ログインの場合は以下を実行します。
+
+```bash
+gcloud auth login
+gcloud config set project <PROJECT_ID>
+supabase login
+pnpm exec wrangler login
+```
+
+`gcloud` と Supabase は認証後に read-only の確認から始め、resource 作成や secret 更新は対象環境を明示して実行してください。
 
 ## Secrets
 

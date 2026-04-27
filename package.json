@@ -50,6 +50,7 @@
     "cf:sync-secrets:test": "node scripts/sync-cloudflare-secrets.mjs --env test",
     "cf:sync-secrets:staging": "node scripts/sync-cloudflare-secrets.mjs --env staging",
     "cf:sync-secrets:production": "node scripts/sync-cloudflare-secrets.mjs --env production",
+    "cloud:status": "node scripts/check-cloud-tools.mjs",
     "deploy:dry-run:test": "pnpm run build && wrangler deploy --env test --dry-run",
     "deploy:dry-run:staging": "pnpm run build && wrangler deploy --env staging --dry-run",
     "deploy:dry-run:production": "pnpm run build && wrangler deploy --env production --dry-run",

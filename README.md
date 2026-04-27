@@ -209,6 +209,7 @@ pnpm run cf:status:staging
 pnpm run cf:status:production
 pnpm run cf:sync-secrets:staging
 pnpm run cf:sync-secrets:production
+pnpm run cloud:status
 pnpm run deploy:test
 pnpm run deploy:staging
 pnpm run deploy:production
@@ -219,8 +220,37 @@ pnpm exec wrangler secret put DATABASE_URL --env staging
 `cf:health:*` は公開 URL の疎通確認、`cf:secrets:*` は Cloudflare 側の secret 投入状況の確認に使います。
 `cf:status:*` は `deployments / healthz / secrets` をまとめて確認します。
 `cf:sync-secrets:*` は `.env.<env>` または `.dev.vars.<env>` から `DATABASE_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` を Cloudflare に同期します。
+`cloud:status` は `gcloud`、Supabase CLI、Wrangler のインストールと認証状態をまとめて確認します。
 Hyperdrive の config ID は `wrangler.toml` の `[[env.<env>.hyperdrive]]` に環境ごとに設定します。
 新規 deploy 直後は `workers.dev` 側の反映に数秒かかり、一時的に `404 There is nothing here yet` になることがあります。
+
+## Cloud CLI
+
+クラウド操作は以下の CLI を使います。
+
+- `gcloud`
+  Google OAuth client や GCP 側 resource の確認に使います。
+- `supabase`
+  Supabase PostgreSQL を使う場合の project / DB connection 確認に使います。
+- `pnpm exec wrangler`
+  Cloudflare Workers、secrets、deploy、Hyperdrive 連携の確認に使います。
+
+状態確認:
+
+```bash
+pnpm run cloud:status
+```
+
+初回ログイン:
+
+```bash
+gcloud auth login
+gcloud config set project <PROJECT_ID>
+supabase login
+pnpm exec wrangler login
+```
+
+Supabase MCP が利用できる環境では MCP を補助確認に使って構いませんが、このリポジトリの標準手順は Supabase CLI とします。
 
 Terraform の土台は `infra/terraform` にあります。
 
