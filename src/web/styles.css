@@ -1,8 +1,21 @@
 :root {
   color-scheme: light;
   font-family: "Avenir Next", "Trebuchet MS", sans-serif;
-  background: #f5f2ea;
-  color: #1e2430;
+  --color-ink: #060b26;
+  --color-text: #1c2945;
+  --color-muted: #60708d;
+  --color-line: rgba(16, 27, 58, 0.1);
+  --color-surface: #ffffff;
+  --color-page: #f4f8ff;
+  --color-panel: #f9fbff;
+  --color-soft-blue: #eaf2ff;
+  --color-soft-cyan: #e5fbfb;
+  --color-cyan: #20c7bd;
+  --color-blue: #2f7df0;
+  --color-violet: #8a5cf6;
+  --shadow-card: 0 12px 30px rgba(29, 55, 105, 0.08);
+  background: var(--color-page);
+  color: var(--color-text);
 }
 
 * {
@@ -32,9 +45,9 @@ button {
 
 .hero-card,
 .panel {
-  border: 1px solid rgba(30, 36, 48, 0.08);
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(45, 51, 67, 0.05);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .hero-card {
@@ -57,10 +70,11 @@ button {
 
 .eyebrow {
   margin: 0 0 0.75rem;
-  color: #556179;
+  color: var(--color-violet);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-size: 0.72rem;
+  font-weight: 800;
 }
 
 .hero-card h1 {
@@ -70,6 +84,7 @@ button {
   letter-spacing: -0.045em;
   font-size: clamp(2.5rem, 6vw, 4.75rem);
   line-height: 0.95;
+  color: var(--color-ink);
 }
 
 .hero-card--compact h1 {
@@ -80,7 +95,7 @@ button {
   max-width: 44rem;
   font-size: 1.02rem;
   line-height: 1.6;
-  color: #435066;
+  color: var(--color-muted);
 }
 
 .primary-button,
@@ -97,15 +112,15 @@ button {
 
 .primary-button {
   border: none;
-  background: #22283a;
+  background: var(--color-blue);
   color: white;
-  box-shadow: 0 8px 20px rgba(34, 40, 58, 0.12);
+  box-shadow: 0 10px 24px rgba(47, 125, 240, 0.2);
 }
 
 .secondary-button {
-  border: 1px solid rgba(34, 40, 58, 0.15);
-  background: #f4efe2;
-  color: #24304a;
+  border: 1px solid rgba(47, 125, 240, 0.24);
+  background: var(--color-soft-blue);
+  color: var(--color-ink);
 }
 
 .primary-button:hover,
@@ -131,8 +146,8 @@ button {
 .summary-grid article {
   padding: 1rem 1.1rem;
   border-radius: 18px;
-  background: #ffffff;
-  border: 1px solid rgba(30, 36, 48, 0.06);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .feature-ribbon article strong,
@@ -181,8 +196,8 @@ button {
   padding: 1rem;
   text-align: left;
   border-radius: 18px;
-  border: 1px solid rgba(30, 36, 48, 0.08);
-  background: #fcfbf7;
+  border: 1px solid rgba(47, 125, 240, 0.14);
+  background: var(--color-panel);
 }
 
 .action-row,
@@ -208,21 +223,22 @@ button {
 
 .pill {
   border-radius: 999px;
-  border: 1px solid rgba(30, 36, 48, 0.1);
-  background: #ffffff;
-  color: #233148;
+  border: 1px solid rgba(47, 125, 240, 0.18);
+  background: var(--color-surface);
+  color: var(--color-text);
   padding: 0.55rem 0.9rem;
 }
 
 .pill--active {
-  background: #22283a;
+  background: var(--color-violet);
   color: white;
 }
 
 .month-chip {
   padding: 0.55rem 0.9rem;
   border-radius: 999px;
-  background: #f4efe2;
+  background: var(--color-soft-blue);
+  color: var(--color-ink);
 }
 
 .summary-band {
@@ -231,12 +247,13 @@ button {
   gap: 1rem;
   padding: 1rem 1.15rem;
   border-radius: 20px;
-  background: #f6f0e1;
-  border: 1px solid rgba(227, 182, 79, 0.2);
+  background: var(--color-soft-cyan);
+  border: 1px solid rgba(32, 199, 189, 0.22);
 }
 
 .summary-band strong {
   font-size: 2rem;
+  color: var(--color-cyan);
 }
 
 .today-card,
@@ -247,27 +264,27 @@ button {
   gap: 1rem;
   padding: 0.9rem 1rem;
   border-radius: 18px;
-  background: #ffffff;
-  border: 1px solid rgba(30, 36, 48, 0.07);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .today-card p,
 .habit-admin-row p,
 .status-text {
   margin: 0.25rem 0 0;
-  color: #667186;
+  color: var(--color-muted);
 }
 
 .toggle-button {
   border: none;
   border-radius: 999px;
-  background: #f0e5ca;
-  color: #21324a;
+  background: var(--color-soft-blue);
+  color: var(--color-ink);
   padding: 0.7rem 1rem;
 }
 
 .toggle-button--done {
-  background: #21324a;
+  background: var(--color-cyan);
   color: white;
 }
 
@@ -301,7 +318,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: var(--color-surface);
   font-size: 0.82rem;
 }
 
@@ -310,7 +327,7 @@ button {
   padding: 0 0.55rem;
   position: sticky;
   left: 0;
-  background: #f8f4e7;
+  background: var(--color-panel);
 }
 
 .monthly-grid__corner {
@@ -319,15 +336,15 @@ button {
 }
 
 .grid-cell {
-  background: rgba(130, 142, 170, 0.14);
+  background: rgba(96, 112, 141, 0.14);
 }
 
 .grid-cell--target {
-  background: rgba(227, 182, 79, 0.35);
+  background: rgba(47, 125, 240, 0.16);
 }
 
 .grid-cell--done {
-  background: rgba(34, 40, 58, 0.88);
+  background: var(--color-cyan);
 }
 
 .data-list {
@@ -345,7 +362,7 @@ button {
   gap: 1rem;
   padding: 0.7rem 0.8rem;
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--color-surface);
 }
 
 .stack-form label {
@@ -356,9 +373,16 @@ button {
 .stack-form input,
 .stack-form select {
   border-radius: 12px;
-  border: 1px solid rgba(30, 36, 48, 0.12);
+  border: 1px solid rgba(47, 125, 240, 0.18);
   padding: 0.78rem 0.9rem;
-  background: #ffffff;
+  background: var(--color-surface);
+}
+
+.stack-form input:focus,
+.stack-form select:focus {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgba(47, 125, 240, 0.12);
+  outline: none;
 }
 
 @media (max-width: 960px) {
