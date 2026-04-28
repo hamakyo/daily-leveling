@@ -3,6 +3,7 @@
 [![CI](https://github.com/hamakyo/daily-leveling/actions/workflows/ci.yml/badge.svg)](https://github.com/hamakyo/daily-leveling/actions/workflows/ci.yml)
 
 Daily Leveling は、Cloudflare Workers + React で構成する習慣トラッカー MVP です。
+現在は Today / Weekly / Monthly の集計、`every_n_days` 習慣、簡易レベル表示、達成時の軽いフィードバックまで含みます。
 
 ## 技術スタック
 
@@ -137,6 +138,8 @@ pnpm run release:check:production
 - Worker 実行時の DB 接続は `HYPERDRIVE.connectionString` を優先し、未設定時だけ `DATABASE_URL` に fallback します。
 - `DATABASE_URL` は local dev、migration、Hyperdrive 作成元として残します。
 - セッション Cookie は Worker 側で管理し、`HttpOnly` です。
+- state-changing request は `Origin / Referer` を Worker 側で検証します。
+- API と静的 HTML の両方に `Content-Security-Policy` などのセキュリティヘッダを付与します。
 - UI のフォントスタックは sans-serif のみを使用します。
 
 ## E2E テスト
@@ -166,7 +169,9 @@ E2E 用 Worker は `http://127.0.0.1:8788` で動き、`.dev.vars` と `config/e
 - オンボーディングテンプレート適用
 - 習慣作成
 - Today view のログ更新
+- Weekly view の集計表示
 - Monthly view の集計表示
+- レベル表示と達成時フィードバック
 
 ## 詳細ドキュメント
 

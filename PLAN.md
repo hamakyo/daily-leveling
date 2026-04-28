@@ -201,6 +201,22 @@
 - `DATABASE_URL` は local dev、migration、fallback として引き続き使える
 - UI は日本語、sans-serif、グラデーションなしの現行方針を維持する
 
+### Phase 12: Security Hardening and Delivery Path Consistency
+
+成果物:
+- 実在する calendar date / month の厳密バリデーション
+- 内部例外詳細を外部に出さない共通エラーハンドリング
+- `Origin / Referer` を使った state-changing request の server-side 検証
+- API と静的 HTML の両方へのセキュリティヘッダ付与
+- 配信経路を Worker first に寄せた asset handling
+
+完了条件:
+- `YYYY-MM-DD` と `YYYY-MM` の異常入力が `400` で拒否される
+- `500` 応答に内部例外 message が露出しない
+- 不正な `Origin` / `Referer` の `POST / PATCH / PUT` が `403` になる
+- `/healthz` と `/` の両方に `Content-Security-Policy` などのヘッダが付く
+- 追加した security regression test が通る
+
 ## Stop-the-Line ルール
 
 以下がコード上で固まるまで feature work を先に進めないこと:

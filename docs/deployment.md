@@ -18,6 +18,12 @@ Worker runtime の DB 接続は `HYPERDRIVE` binding を使います。
 - Hyperdrive config 作成元
 - `HYPERDRIVE` 未設定時の fallback
 
+## Static Asset Delivery
+
+`wrangler.toml` の assets は `run_worker_first = true` にしています。
+これにより API だけでなく静的 HTML / asset 配信も Worker を経由し、
+セキュリティヘッダと SPA fallback を一貫して適用できます。
+
 ## 事前検証
 
 ```bash
@@ -33,6 +39,7 @@ pnpm run cf:status:staging
 
 `deploy:dry-run:*` は Worker bundle と Wrangler config の整合性確認に使います。
 本番 deploy 前には、Hyperdrive config ID が production 用 PostgreSQL を指していることを確認してください。
+あわせて `/` と `/healthz` の両方で security header が返ることを確認してください。
 
 ## Cloud CLI
 
@@ -106,3 +113,18 @@ pnpm run cf:status:staging
 ```
 
 production では同じ流れを `production` script で実行します。
+
+deploy 後の最低確認:
+
+```bash
+pnpm run cf:health:production
+curl -I https://daily-leveling.hamakyoh.workers.dev/
+curl -I https://daily-leveling.hamakyoh.workers.dev/healthz
+```
+
+確認ポイント:
+- `200 OK`
+- `Content-Security-Policy`
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `X-Frame-Options: DENY`

@@ -19,6 +19,7 @@
 
 Daily Leveling は次の体験に特化した習慣トラッカーです。
 - 日々の素早いチェックイン
+- 週間・月間での可視化
 - 月間グリッドでの可視化
 - シンプルな進捗フィードバック
 
@@ -65,11 +66,14 @@ Daily Leveling は次の体験に特化した習慣トラッカーです。
 4. ユーザーはテンプレート適用または手動追加で習慣を作成する
 5. ユーザーは onboarding を完了する
 6. ユーザーは今日の習慣一覧を見て達成状態を切り替えられる
-7. ユーザーは月間ダッシュボードを開いて以下を確認できる
+7. ユーザーはダッシュボードを開いて以下を確認できる
+   - 今日の進捗
+   - 週間合計進捗
    - 月間合計進捗
    - 日別進捗
    - 習慣別進捗
    - current streak
+   - 簡易レベルと XP 進捗
 8. ユーザーは習慣の編集、並び替え、archive を行える
 9. ユーザーはログアウトできる
 
@@ -89,12 +93,13 @@ MVP のコア API:
 - `GET /logs`
 - `PUT /habits/:habitId/logs/:date`
 - `GET /dashboard/today`
+- `GET /dashboard/bootstrap`
+- `GET /dashboard/weekly`
 - `GET /dashboard/monthly`
 
 二次 API:
 - `GET /settings`
 - `PATCH /settings`
-- `GET /dashboard/weekly`
 
 必要であれば、二次 API は最初の usable MVP 後に出してよいものとします。
 
@@ -143,6 +148,8 @@ MVP のコア API:
 - Session cookie は `HttpOnly`, `Secure`, `SameSite=Lax`
 - Session cookie に平文の session hash を入れてはならない
 - Session の `last_seen_at` 更新は `executionCtx.waitUntil()` で response をブロックしない
+- state-changing request は `Origin` または `Referer` が `APP_BASE_URL` と一致する場合だけ許可する
+- API と静的 HTML の両方に `Content-Security-Policy`, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` を付与する
 - Session 有効判定には以下をすべて満たす必要がある
   - cookie が存在する
   - session record が存在する
@@ -163,7 +170,7 @@ MVP のコア API:
 ## コア MVP から除外するもの
 
 - 通知
-- XP、バッジ、通貨、レベル要素
+- バッジ、通貨
 - ソーシャル機能
 - AI レビュー機能
 - カレンダー連携
@@ -176,6 +183,8 @@ MVP のコア API:
 - 初回ユーザーが onboarding を完了できる
 - 習慣の作成、更新、並び替え、archive ができる
 - 今日のチェックインができる
+- 週間ダッシュボードが動作する
 - 月間ダッシュボードが動作する
-- 月間合計進捗、日別進捗、習慣別進捗、streak が見える
+- 週間・月間の合計進捗、日別進捗、習慣別進捗、streak が見える
+- 今日ビューで簡易レベルと XP 進捗が見える
 - モバイルとデスクトップの両方で実用になる
