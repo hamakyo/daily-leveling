@@ -257,6 +257,28 @@ describe("worker app auth and log guards", () => {
     });
   });
 
+  it("redirects browser navigation back to login when auth/google/start is rate limited", async () => {
+    const response = await request(
+      "/auth/google/start",
+      {
+        headers: {
+          accept: "text/html,application/xhtml+xml",
+        },
+      },
+      {
+        AUTH_RATE_LIMITS: {
+          get: vi.fn(async () => "10"),
+          put: vi.fn(async () => undefined),
+        },
+      },
+    );
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toContain("/?authError=rate_limited&retryAfter=");
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("ratelimit-limit")).toBe("10");
+  });
+
   it("rate limits auth/google/callback before token exchange", async () => {
     const response = await request("/auth/google/callback?code=test-code&state=test-state", {
       headers: {
@@ -279,6 +301,28 @@ describe("worker app auth and log guards", () => {
         message: "リクエストが多すぎます。しばらく待ってから再試行してください。",
       },
     });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("redirects browser navigation back to login when auth/google/callback is rate limited", async () => {
+    const response = await request(
+      "/auth/google/callback?code=test-code&state=test-state",
+      {
+        headers: {
+          accept: "text/html,application/xhtml+xml",
+          cookie: "dl_google_state=test-state; dl_google_verifier=test-verifier",
+        },
+      },
+      {
+        AUTH_RATE_LIMITS: {
+          get: vi.fn(async () => "10"),
+          put: vi.fn(async () => undefined),
+        },
+      },
+    );
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toContain("/?authError=rate_limited&retryAfter=");
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

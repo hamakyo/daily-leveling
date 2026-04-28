@@ -124,6 +124,15 @@ button {
   box-shadow: 0 10px 24px rgba(47, 125, 240, 0.2);
 }
 
+.primary-button:disabled,
+.secondary-button:disabled,
+.pill:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+  transform: none;
+  box-shadow: none;
+}
+
 .secondary-button {
   border: 1px solid rgba(47, 125, 240, 0.24);
   background: var(--color-soft-blue);
@@ -136,6 +145,12 @@ button {
 .toggle-button:hover,
 .template-card:hover {
   transform: translateY(-1px);
+}
+
+.primary-button:disabled:hover,
+.secondary-button:disabled:hover,
+.pill:disabled:hover {
+  transform: none;
 }
 
 .feature-ribbon,
@@ -362,6 +377,10 @@ button {
 .status-text {
   margin: 0.25rem 0 0;
   color: var(--color-muted);
+}
+
+.status-text--warning {
+  color: #8a5b00;
 }
 
 .checkbox-toggle {

@@ -144,6 +144,7 @@ pnpm run release:check:production
 - auth route のレート制限は `AUTH_RATE_LIMITS` KV binding を使い、local では binding 未設定時に no-op で動作します。
 - auth rate limit 応答には `Retry-After` と `RateLimit-*` header を付けます。
 - JWKS 取得失敗、署名不正、rate limit 超過は構造化 security log として `wrangler tail` から追えるようにします。
+- ブラウザのログイン導線では、`/auth/google/start` と `/auth/google/callback` の rate limit 時にログイン画面へ戻し、再試行までの秒数を表示します。
 - UI のフォントスタックは sans-serif のみを使用します。
 
 ## E2E テスト

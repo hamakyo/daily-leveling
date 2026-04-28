@@ -5,10 +5,7 @@ test("guest can see the login screen", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "Daily Leveling" })).toBeVisible();
   await expect(page.getByText("毎日の記録を素早く続けられる")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Google でログイン" })).toHaveAttribute(
-    "href",
-    "/auth/google/start",
-  );
+  await expect(page.getByRole("button", { name: "Google でログイン" })).toBeVisible();
 });
 
 test("google auth start emits the expected OAuth redirect", async ({ baseURL, request }) => {

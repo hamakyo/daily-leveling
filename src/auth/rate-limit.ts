@@ -76,6 +76,28 @@ function applyRateLimitHeaders(response: Response, result: RateLimitResult) {
   response.headers.set("RateLimit-Reset", String(result.retryAfterSeconds));
 }
 
+function prefersHtmlNavigation(request: Request): boolean {
+  if (request.method !== "GET") {
+    return false;
+  }
+
+  const accept = request.headers.get("Accept") || "";
+  return accept.includes("text/html");
+}
+
+function createRateLimitedRedirect(appBaseUrl: string, retryAfterSeconds: number): Response {
+  const location = new URL("/", appBaseUrl);
+  location.searchParams.set("authError", "rate_limited");
+  location.searchParams.set("retryAfter", String(retryAfterSeconds));
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: location.toString(),
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
 export function createAuthRateLimitMiddleware(rule: RateLimitRule) {
   return createMiddleware<AppEnv>(async (c, next) => {
     const store = c.env.AUTH_RATE_LIMITS;
@@ -95,9 +117,15 @@ export function createAuthRateLimitMiddleware(rule: RateLimitRule) {
         retryAfterSeconds: result.retryAfterSeconds,
         limit: result.limit,
       });
-      const response = jsonError(
-        new AppError(429, "RATE_LIMITED", "リクエストが多すぎます。しばらく待ってから再試行してください。"),
-      );
+      const response = prefersHtmlNavigation(c.req.raw)
+        ? createRateLimitedRedirect(c.env.APP_BASE_URL, result.retryAfterSeconds)
+        : jsonError(
+            new AppError(
+              429,
+              "RATE_LIMITED",
+              "リクエストが多すぎます。しばらく待ってから再試行してください。",
+            ),
+          );
       applyRateLimitHeaders(response, result);
       return response;
     }
