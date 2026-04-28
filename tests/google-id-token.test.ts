@@ -79,13 +79,17 @@ async function createJwt(options?: {
 }
 
 describe("google jwks id token verification", () => {
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+
   beforeEach(() => {
     fetchMock.mockReset();
     resetGoogleJwksCacheForTesting();
+    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    consoleWarnSpy.mockRestore();
   });
 
   it("parses max-age from cache-control headers", () => {
@@ -144,11 +148,18 @@ describe("google jwks id token verification", () => {
       ),
     );
 
-    await expect(verifyGoogleIdToken(env, invalidToken)).rejects.toMatchObject({
+    await expect(verifyGoogleIdToken(env, invalidToken, {
+      route: "/auth/google/callback",
+      clientIp: "203.0.113.10",
+      requestId: "cf-ray-1",
+    })).rejects.toMatchObject({
       status: 401,
       code: "UNAUTHORIZED",
       message: "Google トークンの署名検証に失敗しました。",
     });
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('"event":"google_id_token_invalid_signature"'),
+    );
   });
 
   it("rejects when email_verified is false", async () => {
@@ -175,11 +186,16 @@ describe("google jwks id token verification", () => {
     const jwt = await createJwt();
     fetchMock.mockRejectedValue(new Error("network down"));
 
-    await expect(verifyGoogleIdToken(env, jwt.token)).rejects.toMatchObject({
+    await expect(verifyGoogleIdToken(env, jwt.token, {
+      route: "/auth/google/callback",
+      clientIp: "203.0.113.10",
+      requestId: "cf-ray-2",
+    })).rejects.toMatchObject({
       status: 503,
       code: "SERVICE_UNAVAILABLE",
       message: "Google 公開鍵の取得に失敗しました。",
     });
+    expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('"event":"google_jwks_fetch_failed"'));
   });
 
   it("rejects when a cache entry has expired and the refresh fails", async () => {

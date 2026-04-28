@@ -233,6 +233,19 @@
 - 制限超過時に `429 RATE_LIMITED` と `Retry-After` を返す
 - JWKS fetch 失敗時は有効 cache が無い限り fail-closed になる
 
+### Phase 14: Auth Observability and Operations
+
+成果物:
+- auth rate limit 応答への `RateLimit-*` header 付与
+- JWKS 取得失敗、署名不正、rate limit 超過の構造化 security log
+- production 向け auth 障害の確認手順
+- README / docs の運用メモ更新
+
+完了条件:
+- auth rate limit 超過時に `Retry-After` に加えて `RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset` が返る
+- `/auth/google/callback` の JWKS 異常系が token 内容を漏らさず log に残る
+- `wrangler tail` で auth 異常系イベントを追える運用手順が docs にある
+
 ## Stop-the-Line ルール
 
 以下がコード上で固まるまで feature work を先に進めないこと:

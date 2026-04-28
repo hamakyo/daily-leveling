@@ -37,14 +37,20 @@ describe("auth rate limit", () => {
 
     await expect(consumeRateLimit(kv.binding, rule, "203.0.113.10", 61_000)).resolves.toEqual({
       allowed: true,
+      limit: 2,
+      remaining: 1,
       retryAfterSeconds: 59,
     });
     await expect(consumeRateLimit(kv.binding, rule, "203.0.113.10", 61_000)).resolves.toEqual({
       allowed: true,
+      limit: 2,
+      remaining: 0,
       retryAfterSeconds: 59,
     });
     await expect(consumeRateLimit(kv.binding, rule, "203.0.113.10", 61_000)).resolves.toEqual({
       allowed: false,
+      limit: 2,
+      remaining: 0,
       retryAfterSeconds: 59,
     });
   });

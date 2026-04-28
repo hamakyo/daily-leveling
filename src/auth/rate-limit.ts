@@ -2,7 +2,8 @@ import { createMiddleware } from "hono/factory";
 import type { AppEnv } from "../api/context";
 import { AppError } from "../lib/errors";
 import { jsonError } from "../lib/http";
-import { getClientIp } from "../lib/request";
+import { logSecurityEvent } from "../lib/observability";
+import { getClientIp, getRequestId } from "../lib/request";
 
 interface RateLimitRule {
   routeKey: string;
@@ -12,6 +13,8 @@ interface RateLimitRule {
 
 export interface RateLimitResult {
   allowed: boolean;
+  limit: number;
+  remaining: number;
   retryAfterSeconds: number;
 }
 
@@ -45,6 +48,8 @@ export async function consumeRateLimit(
   if (Number.isFinite(current) && current >= rule.limit) {
     return {
       allowed: false,
+      limit: rule.limit,
+      remaining: 0,
       retryAfterSeconds,
     };
   }
@@ -56,11 +61,20 @@ export async function consumeRateLimit(
 
   return {
     allowed: true,
+    limit: rule.limit,
+    remaining: Math.max(rule.limit - nextCount, 0),
     retryAfterSeconds,
   };
 }
 
 export { getRateLimitTtlSeconds };
+
+function applyRateLimitHeaders(response: Response, result: RateLimitResult) {
+  response.headers.set("Retry-After", String(result.retryAfterSeconds));
+  response.headers.set("RateLimit-Limit", String(result.limit));
+  response.headers.set("RateLimit-Remaining", String(result.remaining));
+  response.headers.set("RateLimit-Reset", String(result.retryAfterSeconds));
+}
 
 export function createAuthRateLimitMiddleware(rule: RateLimitRule) {
   return createMiddleware<AppEnv>(async (c, next) => {
@@ -70,15 +84,25 @@ export function createAuthRateLimitMiddleware(rule: RateLimitRule) {
       return;
     }
 
-    const result = await consumeRateLimit(store, rule, getClientIp(c.req.raw));
+    const clientIp = getClientIp(c.req.raw);
+    const requestId = getRequestId(c.req.raw);
+    const result = await consumeRateLimit(store, rule, clientIp);
     if (!result.allowed) {
+      logSecurityEvent("auth_rate_limited", {
+        routeKey: rule.routeKey,
+        clientIp,
+        requestId,
+        retryAfterSeconds: result.retryAfterSeconds,
+        limit: result.limit,
+      });
       const response = jsonError(
         new AppError(429, "RATE_LIMITED", "リクエストが多すぎます。しばらく待ってから再試行してください。"),
       );
-      response.headers.set("Retry-After", String(result.retryAfterSeconds));
+      applyRateLimitHeaders(response, result);
       return response;
     }
 
     await next();
+    applyRateLimitHeaders(c.res, result);
   });
 }

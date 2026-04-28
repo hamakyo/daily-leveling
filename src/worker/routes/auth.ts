@@ -20,6 +20,7 @@ import { getDefaultTimezone, getSessionTtlSeconds } from "../../lib/config";
 import { createOpaqueToken, sha256Base64Url } from "../../lib/crypto";
 import { AppError } from "../../lib/errors";
 import { jsonOk } from "../../lib/http";
+import { getClientIp, getRequestId } from "../../lib/request";
 import { getClientMetadata, getOAuthCookieOptions } from "./helpers";
 
 export const authRoutes = new Hono<AppEnv>();
@@ -67,7 +68,11 @@ authRoutes.get("/auth/google/callback", limitGoogleCallback, async (c) => {
   }
 
   const tokens = await exchangeAuthorizationCode(c.env, code, codeVerifier);
-  const identity = await verifyGoogleIdToken(c.env, tokens.idToken);
+  const identity = await verifyGoogleIdToken(c.env, tokens.idToken, {
+    route: "/auth/google/callback",
+    clientIp: getClientIp(c.req.raw),
+    requestId: getRequestId(c.req.raw),
+  });
   const db = c.get("db");
   const user = await upsertGoogleUser(db, identity, getDefaultTimezone(c.env));
   const sessionToken = createOpaqueToken();

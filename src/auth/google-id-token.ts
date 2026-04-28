@@ -1,4 +1,5 @@
 import { AppError } from "../lib/errors";
+import { logSecurityEvent } from "../lib/observability";
 
 const encoder = new TextEncoder();
 const GOOGLE_JWKS_URL = "https://www.googleapis.com/oauth2/v3/certs";
@@ -36,7 +37,26 @@ interface JwksCacheEntry {
   keys: Map<string, JsonWebKey>;
 }
 
+interface AuthObservabilityContext {
+  clientIp?: string;
+  requestId?: string;
+  route?: string;
+}
+
 let googleJwksCache: JwksCacheEntry | null = null;
+
+function reportAuthEvent(
+  event: string,
+  context: AuthObservabilityContext | undefined,
+  details: Record<string, string | number | boolean | null | undefined>,
+) {
+  logSecurityEvent(event, {
+    route: context?.route,
+    clientIp: context?.clientIp,
+    requestId: context?.requestId,
+    ...details,
+  });
+}
 
 function base64UrlDecodeToBytes(input: string): Uint8Array {
   const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
@@ -93,14 +113,27 @@ function getRequiredEnvValue(env: Env, key: "GOOGLE_CLIENT_ID"): string {
   throw new AppError(500, "ENV_MISCONFIGURED", `認証設定 ${key} が不足しています。`);
 }
 
-async function fetchGoogleJwks(): Promise<JwksCacheEntry> {
-  const response = await fetch(GOOGLE_JWKS_URL, {
-    headers: {
-      Accept: "application/json",
-    },
-  });
+async function fetchGoogleJwks(context?: AuthObservabilityContext): Promise<JwksCacheEntry> {
+  let response: Response;
+
+  try {
+    response = await fetch(GOOGLE_JWKS_URL, {
+      headers: {
+        Accept: "application/json",
+      },
+    });
+  } catch {
+    reportAuthEvent("google_jwks_fetch_failed", context, {
+      reason: "network_error",
+    });
+    throw new AppError(503, "SERVICE_UNAVAILABLE", "Google 公開鍵の取得に失敗しました。");
+  }
 
   if (!response.ok) {
+    reportAuthEvent("google_jwks_fetch_failed", context, {
+      reason: "http_error",
+      status: response.status,
+    });
     throw new AppError(503, "SERVICE_UNAVAILABLE", "Google 公開鍵の取得に失敗しました。");
   }
 
@@ -115,6 +148,9 @@ async function fetchGoogleJwks(): Promise<JwksCacheEntry> {
   }
 
   if (keys.size === 0) {
+    reportAuthEvent("google_jwks_fetch_failed", context, {
+      reason: "empty_keys",
+    });
     throw new AppError(503, "SERVICE_UNAVAILABLE", "Google 公開鍵の取得に失敗しました。");
   }
 
@@ -125,16 +161,19 @@ async function fetchGoogleJwks(): Promise<JwksCacheEntry> {
   };
 }
 
-async function getGoogleJwk(kid: string): Promise<JsonWebKey> {
+async function getGoogleJwk(kid: string, context?: AuthObservabilityContext): Promise<JsonWebKey> {
   const currentTime = Date.now();
   if (googleJwksCache && googleJwksCache.expiresAt > currentTime && googleJwksCache.keys.has(kid)) {
     return googleJwksCache.keys.get(kid) as JsonWebKey;
   }
 
   try {
-    googleJwksCache = await fetchGoogleJwks();
+    googleJwksCache = await fetchGoogleJwks(context);
   } catch (error) {
     if (googleJwksCache && googleJwksCache.expiresAt > currentTime && googleJwksCache.keys.has(kid)) {
+      reportAuthEvent("google_jwks_cache_fallback_used", context, {
+        kid,
+      });
       return googleJwksCache.keys.get(kid) as JsonWebKey;
     }
 
@@ -147,6 +186,9 @@ async function getGoogleJwk(kid: string): Promise<JsonWebKey> {
 
   const jwk = googleJwksCache.keys.get(kid);
   if (!jwk) {
+    reportAuthEvent("google_id_token_unknown_kid", context, {
+      kid,
+    });
     throw new AppError(401, "UNAUTHORIZED", "Google トークンの key id が不正です。");
   }
 
@@ -204,6 +246,7 @@ function validateClaims(env: Env, payload: GoogleIdTokenClaims): void {
 export async function verifyGoogleIdToken(
   env: Env,
   idToken: string,
+  context?: AuthObservabilityContext,
 ): Promise<{
   googleSub: string;
   email: string;
@@ -213,15 +256,23 @@ export async function verifyGoogleIdToken(
   const parsed = parseJwt(idToken);
 
   if (parsed.header.alg !== "RS256") {
+    reportAuthEvent("google_id_token_invalid_alg", context, {
+      alg: parsed.header.alg || "missing",
+    });
     throw new AppError(401, "UNAUTHORIZED", "Google トークンの署名方式が不正です。");
   }
 
   if (!parsed.header.kid) {
+    reportAuthEvent("google_id_token_missing_kid", context, {});
     throw new AppError(401, "UNAUTHORIZED", "Google トークンの key id がありません。");
   }
 
-  const jwk = await getGoogleJwk(parsed.header.kid);
+  const jwk = await getGoogleJwk(parsed.header.kid, context);
   if (jwk.alg && jwk.alg !== "RS256") {
+    reportAuthEvent("google_jwk_invalid_alg", context, {
+      alg: jwk.alg,
+      kid: parsed.header.kid,
+    });
     throw new AppError(401, "UNAUTHORIZED", "Google 公開鍵の署名方式が不正です。");
   }
 
@@ -234,6 +285,9 @@ export async function verifyGoogleIdToken(
   );
 
   if (!isValid) {
+    reportAuthEvent("google_id_token_invalid_signature", context, {
+      kid: parsed.header.kid,
+    });
     throw new AppError(401, "UNAUTHORIZED", "Google トークンの署名検証に失敗しました。");
   }
 

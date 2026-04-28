@@ -135,6 +135,7 @@ deploy 後の最低確認:
 pnpm run cf:health:production
 curl -I https://daily-leveling.hamakyoh.workers.dev/
 curl -I https://daily-leveling.hamakyoh.workers.dev/healthz
+pnpm exec wrangler tail --env production
 ```
 
 確認ポイント:
@@ -144,3 +145,4 @@ curl -I https://daily-leveling.hamakyoh.workers.dev/healthz
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `X-Frame-Options: DENY`
 - auth route で `AUTH_RATE_LIMITS` binding が解決される
+- 必要に応じて auth の `security_event` log を tail できる

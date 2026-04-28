@@ -246,6 +246,9 @@ describe("worker app auth and log guards", () => {
 
     expect(response.status).toBe(429);
     expect(response.headers.get("retry-after")).toBeTruthy();
+    expect(response.headers.get("ratelimit-limit")).toBe("10");
+    expect(response.headers.get("ratelimit-remaining")).toBe("0");
+    expect(response.headers.get("ratelimit-reset")).toBeTruthy();
     await expect(response.json()).resolves.toEqual({
       error: {
         code: "RATE_LIMITED",
@@ -268,6 +271,8 @@ describe("worker app auth and log guards", () => {
 
     expect(response.status).toBe(429);
     expect(response.headers.get("retry-after")).toBeTruthy();
+    expect(response.headers.get("ratelimit-limit")).toBe("10");
+    expect(response.headers.get("ratelimit-remaining")).toBe("0");
     await expect(response.json()).resolves.toEqual({
       error: {
         code: "RATE_LIMITED",
@@ -556,6 +561,8 @@ describe("worker app auth and log guards", () => {
 
     expect(response.status).toBe(429);
     expect(response.headers.get("retry-after")).toBeTruthy();
+    expect(response.headers.get("ratelimit-limit")).toBe("30");
+    expect(response.headers.get("ratelimit-remaining")).toBe("0");
     expect(repositoryMocks.revokeSession).not.toHaveBeenCalled();
   });
 

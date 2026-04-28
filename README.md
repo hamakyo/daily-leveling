@@ -142,6 +142,8 @@ pnpm run release:check:production
 - API と静的 HTML の両方に `Content-Security-Policy` などのセキュリティヘッダを付与します。
 - Google ID token は `tokeninfo` ではなく JWKS を使って Worker 内で署名検証します。
 - auth route のレート制限は `AUTH_RATE_LIMITS` KV binding を使い、local では binding 未設定時に no-op で動作します。
+- auth rate limit 応答には `Retry-After` と `RateLimit-*` header を付けます。
+- JWKS 取得失敗、署名不正、rate limit 超過は構造化 security log として `wrangler tail` から追えるようにします。
 - UI のフォントスタックは sans-serif のみを使用します。
 
 ## E2E テスト
@@ -222,6 +224,7 @@ pnpm run deploy:test
 pnpm run deploy:staging
 pnpm run deploy:production
 pnpm exec wrangler secret put DATABASE_URL --env production
+pnpm exec wrangler tail --env production
 ```
 
 `cf:deployments:*` は初回 deploy 前だと対象 Worker が存在せず失敗することがあります。

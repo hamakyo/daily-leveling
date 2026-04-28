@@ -18,3 +18,17 @@ export function getClientIp(request: Request): string {
 
   return "unknown";
 }
+
+export function getRequestId(request: Request): string {
+  const cfRay = request.headers.get("CF-Ray")?.trim();
+  if (cfRay) {
+    return cfRay;
+  }
+
+  const requestId = request.headers.get("X-Request-Id")?.trim();
+  if (requestId) {
+    return requestId;
+  }
+
+  return "unknown";
+}
