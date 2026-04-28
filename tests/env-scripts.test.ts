@@ -4,7 +4,9 @@ const envModulePath = "../scripts/shared/env.mjs";
 const {
   getEnvFilesForTarget,
   getMigrationEnvIssues,
+  getMigrationSafetyIssues,
   getRuntimeEnvIssues,
+  isLocalDatabaseUrl,
   resolveTargetEnvironment,
 } = await import(envModulePath);
 
@@ -63,6 +65,27 @@ describe("runtime env checks", () => {
         DATABASE_URL: "https://example.com/db",
       }),
     ).toContain("DATABASE_URL は postgres:// または postgresql:// 形式で指定してください。");
+  });
+
+  it("detects localhost database urls", () => {
+    expect(isLocalDatabaseUrl("postgres://user:pass@localhost:5432/daily_leveling")).toBe(true);
+    expect(isLocalDatabaseUrl("postgres://user:pass@127.0.0.1:5432/daily_leveling")).toBe(true);
+    expect(isLocalDatabaseUrl("postgres://user:pass@db.example.com:5432/daily_leveling")).toBe(false);
+  });
+
+  it("rejects localhost migration urls outside local environment", () => {
+    expect(
+      getMigrationSafetyIssues("production", {
+        DATABASE_URL: "postgres://user:pass@localhost:5432/daily_leveling",
+      }),
+    ).toContain(
+      "production 環境の DATABASE_URL が localhost/127.0.0.1 を指しています。誤った migration を防ぐため実行を中止しました。",
+    );
+    expect(
+      getMigrationSafetyIssues("local", {
+        DATABASE_URL: "postgres://user:pass@localhost:5432/daily_leveling",
+      }),
+    ).toEqual([]);
   });
 
   it("returns environment-specific files before common files", () => {

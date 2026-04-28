@@ -6,6 +6,7 @@ import postgres from "postgres";
 import {
   formatIssues,
   getMigrationEnvIssues,
+  getMigrationSafetyIssues,
   loadEnvFiles,
   resolveTargetEnvironment,
   TARGET_ENVIRONMENTS,
@@ -52,13 +53,14 @@ try {
 
 const loadedFiles = loadEnvFiles({ targetEnvironment });
 const issues = getMigrationEnvIssues();
+const safetyIssues = getMigrationSafetyIssues(targetEnvironment);
 
-if (issues.length > 0) {
+if (issues.length > 0 || safetyIssues.length > 0) {
   console.error(`migration 実行前の環境変数チェックに失敗しました。対象環境: ${targetEnvironment}`);
   if (loadedFiles.length > 0) {
     console.error(`読み込んだファイル: ${loadedFiles.join(", ")}`);
   }
-  console.error(formatIssues(issues));
+  console.error(formatIssues([...issues, ...safetyIssues]));
   process.exit(1);
 }
 

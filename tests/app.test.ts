@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CurrentUser, HabitRecord, SessionRecord } from "../src/lib/types";
 
+const assetMocks = vi.hoisted(() => ({
+  fetch: vi.fn(async () => new Response("not found", { status: 404 })),
+}));
+
 const clientMocks = vi.hoisted(() => ({
   getDb: vi.fn(() => ({ kind: "db" })),
 }));
@@ -33,7 +37,7 @@ import { app } from "../src/worker/app";
 
 const env: Env = {
   ASSETS: {
-    fetch: async () => new Response("not found", { status: 404 }),
+    fetch: assetMocks.fetch,
   },
   APP_BASE_URL: "http://localhost:8787",
   DATABASE_URL: "postgres://user:pass@localhost:5432/daily_leveling_test",
@@ -60,6 +64,7 @@ const session: SessionRecord = {
 };
 
 const habitId = "11111111-1111-4111-8111-111111111111";
+const trustedOrigin = "http://localhost:8787";
 
 function makeHabit(overrides: Partial<HabitRecord> = {}): HabitRecord {
   return {
@@ -67,12 +72,12 @@ function makeHabit(overrides: Partial<HabitRecord> = {}): HabitRecord {
     userId: currentUser.id,
     name: "Read",
     emoji: "📚",
-  color: "blue",
-  frequencyType: "daily",
-  targetWeekdays: null,
-  intervalDays: null,
-  isActive: true,
-  displayOrder: 0,
+    color: "blue",
+    frequencyType: "daily",
+    targetWeekdays: null,
+    intervalDays: null,
+    isActive: true,
+    displayOrder: 0,
     createdAt: "2026-04-20T00:00:00.000Z",
     updatedAt: "2026-04-20T00:00:00.000Z",
     ...overrides,
@@ -94,6 +99,7 @@ function makeExecutionContext() {
 describe("worker app auth and log guards", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    assetMocks.fetch.mockResolvedValue(new Response("not found", { status: 404 }));
     clientMocks.getDb.mockReturnValue({ kind: "db" });
     repositoryMocks.countCompletedHabitLogs.mockResolvedValue(0);
     repositoryMocks.touchSession.mockResolvedValue(undefined);
@@ -191,6 +197,51 @@ describe("worker app auth and log guards", () => {
     });
   });
 
+  it("returns dashboard bootstrap payload in a single request", async () => {
+    repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
+      user: currentUser,
+      session,
+    });
+    repositoryMocks.listHabits.mockResolvedValue([makeHabit()]);
+    repositoryMocks.listLogsInRange
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+    repositoryMocks.countCompletedHabitLogs.mockResolvedValue(12);
+
+    const response = await request("/dashboard/bootstrap?month=2026-04", {
+      headers: {
+        cookie: "dl_session=valid-session-token",
+      },
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      today: {
+        date: expect.any(String),
+        level: {
+          level: 2,
+          completedCount: 12,
+          totalXp: 120,
+        },
+      },
+      monthly: {
+        month: "2026-04",
+      },
+      weekly: {
+        date: expect.any(String),
+        week: {
+          startDate: expect.any(String),
+          endDate: expect.any(String),
+        },
+      },
+      habits: [expect.objectContaining({ id: habitId })],
+      settings: {
+        timezone: "UTC",
+        defaultView: "today",
+      },
+    });
+  });
+
   it("creates an every_n_days habit with intervalDays", async () => {
     repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
       user: currentUser,
@@ -210,6 +261,7 @@ describe("worker app auth and log guards", () => {
       headers: {
         "content-type": "application/json",
         cookie: "dl_session=valid-session-token",
+        origin: trustedOrigin,
       },
       body: JSON.stringify({
         name: "Laundry",
@@ -240,6 +292,7 @@ describe("worker app auth and log guards", () => {
       headers: {
         "content-type": "application/json",
         cookie: "dl_session=valid-session-token",
+        origin: trustedOrigin,
       },
       body: JSON.stringify({ status: true }),
     });
@@ -271,6 +324,7 @@ describe("worker app auth and log guards", () => {
       headers: {
         "content-type": "application/json",
         cookie: "dl_session=valid-session-token",
+        origin: trustedOrigin,
       },
       body: JSON.stringify({ status: true }),
     });
@@ -306,6 +360,7 @@ describe("worker app auth and log guards", () => {
       headers: {
         "content-type": "application/json",
         cookie: "dl_session=valid-session-token",
+        origin: trustedOrigin,
       },
       body: JSON.stringify({ status: true }),
     });
@@ -336,6 +391,7 @@ describe("worker app auth and log guards", () => {
       headers: {
         "content-type": "application/json",
         cookie: "dl_session=valid-session-token",
+        origin: trustedOrigin,
       },
       body: JSON.stringify({ status: true }),
     });
@@ -348,5 +404,122 @@ describe("worker app auth and log guards", () => {
       },
     });
     expect(repositoryMocks.upsertHabitLog).not.toHaveBeenCalled();
+  });
+
+  it("rejects unsafe state-changing requests from an untrusted origin", async () => {
+    repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
+      user: currentUser,
+      session,
+    });
+
+    const response = await request("/auth/logout", {
+      method: "POST",
+      headers: {
+        cookie: "dl_session=valid-session-token",
+        origin: "https://evil.example",
+      },
+    });
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "FORBIDDEN",
+        message: "不正なリクエスト元です。",
+      },
+    });
+    expect(repositoryMocks.revokeSession).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid calendar month values with 400", async () => {
+    repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
+      user: currentUser,
+      session,
+    });
+
+    const response = await request("/dashboard/bootstrap?month=2026-13&date=2026-04-28", {
+      headers: {
+        cookie: "dl_session=valid-session-token",
+      },
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "INVALID_INPUT",
+        message: "month には実在する年月を指定してください。",
+      },
+    });
+  });
+
+  it("rejects invalid calendar date values with 400", async () => {
+    repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
+      user: currentUser,
+      session,
+    });
+
+    const response = await request("/dashboard/bootstrap?month=2026-04&date=2026-02-31", {
+      headers: {
+        cookie: "dl_session=valid-session-token",
+      },
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "INVALID_INPUT",
+        message: "date には実在する日付を指定してください。",
+      },
+    });
+  });
+
+  it("does not expose internal error messages", async () => {
+    repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
+      user: currentUser,
+      session,
+    });
+    repositoryMocks.listHabits.mockRejectedValue(new Error("secret stack detail"));
+
+    const response = await request("/dashboard/today", {
+      headers: {
+        cookie: "dl_session=valid-session-token",
+      },
+    });
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "予期しないエラーが発生しました。",
+      },
+    });
+  });
+
+  it("adds browser security headers to responses", async () => {
+    const response = await request("/healthz");
+
+    expect(response.headers.get("content-security-policy")).toContain("default-src 'self'");
+    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(response.headers.get("x-frame-options")).toBe("DENY");
+    expect(response.headers.get("referrer-policy")).toBe("strict-origin-when-cross-origin");
+  });
+
+  it("serves static assets through the worker with security headers", async () => {
+    assetMocks.fetch.mockResolvedValue(
+      new Response("<!doctype html><title>Daily Leveling</title>", {
+        status: 200,
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "public, max-age=0, must-revalidate",
+        },
+      }),
+    );
+
+    const response = await request("/");
+
+    expect(response.status).toBe(200);
+    await expect(response.text()).resolves.toContain("Daily Leveling");
+    expect(assetMocks.fetch).toHaveBeenCalledTimes(1);
+    expect(response.headers.get("content-security-policy")).toContain("default-src 'self'");
+    expect(response.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
   });
 });

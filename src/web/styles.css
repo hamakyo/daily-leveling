@@ -569,6 +569,33 @@ button {
   font-size: 1.6rem;
 }
 
+.week-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 0.75rem;
+}
+
+.week-day-card {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.9rem;
+  border-radius: 18px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+}
+
+.week-day-card strong {
+  font-size: 1.35rem;
+  color: var(--color-ink);
+}
+
+.week-day-card__label {
+  color: var(--color-violet);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 .monthly-grid {
   display: grid;
   --monthly-grid-label-width: 140px;

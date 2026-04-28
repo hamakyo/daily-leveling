@@ -280,6 +280,7 @@ export function buildWeeklyDashboard(
   const targetCount = dailyStats.reduce((sum, stat) => sum + stat.targetCount, 0);
 
   return {
+    date,
     week: {
       startDate,
       endDate,

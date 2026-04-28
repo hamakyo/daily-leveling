@@ -4,10 +4,20 @@ export function currentMonthString() {
   return new Date().toISOString().slice(0, 7);
 }
 
+export function currentDateString() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function shiftMonth(month: string, delta: number): string {
   const [year, monthNumber] = month.split("-").map(Number);
   const next = new Date(Date.UTC(year, monthNumber - 1 + delta, 1));
   return `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+export function shiftDate(date: string, deltaDays: number): string {
+  const [year, monthNumber, dayNumber] = date.split("-").map(Number);
+  const next = new Date(Date.UTC(year, monthNumber - 1, dayNumber + deltaDays));
+  return `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, "0")}-${String(next.getUTCDate()).padStart(2, "0")}`;
 }
 
 export function isTargetDay(

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  assertIsoDate,
+  assertIsoMonth,
   enumerateDates,
   getMonthRange,
   getWeekRange,
@@ -37,5 +39,15 @@ describe("date helpers", () => {
   it("validates IANA timezones", () => {
     expect(isValidTimezone("Asia/Tokyo")).toBe(true);
     expect(isValidTimezone("Mars/Base")).toBe(false);
+  });
+
+  it("rejects non-existent calendar dates", () => {
+    expect(() => assertIsoDate("2026-02-31")).toThrow("実在する日付");
+    expect(() => assertIsoDate("2026-04-31")).toThrow("実在する日付");
+  });
+
+  it("rejects non-existent months", () => {
+    expect(() => assertIsoMonth("2026-13")).toThrow("実在する年月");
+    expect(() => assertIsoMonth("2026-00")).toThrow("実在する年月");
   });
 });

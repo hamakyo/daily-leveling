@@ -4,6 +4,7 @@ import type { AppEnv } from "../api/context";
 import { getDb } from "../db/client";
 import { AppError } from "../lib/errors";
 import { jsonError, jsonOk, normalizeError } from "../lib/http";
+import { applySecurityHeaders, assertTrustedOrigin } from "../lib/security";
 import { authRoutes } from "./routes/auth";
 import { dashboardRoutes } from "./routes/dashboard";
 import { e2eRoutes } from "./routes/e2e";
@@ -13,6 +14,23 @@ import { onboardingRoutes } from "./routes/onboarding";
 import { settingsRoutes } from "./routes/settings";
 
 export const app = new Hono<AppEnv>();
+
+async function serveAsset(request: Request, env: Env) {
+  const response = await env.ASSETS.fetch(request);
+  return applySecurityHeaders(
+    new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    }),
+  );
+}
+
+app.use("*", async (c, next) => {
+  assertTrustedOrigin(c.req.raw, c.env.APP_BASE_URL);
+  await next();
+  applySecurityHeaders(c.res);
+});
 
 app.get("/healthz", () =>
   jsonOk({
@@ -50,14 +68,22 @@ app.use("*", async (c, next) => {
 });
 
 app.onError((error) => {
-  if (error instanceof ZodError) {
-    return jsonError(new AppError(400, "INVALID_INPUT", error.issues[0]?.message || "入力内容が不正です。"));
+  if (!(error instanceof AppError) && !(error instanceof ZodError)) {
+    console.error(error);
   }
 
-  return jsonError(normalizeError(error));
+  if (error instanceof ZodError) {
+    return applySecurityHeaders(
+      jsonError(new AppError(400, "INVALID_INPUT", error.issues[0]?.message || "入力内容が不正です。")),
+    );
+  }
+
+  return applySecurityHeaders(jsonError(normalizeError(error)));
 });
 
-app.notFound(() => jsonError(new AppError(404, "NOT_FOUND", "指定されたルートは存在しません。")));
+app.notFound(() =>
+  applySecurityHeaders(jsonError(new AppError(404, "NOT_FOUND", "指定されたルートは存在しません。"))),
+);
 
 app.route("/", authRoutes);
 app.route("/", onboardingRoutes);
@@ -66,3 +92,5 @@ app.route("/", logRoutes);
 app.route("/", dashboardRoutes);
 app.route("/", settingsRoutes);
 app.route("/", e2eRoutes);
+
+app.on(["GET", "HEAD"], "*", (c) => serveAsset(c.req.raw, c.env));

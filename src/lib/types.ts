@@ -98,6 +98,7 @@ export interface MonthlyDashboard {
 }
 
 export interface WeeklyDashboard {
+  date: string;
   week: {
     startDate: string;
     endDate: string;

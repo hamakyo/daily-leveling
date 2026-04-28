@@ -31,6 +31,10 @@ test("authenticated user can create and complete a habit", async ({ page }, test
     await expect(levelPanel.getByText("10 XP", { exact: true })).toBeVisible();
     await expect(levelPanel.locator(".level-meter__fill")).toHaveAttribute("style", /width: 10%/);
 
+    await page.getByRole("button", { name: "週間" }).click();
+    await expect(page.getByRole("heading", { name: "週間ビュー" })).toBeVisible();
+    await expect(page.getByText("週間達成率")).toBeVisible();
+
     await page.getByRole("button", { name: "月間" }).click();
     await expect(page.getByRole("heading", { name: "月間ビュー" })).toBeVisible();
     await expect(page.getByText("月間達成率")).toBeVisible();

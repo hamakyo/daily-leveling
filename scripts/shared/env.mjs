@@ -172,6 +172,15 @@ export function getRuntimeEnvIssues(env = process.env) {
   return issues;
 }
 
+export function isLocalDatabaseUrl(value) {
+  try {
+    const url = new URL(value);
+    return ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
 export function getMigrationEnvIssues(env = process.env) {
   const issues = [];
 
@@ -182,6 +191,20 @@ export function getMigrationEnvIssues(env = process.env) {
   }
 
   return issues;
+}
+
+export function getMigrationSafetyIssues(targetEnvironment, env = process.env) {
+  if (targetEnvironment === "local") {
+    return [];
+  }
+
+  if (env.DATABASE_URL && isLocalDatabaseUrl(env.DATABASE_URL)) {
+    return [
+      `${targetEnvironment} 環境の DATABASE_URL が localhost/127.0.0.1 を指しています。誤った migration を防ぐため実行を中止しました。`,
+    ];
+  }
+
+  return [];
 }
 
 export function formatIssues(issues) {

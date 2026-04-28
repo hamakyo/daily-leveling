@@ -8,18 +8,7 @@ compatibility_flags = ["nodejs_compat"]
 directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
-run_worker_first = [
-  "/__e2e/*",
-  "/healthz",
-  "/auth/*",
-  "/dashboard/*",
-  "/habits",
-  "/habits/*",
-  "/logs",
-  "/onboarding/*",
-  "/settings",
-  "/settings/*"
-]
+run_worker_first = true
 
 [env.test]
 name = "daily-leveling-test"

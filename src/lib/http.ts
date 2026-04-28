@@ -26,7 +26,7 @@ export function normalizeError(error: unknown): AppError {
   }
 
   if (error instanceof Error) {
-    return new AppError(500, "INTERNAL_ERROR", error.message);
+    return new AppError(500, "INTERNAL_ERROR", "予期しないエラーが発生しました。");
   }
 
   return new AppError(500, "INTERNAL_ERROR", "予期しないエラーが発生しました。");

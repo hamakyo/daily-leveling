@@ -1,4 +1,4 @@
-import type { CurrentUser, HabitRecord, MonthlyDashboard, TodayDashboard } from "../lib/types";
+import type { CurrentUser, HabitRecord, MonthlyDashboard, TodayDashboard, WeeklyDashboard } from "../lib/types";
 
 export type UserSettings = {
   timezone: string;
@@ -28,6 +28,7 @@ export type HabitPayload = {
 
 export type DashboardData = {
   today: TodayDashboard;
+  weekly: WeeklyDashboard;
   monthly: MonthlyDashboard;
   habits: HabitRecord[];
   settings: UserSettings;

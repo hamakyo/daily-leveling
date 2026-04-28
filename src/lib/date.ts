@@ -49,12 +49,28 @@ export function assertIsoDate(value: string, fieldName = "date"): string {
     throw new AppError(400, "INVALID_INPUT", `${fieldName} は YYYY-MM-DD 形式で指定してください。`);
   }
 
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day, 12));
+  const normalized = `${parsed.getUTCFullYear()}-${String(parsed.getUTCMonth() + 1).padStart(2, "0")}-${String(parsed.getUTCDate()).padStart(2, "0")}`;
+
+  if (normalized !== value) {
+    throw new AppError(400, "INVALID_INPUT", `${fieldName} には実在する日付を指定してください。`);
+  }
+
   return value;
 }
 
 export function assertIsoMonth(value: string): string {
   if (!isIsoMonth(value)) {
     throw new AppError(400, "INVALID_INPUT", "month は YYYY-MM 形式で指定してください。");
+  }
+
+  const [year, month] = value.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, 1, 12));
+  const normalized = `${parsed.getUTCFullYear()}-${String(parsed.getUTCMonth() + 1).padStart(2, "0")}`;
+
+  if (normalized !== value) {
+    throw new AppError(400, "INVALID_INPUT", "month には実在する年月を指定してください。");
   }
 
   return value;

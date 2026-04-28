@@ -88,20 +88,12 @@ export async function createHabit(payload: HabitPayload): Promise<void> {
   });
 }
 
-export async function loadDashboardData(month: string): Promise<DashboardData> {
-  const [today, monthly, habitsResponse, settingsResponse] = await Promise.all([
-    apiFetch<TodayDashboard>("/dashboard/today"),
-    apiFetch<MonthlyDashboard>(`/dashboard/monthly?month=${month}`),
-    apiFetch<HabitsResponse>("/habits"),
-    apiFetch<SettingsResponse>("/settings"),
-  ]);
-
-  return {
-    today,
-    monthly,
-    habits: habitsResponse.habits,
-    settings: settingsResponse.settings,
-  };
+export async function loadDashboardData(month: string, date: string): Promise<DashboardData> {
+  const params = new URLSearchParams({
+    month,
+    date,
+  });
+  return apiFetch<DashboardData>(`/dashboard/bootstrap?${params.toString()}`);
 }
 
 export async function toggleHabitLog(habitId: string, date: string, status: boolean): Promise<void> {

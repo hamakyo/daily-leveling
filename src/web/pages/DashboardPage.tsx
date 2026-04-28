@@ -1,5 +1,5 @@
 import { type FormEvent, startTransition, useDeferredValue, useEffect, useRef, useState } from "react";
-import type { CurrentUser, HabitRecord, MonthlyDashboard, TodayDashboard } from "../../lib/types";
+import type { CurrentUser, HabitRecord, MonthlyDashboard, TodayDashboard, WeeklyDashboard } from "../../lib/types";
 import {
   archiveHabit as archiveHabitApi,
   createHabit,
@@ -14,9 +14,10 @@ import { HabitList } from "../components/HabitList";
 import { MonthlyHabitGrid } from "../components/MonthlyHabitGrid";
 import { SettingsForm } from "../components/SettingsForm";
 import { TodayHabitList } from "../components/TodayHabitList";
+import { WeeklySummary } from "../components/WeeklySummary";
 import type { CreateHabitInput, UserSettings } from "../types";
 import { createEmptyHabitForm, toHabitPayload } from "../utils/habitForm";
-import { currentMonthString, shiftMonth } from "../utils/month";
+import { currentDateString, currentMonthString, shiftDate, shiftMonth } from "../utils/month";
 
 export function DashboardPage({
   user,
@@ -27,13 +28,17 @@ export function DashboardPage({
   onUserReload: () => Promise<void>;
   onLogout: () => Promise<void>;
 }) {
-  const [view, setView] = useState<"today" | "month">(user.defaultView);
+  const [view, setView] = useState<"today" | "week" | "month">(user.defaultView);
   const [selectedMonth, setSelectedMonth] = useState(currentMonthString());
+  const [selectedWeekDate, setSelectedWeekDate] = useState(currentDateString());
   const deferredMonth = useDeferredValue(selectedMonth);
+  const deferredWeekDate = useDeferredValue(selectedWeekDate);
   const [today, setToday] = useState<TodayDashboard | null>(null);
+  const [weekly, setWeekly] = useState<WeeklyDashboard | null>(null);
   const [monthly, setMonthly] = useState<MonthlyDashboard | null>(null);
   const [habits, setHabits] = useState<HabitRecord[]>([]);
   const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [form, setForm] = useState<CreateHabitInput>(createEmptyHabitForm);
@@ -45,15 +50,20 @@ export function DashboardPage({
   const levelTransitionTimeoutRef = useRef<number | null>(null);
   const previousLevelRef = useRef<{ level: number; progressRate: number } | null>(null);
 
-  async function refreshDashboardData(month = deferredMonth) {
+  async function refreshDashboardData(month = deferredMonth, weekDate = deferredWeekDate) {
     setIsBusy(true);
     try {
-      const data = await loadDashboardData(month);
+      const data = await loadDashboardData(month, weekDate);
       setToday(data.today);
+      setWeekly(data.weekly);
       setMonthly(data.monthly);
       setHabits(data.habits);
       setSettings(data.settings);
+      setDashboardError(null);
       return data;
+    } catch (error) {
+      setDashboardError(error instanceof Error ? error.message : "ダッシュボードの読み込みに失敗しました。");
+      return null;
     } finally {
       setIsBusy(false);
     }
@@ -61,7 +71,7 @@ export function DashboardPage({
 
   useEffect(() => {
     void refreshDashboardData();
-  }, [deferredMonth]);
+  }, [deferredMonth, deferredWeekDate]);
 
   useEffect(() => {
     if (!today) {
@@ -150,8 +160,8 @@ export function DashboardPage({
   }, [todayCompleteState]);
 
   async function reloadAll(message?: string) {
-    await Promise.all([refreshDashboardData(), onUserReload()]);
-    if (message) {
+    const [dashboardData] = await Promise.all([refreshDashboardData(), onUserReload()]);
+    if (message && dashboardData) {
       setNotice(message);
     }
   }
@@ -170,7 +180,7 @@ export function DashboardPage({
     }
 
     const nextData = await refreshDashboardData(feedbackMonth);
-    if (!status) {
+    if (!status || !nextData) {
       return;
     }
 
@@ -270,6 +280,13 @@ export function DashboardPage({
               今日
             </button>
             <button
+              className={view === "week" ? "pill pill--active" : "pill"}
+              onClick={() => setView("week")}
+              type="button"
+            >
+              週間
+            </button>
+            <button
               className={view === "month" ? "pill pill--active" : "pill"}
               onClick={() => setView("month")}
               type="button"
@@ -310,7 +327,19 @@ export function DashboardPage({
 
       <section className="panel-grid panel-grid--dashboard">
         <div className="panel panel--wide">
-          {view === "today" ? (
+          {dashboardError ? (
+            <div className="stack-space">
+              <header className="section-header">
+                <h2>ダッシュボードを読み込めませんでした</h2>
+              </header>
+              <p className="status-text status-text--error">{dashboardError}</p>
+              <div className="toolbar">
+                <button className="primary-button" onClick={() => void refreshDashboardData()} type="button">
+                  再試行
+                </button>
+              </div>
+            </div>
+          ) : view === "today" ? (
             <div className="stack-space">
               <header className="section-header">
                 <h2>今日の記録</h2>
@@ -331,6 +360,36 @@ export function DashboardPage({
                 onToggle={(habitId, status) => void toggleHabit(habitId, status)}
                 today={today}
               />
+            </div>
+          ) : view === "week" ? (
+            <div className="stack-space">
+              <header className="section-header">
+                <h2>週間ビュー</h2>
+                <div className="toolbar">
+                  <button
+                    className="pill"
+                    onClick={() => {
+                      startTransition(() => setSelectedWeekDate((current) => shiftDate(current, -7)));
+                    }}
+                    type="button"
+                  >
+                    前週
+                  </button>
+                  <span className="month-chip">
+                    {weekly ? `${weekly.week.startDate} - ${weekly.week.endDate}` : deferredWeekDate}
+                  </span>
+                  <button
+                    className="pill"
+                    onClick={() => {
+                      startTransition(() => setSelectedWeekDate((current) => shiftDate(current, 7)));
+                    }}
+                    type="button"
+                  >
+                    次週
+                  </button>
+                </div>
+              </header>
+              <WeeklySummary weekly={weekly} />
             </div>
           ) : (
             <div className="stack-space">
