@@ -5,6 +5,8 @@ const assetMocks = vi.hoisted(() => ({
   fetch: vi.fn(async () => new Response("not found", { status: 404 })),
 }));
 
+const fetchMock = vi.hoisted(() => vi.fn());
+
 const clientMocks = vi.hoisted(() => ({
   getDb: vi.fn(() => ({ kind: "db" })),
 }));
@@ -32,6 +34,7 @@ const repositoryMocks = vi.hoisted(() => ({
 
 vi.mock("../src/db/client", () => clientMocks);
 vi.mock("../src/db/repositories", () => repositoryMocks);
+vi.stubGlobal("fetch", fetchMock);
 
 import { app } from "../src/worker/app";
 
@@ -65,6 +68,7 @@ const session: SessionRecord = {
 
 const habitId = "11111111-1111-4111-8111-111111111111";
 const trustedOrigin = "http://localhost:8787";
+const encoder = new TextEncoder();
 
 function makeHabit(overrides: Partial<HabitRecord> = {}): HabitRecord {
   return {
@@ -84,8 +88,11 @@ function makeHabit(overrides: Partial<HabitRecord> = {}): HabitRecord {
   };
 }
 
-async function request(path: string, init?: RequestInit) {
-  return app.request(`http://localhost${path}`, init, env);
+async function request(path: string, init?: RequestInit, envOverride?: Partial<Env>) {
+  return app.request(`http://localhost${path}`, init, {
+    ...env,
+    ...envOverride,
+  });
 }
 
 function makeExecutionContext() {
@@ -96,10 +103,68 @@ function makeExecutionContext() {
   } as NonNullable<Parameters<typeof app.request>[3]>;
 }
 
+function base64UrlEncode(bytes: Uint8Array): string {
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+async function createSignedGoogleIdToken() {
+  const keyPair = await crypto.subtle.generateKey(
+    {
+      name: "RSASSA-PKCS1-v1_5",
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: "SHA-256",
+    },
+    true,
+    ["sign", "verify"],
+  );
+  const header = {
+    alg: "RS256",
+    kid: "test-kid",
+    typ: "JWT",
+  };
+  const payload = {
+    iss: "https://accounts.google.com",
+    aud: env.GOOGLE_CLIENT_ID,
+    sub: "google-sub-1",
+    email: "tester@example.com",
+    email_verified: true,
+    exp: Math.floor(Date.now() / 1000) + 600,
+    name: "Tester",
+  };
+  const signingInput = `${base64UrlEncode(encoder.encode(JSON.stringify(header)))}.${base64UrlEncode(
+    encoder.encode(JSON.stringify(payload)),
+  )}`;
+  const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", keyPair.privateKey, encoder.encode(signingInput));
+  const publicJwk = (await crypto.subtle.exportKey("jwk", keyPair.publicKey)) as JsonWebKey;
+
+  return {
+    token: `${signingInput}.${base64UrlEncode(new Uint8Array(signature))}`,
+    jwk: {
+      ...publicJwk,
+      kid: "test-kid",
+      alg: "RS256",
+      use: "sig",
+    },
+  };
+}
+
 describe("worker app auth and log guards", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     assetMocks.fetch.mockResolvedValue(new Response("not found", { status: 404 }));
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(async () => {
+      throw new Error("Unexpected fetch");
+    });
     clientMocks.getDb.mockReturnValue({ kind: "db" });
     repositoryMocks.countCompletedHabitLogs.mockResolvedValue(0);
     repositoryMocks.touchSession.mockResolvedValue(undefined);
@@ -169,6 +234,47 @@ describe("worker app auth and log guards", () => {
     expect(authorizationUrl.searchParams.get("scope")).toBe("openid email profile");
     expect(authorizationUrl.searchParams.has("access_type")).toBe(false);
     expect(authorizationUrl.searchParams.get("prompt")).toBe("select_account");
+  });
+
+  it("rate limits auth/google/start when the threshold is exceeded", async () => {
+    const response = await request("/auth/google/start", undefined, {
+      AUTH_RATE_LIMITS: {
+        get: vi.fn(async () => "10"),
+        put: vi.fn(async () => undefined),
+      },
+    });
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBeTruthy();
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "RATE_LIMITED",
+        message: "リクエストが多すぎます。しばらく待ってから再試行してください。",
+      },
+    });
+  });
+
+  it("rate limits auth/google/callback before token exchange", async () => {
+    const response = await request("/auth/google/callback?code=test-code&state=test-state", {
+      headers: {
+        cookie: "dl_google_state=test-state; dl_google_verifier=test-verifier",
+      },
+    }, {
+      AUTH_RATE_LIMITS: {
+        get: vi.fn(async () => "10"),
+        put: vi.fn(async () => undefined),
+      },
+    });
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBeTruthy();
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "RATE_LIMITED",
+        message: "リクエストが多すぎます。しばらく待ってから再試行してください。",
+      },
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("returns level progress in today dashboard", async () => {
@@ -428,6 +534,72 @@ describe("worker app auth and log guards", () => {
       },
     });
     expect(repositoryMocks.revokeSession).not.toHaveBeenCalled();
+  });
+
+  it("rate limits logout before session revocation", async () => {
+    const response = await request(
+      "/auth/logout",
+      {
+        method: "POST",
+        headers: {
+          cookie: "dl_session=valid-session-token",
+          origin: trustedOrigin,
+        },
+      },
+      {
+        AUTH_RATE_LIMITS: {
+          get: vi.fn(async () => "30"),
+          put: vi.fn(async () => undefined),
+        },
+      },
+    );
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBeTruthy();
+    expect(repositoryMocks.revokeSession).not.toHaveBeenCalled();
+  });
+
+  it("rejects oauth callback when the google token signature is invalid", async () => {
+    const signedToken = await createSignedGoogleIdToken();
+    const invalidToken = `${signedToken.token.split(".").slice(0, 2).join(".")}.${base64UrlEncode(
+      new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]),
+    )}`;
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+
+      if (url === "https://oauth2.googleapis.com/token") {
+        return Response.json({ id_token: invalidToken });
+      }
+
+      if (url === "https://www.googleapis.com/oauth2/v3/certs") {
+        return Response.json(
+          { keys: [signedToken.jwk] },
+          {
+            headers: {
+              "Cache-Control": "public, max-age=300",
+            },
+          },
+        );
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+
+    const response = await request("/auth/google/callback?code=test-code&state=test-state", {
+      headers: {
+        cookie: "dl_google_state=test-state; dl_google_verifier=test-verifier",
+      },
+    });
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "UNAUTHORIZED",
+        message: "Google トークンの署名検証に失敗しました。",
+      },
+    });
+    expect(repositoryMocks.upsertGoogleUser).not.toHaveBeenCalled();
   });
 
   it("rejects invalid calendar month values with 400", async () => {

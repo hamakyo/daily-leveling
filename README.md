@@ -140,6 +140,8 @@ pnpm run release:check:production
 - セッション Cookie は Worker 側で管理し、`HttpOnly` です。
 - state-changing request は `Origin / Referer` を Worker 側で検証します。
 - API と静的 HTML の両方に `Content-Security-Policy` などのセキュリティヘッダを付与します。
+- Google ID token は `tokeninfo` ではなく JWKS を使って Worker 内で署名検証します。
+- auth route のレート制限は `AUTH_RATE_LIMITS` KV binding を使い、local では binding 未設定時に no-op で動作します。
 - UI のフォントスタックは sans-serif のみを使用します。
 
 ## E2E テスト

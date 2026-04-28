@@ -1,6 +1,7 @@
 account_id             = "replace_me"
 worker_name            = "daily-leveling-test"
 enable_workers_dev     = true
+auth_rate_limits_namespace_id = "c0202689adc9494cb5aabd5f5376ef71"
 zone_id                = "replace_me_if_using_zone_routing"
 custom_domain_hostname = "test.example.com"
 route_pattern          = null

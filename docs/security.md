@@ -6,9 +6,33 @@
 OAuth start では `state` と PKCE を使い、callback で state と code verifier を検証します。
 refresh token は保存しないため、Google 認可 URL では `access_type=offline` を要求しません。
 
-ID token 検証は現時点では Google `tokeninfo` endpoint を使います。
-検証対象は `iss`、`aud`、`sub`、`email`、`email_verified` です。
-JWKS によるローカル検証は次フェーズの hardening 対象です。
+ID token は Worker 内で Google JWKS を使ってローカル検証します。
+署名方式は `RS256` のみ許可し、JWT header の `alg` と `kid` を確認したうえで、
+Google 公開鍵を `crypto.subtle.verify()` へ渡して署名を検証します。
+claims では `iss`, `aud`, `sub`, `email`, `email_verified`, `exp` を必須検証します。
+
+JWKS は module scope で cache し、Google の `Cache-Control: max-age=...` を優先して TTL を決めます。
+有効 cache が無い状態で JWKS 再取得に失敗した場合は fail-closed とし、認証を拒否します。
+
+## Auth Rate Limit
+
+auth 系 endpoint には Cloudflare KV を使った固定窓 rate limit を入れます。
+binding 名は `AUTH_RATE_LIMITS` です。
+
+対象 route:
+- `GET /auth/google/start`
+- `GET /auth/google/callback`
+- `POST /auth/logout`
+
+キーは `route + clientIp + minuteBucket` です。
+client IP は `CF-Connecting-IP` を優先し、無ければ `X-Forwarded-For` の先頭を使います。
+
+現在の制限値:
+- `/auth/google/start`: `10 req / 1 min / IP`
+- `/auth/google/callback`: `10 req / 1 min / IP`
+- `/auth/logout`: `30 req / 1 min / IP`
+
+超過時は `429 RATE_LIMITED` と `Retry-After` header を返します。
 
 ## Session
 

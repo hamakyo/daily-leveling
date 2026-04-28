@@ -6,6 +6,7 @@
 
 この Terraform レイヤーでは主に以下を扱います。
 - Worker サービス定義
+- auth route 用 KV namespace
 - `workers.dev` の有効化/無効化
 - 任意の Custom Domain
 - 任意の Worker Route
@@ -57,3 +58,5 @@ terraform apply -var-file=staging.tfvars
 - 既存オリジンの前段に Worker を挟む場合は Route を使います。
 - Worker コードのバージョン管理まで Terraform に寄せる意図がない限り、コード配備は Wrangler のままにしてください。
 - 実運用では `test / staging / production` で Terraform の `tfvars` と state を分けてください。
+- `auth_rate_limits_namespace_id` を `tfvars` で渡すと既存 namespace を再利用し、`null` のときだけ Terraform が新規作成します。
+- `wrangler.toml` の `AUTH_RATE_LIMITS` binding と `tfvars` の `auth_rate_limits_namespace_id` は同じ ID にそろえてください。

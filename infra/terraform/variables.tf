@@ -35,3 +35,10 @@ variable "route_pattern" {
   default     = null
   nullable    = true
 }
+
+variable "auth_rate_limits_namespace_id" {
+  description = "Existing KV namespace ID for auth rate limiting. When null, Terraform creates one."
+  type        = string
+  default     = null
+  nullable    = true
+}

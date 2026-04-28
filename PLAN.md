@@ -217,6 +217,22 @@
 - `/healthz` と `/` の両方に `Content-Security-Policy` などのヘッダが付く
 - 追加した security regression test が通る
 
+### Phase 13: Auth Hardening with JWKS and KV Rate Limits
+
+成果物:
+- Google ID token の JWKS ローカル検証
+- module scope の JWKS cache
+- auth route 向け KV ベースの固定窓 rate limit
+- `AUTH_RATE_LIMITS` binding と Terraform 側 namespace
+- README / docs の auth hardening 更新
+
+完了条件:
+- `tokeninfo` に依存せず `RS256` の署名検証ができる
+- `iss`, `aud`, `sub`, `email`, `email_verified`, `exp` を必須検証する
+- `/auth/google/start`, `/auth/google/callback`, `/auth/logout` が rate limit を持つ
+- 制限超過時に `429 RATE_LIMITED` と `Retry-After` を返す
+- JWKS fetch 失敗時は有効 cache が無い限り fail-closed になる
+
 ## Stop-the-Line ルール
 
 以下がコード上で固まるまで feature work を先に進めないこと:

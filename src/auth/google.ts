@@ -1,5 +1,6 @@
 import { createOpaqueToken, createPkcePair } from "../lib/crypto";
 import { AppError } from "../lib/errors";
+export { verifyGoogleIdToken } from "./google-id-token";
 
 export const GOOGLE_STATE_COOKIE = "dl_google_state";
 export const GOOGLE_VERIFIER_COOKIE = "dl_google_verifier";
@@ -9,17 +10,6 @@ interface GoogleTokenResponse {
   id_token?: string;
   error?: string;
   error_description?: string;
-}
-
-interface GoogleTokenInfoResponse {
-  aud?: string;
-  email?: string;
-  email_verified?: string;
-  exp?: string;
-  iss?: string;
-  name?: string;
-  picture?: string;
-  sub?: string;
 }
 
 function getRequiredEnvValue(
@@ -97,55 +87,4 @@ export async function exchangeAuthorizationCode(
   return {
     idToken: payload.id_token,
   };
-}
-
-export async function verifyGoogleIdToken(
-  env: Env,
-  idToken: string,
-): Promise<{
-  googleSub: string;
-  email: string;
-  displayName: string;
-  avatarUrl: string | null;
-}> {
-  const url = new URL("https://oauth2.googleapis.com/tokeninfo");
-  url.searchParams.set("id_token", idToken);
-
-  const response = await fetch(url);
-  const payload = (await response.json()) as GoogleTokenInfoResponse;
-
-  if (!response.ok) {
-    throw new AppError(401, "UNAUTHORIZED", "Google トークンの検証に失敗しました。");
-  }
-
-  validateGoogleTokenInfo(env, payload);
-
-  return {
-    googleSub: payload.sub as string,
-    email: payload.email as string,
-    displayName: payload.name || (payload.email as string),
-    avatarUrl: payload.picture || null,
-  };
-}
-
-function validateGoogleTokenInfo(env: Env, payload: GoogleTokenInfoResponse): void {
-  if (payload.iss && !["accounts.google.com", "https://accounts.google.com"].includes(payload.iss)) {
-    throw new AppError(401, "UNAUTHORIZED", "Google トークンの issuer が不正です。");
-  }
-
-  if (payload.exp && Number(payload.exp) <= Math.floor(Date.now() / 1000)) {
-    throw new AppError(401, "UNAUTHORIZED", "Google トークンの有効期限が切れています。");
-  }
-
-  if (payload.aud !== getRequiredEnvValue(env, "GOOGLE_CLIENT_ID")) {
-    throw new AppError(401, "UNAUTHORIZED", "Google トークンの audience が一致しません。");
-  }
-
-  if (!payload.sub || !payload.email) {
-    throw new AppError(401, "UNAUTHORIZED", "Google トークンに必要なユーザー情報がありません。");
-  }
-
-  if (payload.email_verified !== "true") {
-    throw new AppError(401, "UNAUTHORIZED", "Google アカウントのメール認証が必要です。");
-  }
 }

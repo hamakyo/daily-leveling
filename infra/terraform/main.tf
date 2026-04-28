@@ -11,6 +11,12 @@ resource "cloudflare_worker" "daily_leveling" {
   }
 }
 
+resource "cloudflare_workers_kv_namespace" "auth_rate_limits" {
+  count      = var.auth_rate_limits_namespace_id == null ? 1 : 0
+  account_id = var.account_id
+  title      = "${var.worker_name}-auth-rate-limits"
+}
+
 resource "cloudflare_workers_custom_domain" "daily_leveling" {
   count = var.custom_domain_hostname == null ? 0 : 1
 

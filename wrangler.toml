@@ -13,6 +13,10 @@ run_worker_first = true
 [env.test]
 name = "daily-leveling-test"
 
+[[env.test.kv_namespaces]]
+binding = "AUTH_RATE_LIMITS"
+id = "c0202689adc9494cb5aabd5f5376ef71"
+
 [env.test.vars]
 APP_BASE_URL = "https://daily-leveling-test.hamakyoh.workers.dev"
 DEFAULT_TIMEZONE = "Asia/Tokyo"
@@ -22,6 +26,10 @@ SESSION_TTL_SECONDS = "1209600"
 [env.staging]
 name = "daily-leveling-staging"
 
+[[env.staging.kv_namespaces]]
+binding = "AUTH_RATE_LIMITS"
+id = "ae242c82536543ba90fea6cfc840fe27"
+
 [env.staging.vars]
 APP_BASE_URL = "https://daily-leveling-staging.hamakyoh.workers.dev"
 DEFAULT_TIMEZONE = "Asia/Tokyo"
@@ -30,6 +38,10 @@ SESSION_TTL_SECONDS = "1209600"
 
 [env.production]
 name = "daily-leveling"
+
+[[env.production.kv_namespaces]]
+binding = "AUTH_RATE_LIMITS"
+id = "85d30600b7474aaa8a5b4788b5173db9"
 
 [[env.production.hyperdrive]]
 binding = "HYPERDRIVE"

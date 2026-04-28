@@ -65,5 +65,7 @@ Vitest の integration test では、少なくとも以下を固定します。
 - `500 INTERNAL_ERROR` に内部例外 message が露出しない
 - 不正な `Origin` を持つ state-changing request が `403` になる
 - `/healthz` と `/` に security header が付く
+- auth route の rate limit 超過で `429 RATE_LIMITED` と `Retry-After` が返る
+- Google ID token の JWKS 検証で invalid signature が拒否される
 
 この領域は regress しやすいため、配信経路や middleware 順序を変えるときは必ず再確認します。

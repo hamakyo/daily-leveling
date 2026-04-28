@@ -2,12 +2,18 @@ type AssetFetcher = {
   fetch(input: Request | URL | string): Promise<Response>;
 };
 
+type KVNamespaceBinding = {
+  get(key: string, type: "text"): Promise<string | null>;
+  put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
+};
+
 type HyperdriveBinding = {
   connectionString: string;
 };
 
 interface Env {
   ASSETS: AssetFetcher;
+  AUTH_RATE_LIMITS?: KVNamespaceBinding;
   APP_BASE_URL: string;
   DATABASE_URL?: string;
   DEFAULT_TIMEZONE?: string;

@@ -76,9 +76,24 @@ Worker runtime で必要な secret:
 - `GOOGLE_CLIENT_SECRET`
 - fallback が必要な場合のみ `DATABASE_URL`
 
+Worker runtime で必要な binding:
+- `AUTH_RATE_LIMITS`
+- production のみ `HYPERDRIVE`
+
 ローカル CLI から Cloudflare secrets を同期する場合は、対象環境ごとの `.env.<env>` または `.dev.vars.<env>` を使います。
 `.dev.vars` だけを fallback として読む状態、または `DATABASE_URL` が `localhost` / `127.0.0.1` の状態では、誤同期防止のため sync script が失敗します。
 Hyperdrive を使う通常運用では、Cloudflare Worker secret の `DATABASE_URL` は必須ではありません。
+
+## Auth Rate Limit KV
+
+auth route の rate limit は Cloudflare KV namespace を使います。
+Terraform は `worker_name-auth-rate-limits` という title で namespace を作成し、その ID を output します。
+
+Wrangler では `AUTH_RATE_LIMITS` binding を各環境に設定します。
+現在の `wrangler.toml` には作成済み namespace ID を反映しています。
+Terraform 側でも同じ ID を `auth_rate_limits_namespace_id` として渡し、既存 namespace を再利用してください。
+
+local dev は binding 未設定でも起動し、その場合 rate limit は no-op です。
 
 ## Supabase PostgreSQL
 
@@ -128,3 +143,4 @@ curl -I https://daily-leveling.hamakyoh.workers.dev/healthz
 - `X-Content-Type-Options: nosniff`
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `X-Frame-Options: DENY`
+- auth route で `AUTH_RATE_LIMITS` binding が解決される

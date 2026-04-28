@@ -1,5 +1,6 @@
 import { z, type ZodSchema } from "zod";
 import { isSecureCookie } from "../../lib/config";
+import { getClientIp } from "../../lib/request";
 
 export const pathUuidSchema = z.string().uuid("UUID の形式が不正です。");
 
@@ -19,7 +20,7 @@ export function parseBody<T>(schema: ZodSchema<T>, body: unknown): T {
 
 export function getClientMetadata(request: Request) {
   return {
-    ipAddress: request.headers.get("CF-Connecting-IP"),
+    ipAddress: getClientIp(request),
     userAgent: request.headers.get("user-agent"),
   };
 }

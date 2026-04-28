@@ -9,6 +9,7 @@ import {
   exchangeAuthorizationCode,
   verifyGoogleIdToken,
 } from "../../auth/google";
+import { createAuthRateLimitMiddleware } from "../../auth/rate-limit";
 import { clearSessionCookie, setSessionCookie } from "../../auth/session";
 import {
   createSession,
@@ -23,7 +24,25 @@ import { getClientMetadata, getOAuthCookieOptions } from "./helpers";
 
 export const authRoutes = new Hono<AppEnv>();
 
-authRoutes.get("/auth/google/start", async (c) => {
+const limitGoogleStart = createAuthRateLimitMiddleware({
+  routeKey: "/auth/google/start",
+  limit: 10,
+  windowSeconds: 60,
+});
+
+const limitGoogleCallback = createAuthRateLimitMiddleware({
+  routeKey: "/auth/google/callback",
+  limit: 10,
+  windowSeconds: 60,
+});
+
+const limitLogout = createAuthRateLimitMiddleware({
+  routeKey: "/auth/logout",
+  limit: 30,
+  windowSeconds: 60,
+});
+
+authRoutes.get("/auth/google/start", limitGoogleStart, async (c) => {
   const { authorizationUrl, state, codeVerifier } = await createGoogleAuthorizationRequest(c.env);
   const cookieOptions = getOAuthCookieOptions(c.env);
 
@@ -33,7 +52,7 @@ authRoutes.get("/auth/google/start", async (c) => {
   return c.redirect(authorizationUrl, 302);
 });
 
-authRoutes.get("/auth/google/callback", async (c) => {
+authRoutes.get("/auth/google/callback", limitGoogleCallback, async (c) => {
   const code = c.req.query("code");
   const state = c.req.query("state");
   const expectedState = getCookie(c, GOOGLE_STATE_COOKIE);
@@ -71,7 +90,7 @@ authRoutes.get("/auth/me", requireAuth, async (c) => {
   });
 });
 
-authRoutes.post("/auth/logout", requireAuth, async (c) => {
+authRoutes.post("/auth/logout", limitLogout, requireAuth, async (c) => {
   const db = c.get("db");
   await revokeSession(db, c.get("session").id);
   clearSessionCookie(c);
