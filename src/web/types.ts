@@ -2,7 +2,7 @@ import type { CurrentUser, HabitRecord, MonthlyDashboard, TodayDashboard, Weekly
 
 export type UserSettings = {
   timezone: string;
-  defaultView: "today" | "month";
+  defaultView: "today" | "week" | "month";
 };
 
 export type ScreenState =

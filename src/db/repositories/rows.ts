@@ -12,7 +12,7 @@ export type UserProfileRow = {
   avatar_url: string | null;
   onboarding_completed: boolean;
   timezone: string;
-  default_view: "today" | "month";
+  default_view: "today" | "week" | "month";
 };
 
 export type HabitRow = {

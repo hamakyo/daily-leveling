@@ -139,7 +139,7 @@ MVP のコア API:
   - `daily` と `weekly_days` のときは未指定または null でなければならない
 - `date`: `YYYY-MM-DD`
 - `month`: `YYYY-MM`
-- `defaultView`: `today | month`
+- `defaultView`: `today | week | month`
 - `timezone`: 有効な IANA timezone
 
 ## セキュリティルール

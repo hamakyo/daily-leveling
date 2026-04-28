@@ -1,5 +1,5 @@
 export type FrequencyType = "daily" | "weekly_days" | "every_n_days";
-export type DefaultView = "today" | "month";
+export type DefaultView = "today" | "week" | "month";
 
 export interface CurrentUser {
   id: string;

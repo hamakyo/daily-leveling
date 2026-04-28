@@ -559,6 +559,44 @@ describe("worker app auth and log guards", () => {
     expect(repositoryMocks.revokeSession).not.toHaveBeenCalled();
   });
 
+  it("accepts week as a valid settings defaultView", async () => {
+    repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
+      user: currentUser,
+      session,
+    });
+    repositoryMocks.updateSettings.mockResolvedValue({
+      timezone: "UTC",
+      defaultView: "week",
+    });
+    repositoryMocks.getCurrentUserById.mockResolvedValue({
+      ...currentUser,
+      defaultView: "week",
+    });
+
+    const response = await request("/settings", {
+      method: "PATCH",
+      headers: {
+        "content-type": "application/json",
+        cookie: "dl_session=valid-session-token",
+        origin: trustedOrigin,
+      },
+      body: JSON.stringify({
+        defaultView: "week",
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      settings: {
+        timezone: "UTC",
+        defaultView: "week",
+      },
+    });
+    expect(repositoryMocks.updateSettings).toHaveBeenCalledWith({ kind: "db" }, currentUser.id, {
+      defaultView: "week",
+    });
+  });
+
   it("rejects oauth callback when the google token signature is invalid", async () => {
     const signedToken = await createSignedGoogleIdToken();
     const invalidToken = `${signedToken.token.split(".").slice(0, 2).join(".")}.${base64UrlEncode(

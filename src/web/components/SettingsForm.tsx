@@ -40,6 +40,7 @@ export function SettingsForm({
           }
         >
           <option value="today">今日</option>
+          <option value="week">週間</option>
           <option value="month">月間</option>
         </select>
       </label>

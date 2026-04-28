@@ -4,12 +4,12 @@ import type { settingsSchema } from "../../domain/validation";
 
 type UserSettings = {
   timezone: string;
-  defaultView: "today" | "month";
+  defaultView: "today" | "week" | "month";
 };
 
 type UserSettingsRow = {
   timezone: string;
-  default_view: "today" | "month";
+  default_view: "today" | "week" | "month";
 };
 
 export async function getSettings(db: DatabaseClient, userId: string): Promise<UserSettings | null> {

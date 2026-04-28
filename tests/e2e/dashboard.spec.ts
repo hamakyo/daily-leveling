@@ -97,3 +97,26 @@ test("authenticated user can create an every_n_days habit", async ({ page }, tes
     await resetE2eUser(page, testId);
   }
 });
+
+test("authenticated user can persist weekly as the default view", async ({ page }, testInfo) => {
+  const testId = makeTestId(testInfo);
+
+  await loginAsE2eUser(page, testId, { onboardingCompleted: true });
+  try {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "今日の記録" })).toBeVisible();
+
+    await page.getByLabel("初期表示").selectOption("week");
+    const settingsResponse = page.waitForResponse((response) => {
+      return response.request().method() === "PATCH" && response.url().includes("/settings");
+    });
+    await page.getByRole("button", { name: "設定を保存" }).click();
+    expect((await settingsResponse).ok()).toBe(true);
+
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "週間ビュー" })).toBeVisible();
+    await expect(page.getByText("週間達成率")).toBeVisible();
+  } finally {
+    await resetE2eUser(page, testId);
+  }
+});
