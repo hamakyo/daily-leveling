@@ -1,5 +1,6 @@
 import type { FormEvent } from "react";
 import type { UserSettings } from "../types";
+import { buildTimezoneOptions } from "../utils/timezones";
 
 export function SettingsForm({
   settings,
@@ -14,11 +15,13 @@ export function SettingsForm({
     return <p>設定を読み込んでいます。</p>;
   }
 
+  const timezoneOptions = buildTimezoneOptions(settings.timezone);
+
   return (
     <form className="stack-form" onSubmit={onSubmit}>
       <label>
         <span>タイムゾーン</span>
-        <input
+        <select
           value={settings.timezone}
           onChange={(event) =>
             onChange({
@@ -26,7 +29,13 @@ export function SettingsForm({
               timezone: event.target.value,
             })
           }
-        />
+        >
+          {timezoneOptions.map((timezone) => (
+            <option key={timezone} value={timezone}>
+              {timezone}
+            </option>
+          ))}
+        </select>
       </label>
       <label>
         <span>初期表示</span>

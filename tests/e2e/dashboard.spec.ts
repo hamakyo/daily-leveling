@@ -100,12 +100,14 @@ test("authenticated user can create an every_n_days habit", async ({ page }, tes
 
 test("authenticated user can persist weekly as the default view", async ({ page }, testInfo) => {
   const testId = makeTestId(testInfo);
+  const timezone = "Asia/Tokyo";
 
   await loginAsE2eUser(page, testId, { onboardingCompleted: true });
   try {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "今日の記録" })).toBeVisible();
 
+    await page.getByLabel("タイムゾーン").selectOption(timezone);
     await page.getByLabel("初期表示").selectOption("week");
     const settingsResponse = page.waitForResponse((response) => {
       return response.request().method() === "PATCH" && response.url().includes("/settings");
@@ -114,6 +116,7 @@ test("authenticated user can persist weekly as the default view", async ({ page 
     expect((await settingsResponse).ok()).toBe(true);
 
     await page.reload();
+    await expect(page.getByLabel("タイムゾーン")).toHaveValue(timezone);
     await expect(page.getByRole("heading", { name: "週間ビュー" })).toBeVisible();
     await expect(page.getByText("週間達成率")).toBeVisible();
   } finally {
