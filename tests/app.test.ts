@@ -692,6 +692,46 @@ describe("worker app auth and log guards", () => {
     });
   });
 
+  it("accepts system as a valid settings theme", async () => {
+    repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
+      user: currentUser,
+      session,
+    });
+    repositoryMocks.updateSettings.mockResolvedValue({
+      timezone: "UTC",
+      defaultView: "today",
+      theme: "system",
+    });
+    repositoryMocks.getCurrentUserById.mockResolvedValue({
+      ...currentUser,
+      theme: "system",
+    });
+
+    const response = await request("/settings", {
+      method: "PATCH",
+      headers: {
+        "content-type": "application/json",
+        cookie: "dl_session=valid-session-token",
+        origin: trustedOrigin,
+      },
+      body: JSON.stringify({
+        theme: "system",
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      settings: {
+        timezone: "UTC",
+        defaultView: "today",
+        theme: "system",
+      },
+    });
+    expect(repositoryMocks.updateSettings).toHaveBeenCalledWith({ kind: "db" }, currentUser.id, {
+      theme: "system",
+    });
+  });
+
   it("rejects invalid settings theme values", async () => {
     repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
       user: currentUser,
@@ -706,7 +746,7 @@ describe("worker app auth and log guards", () => {
         origin: trustedOrigin,
       },
       body: JSON.stringify({
-        theme: "system",
+        theme: "sepia",
       }),
     });
 
