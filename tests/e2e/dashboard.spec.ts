@@ -149,6 +149,14 @@ test("authenticated user can persist weekly as the default view", async ({ page 
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "今日の記録" })).toBeVisible();
     await expect(page.getByRole("button", { name: "設定を保存" })).toBeDisabled();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+
+    await page.getByLabel("表示テーマ").selectOption("dark");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await expect(page.getByRole("button", { name: "元に戻す" })).toBeVisible();
+    await page.getByRole("button", { name: "元に戻す" }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    await expect(page.getByRole("button", { name: "設定を保存" })).toBeDisabled();
 
     await page.getByLabel("タイムゾーン").selectOption(timezone);
     await expect(page.getByRole("button", { name: "元に戻す" })).toBeVisible();
@@ -159,6 +167,7 @@ test("authenticated user can persist weekly as the default view", async ({ page 
 
     await page.getByLabel("タイムゾーン").selectOption(timezone);
     await page.getByLabel("初期表示").selectOption("week");
+    await page.getByLabel("表示テーマ").selectOption("dark");
     const settingsResponse = page.waitForResponse((response) => {
       return response.request().method() === "PATCH" && response.url().includes("/settings");
     });
@@ -168,6 +177,8 @@ test("authenticated user can persist weekly as the default view", async ({ page 
 
     await page.reload();
     await expect(page.getByLabel("タイムゾーン")).toHaveValue(timezone);
+    await expect(page.getByLabel("表示テーマ")).toHaveValue("dark");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await expect(page.getByRole("heading", { name: "週間ビュー" })).toBeVisible();
     await expect(page.getByText("週間達成率")).toBeVisible();
   } finally {

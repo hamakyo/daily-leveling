@@ -5,6 +5,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import type { ScreenState } from "./types";
+import { watchThemePreference } from "./utils/theme";
 
 export function App() {
   const [screen, setScreen] = useState<ScreenState>({ kind: "loading" });
@@ -28,6 +29,10 @@ export function App() {
   useEffect(() => {
     void refreshUser();
   }, []);
+
+  useEffect(() => {
+    return watchThemePreference(screen.kind === "ready" ? screen.user.theme : "light");
+  }, [screen]);
 
   if (fatalError) {
     return (

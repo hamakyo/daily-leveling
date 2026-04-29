@@ -56,6 +56,7 @@ const currentUser: CurrentUser = {
   onboardingCompleted: true,
   timezone: "UTC",
   defaultView: "today",
+  theme: "light",
 };
 
 const session: SessionRecord = {
@@ -393,6 +394,7 @@ describe("worker app auth and log guards", () => {
       settings: {
         timezone: "UTC",
         defaultView: "today",
+        theme: "light",
       },
     });
   });
@@ -618,6 +620,7 @@ describe("worker app auth and log guards", () => {
     repositoryMocks.updateSettings.mockResolvedValue({
       timezone: "UTC",
       defaultView: "week",
+      theme: "light",
     });
     repositoryMocks.getCurrentUserById.mockResolvedValue({
       ...currentUser,
@@ -641,11 +644,74 @@ describe("worker app auth and log guards", () => {
       settings: {
         timezone: "UTC",
         defaultView: "week",
+        theme: "light",
       },
     });
     expect(repositoryMocks.updateSettings).toHaveBeenCalledWith({ kind: "db" }, currentUser.id, {
       defaultView: "week",
     });
+  });
+
+  it("accepts dark as a valid settings theme", async () => {
+    repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
+      user: currentUser,
+      session,
+    });
+    repositoryMocks.updateSettings.mockResolvedValue({
+      timezone: "UTC",
+      defaultView: "today",
+      theme: "dark",
+    });
+    repositoryMocks.getCurrentUserById.mockResolvedValue({
+      ...currentUser,
+      theme: "dark",
+    });
+
+    const response = await request("/settings", {
+      method: "PATCH",
+      headers: {
+        "content-type": "application/json",
+        cookie: "dl_session=valid-session-token",
+        origin: trustedOrigin,
+      },
+      body: JSON.stringify({
+        theme: "dark",
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      settings: {
+        timezone: "UTC",
+        defaultView: "today",
+        theme: "dark",
+      },
+    });
+    expect(repositoryMocks.updateSettings).toHaveBeenCalledWith({ kind: "db" }, currentUser.id, {
+      theme: "dark",
+    });
+  });
+
+  it("rejects invalid settings theme values", async () => {
+    repositoryMocks.getCurrentUserBySessionHash.mockResolvedValue({
+      user: currentUser,
+      session,
+    });
+
+    const response = await request("/settings", {
+      method: "PATCH",
+      headers: {
+        "content-type": "application/json",
+        cookie: "dl_session=valid-session-token",
+        origin: trustedOrigin,
+      },
+      body: JSON.stringify({
+        theme: "system",
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(repositoryMocks.updateSettings).not.toHaveBeenCalled();
   });
 
   it("rejects oauth callback when the google token signature is invalid", async () => {

@@ -1,5 +1,6 @@
 export type FrequencyType = "daily" | "weekly_days" | "every_n_days";
 export type DefaultView = "today" | "week" | "month";
+export type Theme = "light" | "dark" | "system";
 
 export interface CurrentUser {
   id: string;
@@ -9,6 +10,7 @@ export interface CurrentUser {
   onboardingCompleted: boolean;
   timezone: string;
   defaultView: DefaultView;
+  theme: Theme;
 }
 
 export interface HabitRecord {

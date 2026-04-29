@@ -12,7 +12,8 @@ export async function getCurrentUserById(db: DatabaseClient, userId: string): Pr
       u.avatar_url,
       u.onboarding_completed,
       s.timezone,
-      s.default_view
+      s.default_view,
+      s.theme
     FROM users u
     INNER JOIN user_settings s ON s.user_id = u.id
     WHERE u.id = ${userId}
@@ -51,14 +52,14 @@ export async function upsertGoogleUser(
         email = EXCLUDED.email,
         display_name = EXCLUDED.display_name,
         avatar_url = EXCLUDED.avatar_url
-      RETURNING id, email, display_name, avatar_url, onboarding_completed, ${defaultTimezone}::text AS timezone, 'today'::text AS default_view
+      RETURNING id, email, display_name, avatar_url, onboarding_completed, ${defaultTimezone}::text AS timezone, 'today'::text AS default_view, 'light'::text AS theme
     `;
 
     const userId = userRows[0].id;
 
     await trx`
-      INSERT INTO user_settings (user_id, timezone, default_view)
-      VALUES (${userId}, ${defaultTimezone}, 'today')
+      INSERT INTO user_settings (user_id, timezone, default_view, theme)
+      VALUES (${userId}, ${defaultTimezone}, 'today', 'light')
       ON CONFLICT (user_id) DO NOTHING
     `;
 
@@ -70,7 +71,8 @@ export async function upsertGoogleUser(
         u.avatar_url,
         u.onboarding_completed,
         s.timezone,
-        s.default_view
+        s.default_view,
+        s.theme
       FROM users u
       INNER JOIN user_settings s ON s.user_id = u.id
       WHERE u.id = ${userId}

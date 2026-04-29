@@ -1,8 +1,9 @@
-import type { CurrentUser, HabitRecord, MonthlyDashboard, TodayDashboard, WeeklyDashboard } from "../lib/types";
+import type { CurrentUser, HabitRecord, MonthlyDashboard, Theme, TodayDashboard, WeeklyDashboard } from "../lib/types";
 
 export type UserSettings = {
   timezone: string;
   defaultView: "today" | "week" | "month";
+  theme: Theme;
 };
 
 export type ScreenState =

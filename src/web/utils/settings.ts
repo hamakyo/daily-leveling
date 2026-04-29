@@ -11,7 +11,7 @@ export function areSettingsEqual(left: UserSettings | null, right: UserSettings 
     return false;
   }
 
-  return left.timezone === right.timezone && left.defaultView === right.defaultView;
+  return left.timezone === right.timezone && left.defaultView === right.defaultView && left.theme === right.theme;
 }
 
 export function reconcileSettingsAfterRefresh({

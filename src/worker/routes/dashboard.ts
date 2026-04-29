@@ -44,6 +44,7 @@ dashboardRoutes.get("/dashboard/bootstrap", requireAuth, async (c) => {
     settings: {
       timezone: currentUser.timezone,
       defaultView: currentUser.defaultView,
+      theme: currentUser.theme,
     },
   });
 });

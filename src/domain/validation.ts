@@ -103,6 +103,7 @@ export const logBodySchema = z.object({
 export const settingsSchema = z.object({
   timezone: z.string().trim().min(1).optional(),
   defaultView: z.enum(["today", "week", "month"]).optional(),
+  theme: z.enum(["light", "dark", "system"]).optional(),
 });
 
 export const logsRangeQuerySchema = z.object({

@@ -21,6 +21,23 @@
   color: var(--color-text);
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-ink: #f3f7ff;
+  --color-text: #d9e4f7;
+  --color-muted: #9fb0cd;
+  --color-line: rgba(214, 226, 248, 0.14);
+  --color-surface: #111a2e;
+  --color-page: #070d1b;
+  --color-panel: #0d1527;
+  --color-soft-blue: #172848;
+  --color-soft-cyan: #113238;
+  --color-cyan: #38d8cf;
+  --color-blue: #6ea4ff;
+  --color-violet: #a984ff;
+  --shadow-card: 0 14px 34px rgba(0, 0, 0, 0.32);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -28,6 +45,8 @@
 body {
   margin: 0;
   min-height: 100vh;
+  background: var(--color-page);
+  color: var(--color-text);
 }
 
 button,
@@ -616,7 +635,7 @@ button {
   height: 1.2rem;
   border-radius: 999px;
   border: 2px solid rgba(47, 125, 240, 0.32);
-  background: white;
+  background: var(--color-surface);
   display: inline-flex;
   align-items: center;
   justify-content: center;

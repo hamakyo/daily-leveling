@@ -1,6 +1,7 @@
 import type { FormEvent } from "react";
 import type { UserSettings } from "../types";
 import { formatDefaultViewLabel } from "../utils/settings";
+import { THEME_LABELS } from "../utils/theme";
 import { buildTimezoneOptionGroups, formatTimezoneLabel, resolveBrowserTimezone } from "../utils/timezones";
 
 export function SettingsForm({
@@ -84,6 +85,7 @@ export function SettingsForm({
       ) : null}
       <section className="settings-preview" aria-label="設定プレビュー">
         <strong>この設定での表示</strong>
+        <p className="status-text">表示テーマ: {THEME_LABELS[settings.theme]}</p>
         <p className="status-text">日付の区切り: {selectedTimezoneLabel}</p>
         <p className="status-text">ログイン後の初期表示: {formatDefaultViewLabel(settings.defaultView)}</p>
         {browserTimezoneLabel ? (
@@ -93,6 +95,22 @@ export function SettingsForm({
           </p>
         ) : null}
       </section>
+      <label>
+        <span>表示テーマ</span>
+        <select
+          value={settings.theme}
+          onChange={(event) =>
+            onChange({
+              ...settings,
+              theme: event.target.value as UserSettings["theme"],
+            })
+          }
+        >
+          <option value="light">{THEME_LABELS.light}</option>
+          <option value="dark">{THEME_LABELS.dark}</option>
+          <option value="system">{THEME_LABELS.system}</option>
+        </select>
+      </label>
       <label>
         <span>初期表示</span>
         <select

@@ -20,6 +20,7 @@ import type { CreateHabitInput, UserSettings } from "../types";
 import { createEmptyHabitForm, toHabitPayload } from "../utils/habitForm";
 import { currentDateString, currentMonthString, shiftDate, shiftMonth } from "../utils/month";
 import { areSettingsEqual, reconcileSettingsAfterRefresh } from "../utils/settings";
+import { watchThemePreference } from "../utils/theme";
 import { moveItem } from "../utils/todayOrder";
 
 export function DashboardPage({
@@ -89,6 +90,10 @@ export function DashboardPage({
   useEffect(() => {
     void refreshDashboardData();
   }, [deferredMonth, deferredWeekDate]);
+
+  useEffect(() => {
+    return watchThemePreference(settings?.theme ?? user.theme);
+  }, [settings?.theme, user.theme]);
 
   useEffect(() => {
     if (!today) {

@@ -13,6 +13,7 @@ export type UserProfileRow = {
   onboarding_completed: boolean;
   timezone: string;
   default_view: "today" | "week" | "month";
+  theme: "light" | "dark" | "system";
 };
 
 export type HabitRow = {
@@ -57,6 +58,7 @@ export function mapUser(row: UserProfileRow): CurrentUser {
     onboardingCompleted: row.onboarding_completed,
     timezone: row.timezone,
     defaultView: row.default_view,
+    theme: row.theme,
   };
 }
 

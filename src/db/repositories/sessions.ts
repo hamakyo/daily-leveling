@@ -19,7 +19,8 @@ export async function getCurrentUserBySessionHash(
       users.avatar_url,
       users.onboarding_completed,
       settings.timezone,
-      settings.default_view
+      settings.default_view,
+      settings.theme
     FROM sessions
     INNER JOIN users ON users.id = sessions.user_id
     INNER JOIN user_settings settings ON settings.user_id = users.id
