@@ -46,6 +46,7 @@ export function DashboardPage({
   const [notice, setNotice] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [settingsStatusMessage, setSettingsStatusMessage] = useState<string | null>(null);
   const [settingsStatusTone, setSettingsStatusTone] = useState<"success" | "error" | null>(null);
   const [form, setForm] = useState<CreateHabitInput>(createEmptyHabitForm);
@@ -359,14 +360,19 @@ export function DashboardPage({
   }
 
   async function handleLogout() {
-    await logout();
-    await onLogout();
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      await onLogout();
+    } finally {
+      setIsLoggingOut(false);
+    }
   }
 
   return (
     <div className="page-shell">
       <section className="hero-card hero-card--compact">
-        <div>
+        <div className="hero-card__main">
           <p className="eyebrow">{user.displayName} としてログイン中</p>
           <h1>Daily Leveling</h1>
           <p className="lede">
@@ -398,9 +404,6 @@ export function DashboardPage({
                 月間
               </button>
             </div>
-            <button className="pill dashboard-nav__logout" onClick={() => void handleLogout()} type="button">
-              ログアウト
-            </button>
           </div>
           <section className="level-panel" aria-label="レベル進捗">
             {levelUpState ? <div className="level-up-badge">LEVEL UP! Lv {levelUpState.level}</div> : null}
@@ -591,12 +594,14 @@ export function DashboardPage({
             <h2>設定</h2>
             <SettingsForm
               hasUnsavedChanges={hasUnsavedSettingsChanges}
+              isLoggingOut={isLoggingOut}
               isSaving={isSavingSettings}
               onChange={(nextSettings) => {
                 setSettings(nextSettings);
                 setSettingsStatusMessage(null);
                 setSettingsStatusTone(null);
               }}
+              onLogout={() => void handleLogout()}
               onReset={resetSettingsChanges}
               onSubmit={handleSettingsSave}
               settings={settings}

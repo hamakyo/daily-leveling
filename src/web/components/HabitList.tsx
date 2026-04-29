@@ -122,17 +122,31 @@ export function HabitList({
                     />
                   </label>
                   <HabitScheduleFields
-                    disabled={isSaving}
+                    disabled={isSaving || isDeleting}
                     form={editingForm}
                     onChange={(nextForm) => setEditingForm(nextForm)}
                     onValidationMessageClear={() => setValidationMessage(null)}
                     validationMessage={validationMessage}
                   />
                   <div className="toolbar habit-edit-form__actions">
-                    <button className="pill" disabled={isSaving} onClick={cancelEditing} type="button">
+                    <button className="pill" disabled={isSaving || isDeleting} onClick={cancelEditing} type="button">
                       キャンセル
                     </button>
-                    <button className="secondary-button" disabled={isSaving || !hasChanges} type="submit">
+                    {habit.isActive ? (
+                      <button
+                        className="pill pill--danger"
+                        disabled={isSaving || isDeleting}
+                        onClick={() => void deleteExistingHabit(habit.id)}
+                        type="button"
+                      >
+                        {isDeleting ? "削除中..." : "削除"}
+                      </button>
+                    ) : null}
+                    <button
+                      className="secondary-button"
+                      disabled={isSaving || isDeleting || !hasChanges}
+                      type="submit"
+                    >
                       {isSaving ? "保存中..." : "更新"}
                     </button>
                   </div>
@@ -156,16 +170,6 @@ export function HabitList({
                     <button className="pill" onClick={() => onMove(habit.id, 1)} type="button">
                       ↓
                     </button>
-                    {habit.isActive ? (
-                      <button
-                        className="pill pill--danger"
-                        disabled={isDeleting}
-                        onClick={() => void deleteExistingHabit(habit.id)}
-                        type="button"
-                      >
-                        {isDeleting ? "削除中..." : "削除"}
-                      </button>
-                    ) : null}
                   </div>
                 </>
               )}

@@ -6,18 +6,22 @@ import { buildTimezoneOptionGroups, formatTimezoneLabel, resolveBrowserTimezone 
 export function SettingsForm({
   settings,
   onChange,
+  onLogout,
   onReset,
   onSubmit,
   hasUnsavedChanges,
+  isLoggingOut,
   isSaving,
   statusTone,
   statusMessage,
 }: {
   settings: UserSettings | null;
   onChange: (settings: UserSettings) => void;
+  onLogout?: () => void;
   onReset?: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   hasUnsavedChanges?: boolean;
+  isLoggingOut?: boolean;
   isSaving?: boolean;
   statusTone?: "success" | "error" | null;
   statusMessage?: string | null;
@@ -125,6 +129,20 @@ export function SettingsForm({
           {isSaving ? "保存中..." : "設定を保存"}
         </button>
       </div>
+      {onLogout ? (
+        <section className="settings-account">
+          <strong>アカウント</strong>
+          <p className="status-text">この端末からログアウトします。</p>
+          <button
+            className="pill pill--danger"
+            disabled={Boolean(isLoggingOut)}
+            onClick={onLogout}
+            type="button"
+          >
+            {isLoggingOut ? "ログアウト中..." : "ログアウト"}
+          </button>
+        </section>
+      ) : null}
     </form>
   );
 }

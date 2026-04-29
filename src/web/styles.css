@@ -60,24 +60,29 @@ button {
 }
 
 .hero-card--compact {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+  align-items: start;
   gap: 1rem;
+}
+
+.hero-card__main {
+  min-width: 0;
+  padding-right: 0.5rem;
 }
 
 .dashboard-hero-side {
   display: grid;
   gap: 0.9rem;
-  justify-items: end;
-  min-width: min(360px, 100%);
+  width: 100%;
   min-width: 0;
+  justify-items: stretch;
 }
 
 .dashboard-nav {
   display: grid;
   gap: 0.6rem;
-  width: min(360px, 100%);
+  width: 100%;
 }
 
 .dashboard-nav__views {
@@ -213,6 +218,7 @@ button {
 
 .panel-grid--dashboard {
   grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+  align-items: start;
 }
 
 .panel {
@@ -308,6 +314,13 @@ button {
   margin: 0;
 }
 
+.settings-account {
+  display: grid;
+  gap: 0.35rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--color-line);
+}
+
 .pill {
   border-radius: 999px;
   border: 1px solid rgba(47, 125, 240, 0.18);
@@ -336,7 +349,7 @@ button {
 .level-panel {
   position: relative;
   overflow: hidden;
-  width: min(360px, 100%);
+  width: 100%;
   padding: 1rem 1.1rem;
   border-radius: 20px;
   border: 1px solid rgba(47, 125, 240, 0.16);
@@ -966,25 +979,25 @@ button {
   .feature-ribbon,
   .panel-grid,
   .panel-grid--dashboard,
+  .hero-card--compact,
   .summary-grid,
   .stats-columns {
     grid-template-columns: 1fr;
   }
 
-  .hero-card--compact,
   .today-card,
   .habit-admin-row {
     flex-direction: column;
     align-items: flex-start;
   }
 
+  .hero-card__main {
+    padding-right: 0;
+  }
+
   .dashboard-hero-side {
     width: 100%;
     justify-items: stretch;
-  }
-
-  .level-panel {
-    width: 100%;
   }
 
   .toast-stack {
@@ -1041,6 +1054,11 @@ button {
   }
 
   .dashboard-nav,
+  .dashboard-hero-side .toolbar {
+    width: 100%;
+  }
+
+  .dashboard-nav__views,
   .dashboard-hero-side .toolbar {
     width: 100%;
   }
