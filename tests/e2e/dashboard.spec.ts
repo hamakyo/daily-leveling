@@ -216,10 +216,15 @@ test("authenticated user can edit and delete a habit from the habit list", async
     const updatedRow = page.locator(".habit-admin-row").filter({
       has: page.getByText(updatedHabitName, { exact: true }),
     });
+    await expect(updatedRow.getByRole("button", { name: "削除" })).toHaveCount(0);
+    await updatedRow.getByRole("button", { name: "編集" }).click();
+
+    const deleteEditRow = page.locator(".habit-admin-row--editing");
+    await expect(deleteEditRow).toBeVisible();
     const deleteResponse = page.waitForResponse((response) => {
       return response.request().method() === "PATCH" && response.url().includes("/habits/");
     });
-    await updatedRow.getByRole("button", { name: "削除" }).click();
+    await deleteEditRow.getByRole("button", { name: "削除" }).click();
     expect((await deleteResponse).ok()).toBe(true);
 
     await expect(page.getByText("習慣を削除しました。累計XPは維持されます。")).toBeVisible();

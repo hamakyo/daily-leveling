@@ -434,142 +434,164 @@ export function DashboardPage({
       </div>
 
       <section className="panel-grid panel-grid--dashboard">
-        <div className="panel panel--wide">
-          {dashboardError ? (
-            <div className="stack-space">
-              <header className="section-header">
-                <h2>ダッシュボードを読み込めませんでした</h2>
-              </header>
-              <p className="status-text status-text--error">{dashboardError}</p>
-              <div className="toolbar">
-                <button className="primary-button" onClick={() => void refreshDashboardData()} type="button">
-                  再試行
-                </button>
+        <div className="dashboard-main-stack">
+          <div className="panel panel--wide dashboard-primary">
+            {dashboardError ? (
+              <div className="stack-space">
+                <header className="section-header">
+                  <h2>ダッシュボードを読み込めませんでした</h2>
+                </header>
+                <p className="status-text status-text--error">{dashboardError}</p>
+                <div className="toolbar">
+                  <button className="primary-button" onClick={() => void refreshDashboardData()} type="button">
+                    再試行
+                  </button>
+                </div>
               </div>
-            </div>
-          ) : view === "today" ? (
-            <div className="stack-space">
-              <header className="section-header">
-                <h2>今日の記録</h2>
-                <div className="toolbar">
-                  {today ? (
-                    <span>
-                      {today.summary.completedCount}/{today.summary.targetCount} 達成
-                    </span>
-                  ) : null}
-                  {isTodayReorderMode ? (
-                    <>
-                      <button
-                        className="pill"
-                        disabled={isSavingTodayOrder}
-                        onClick={cancelTodayReorder}
-                        type="button"
-                      >
-                        キャンセル
+            ) : view === "today" ? (
+              <div className="stack-space">
+                <header className="section-header">
+                  <h2>今日の記録</h2>
+                  <div className="toolbar">
+                    {today ? (
+                      <span>
+                        {today.summary.completedCount}/{today.summary.targetCount} 達成
+                      </span>
+                    ) : null}
+                    {isTodayReorderMode ? (
+                      <>
+                        <button
+                          className="pill"
+                          disabled={isSavingTodayOrder}
+                          onClick={cancelTodayReorder}
+                          type="button"
+                        >
+                          キャンセル
+                        </button>
+                        <button
+                          className="secondary-button"
+                          disabled={isSavingTodayOrder || !hasTodayOrderChanges}
+                          onClick={() => void saveTodayOrder()}
+                          type="button"
+                        >
+                          {isSavingTodayOrder ? "保存中..." : "順番を保存"}
+                        </button>
+                      </>
+                    ) : (
+                      <button className="pill" onClick={startTodayReorder} type="button">
+                        並び替え
                       </button>
-                      <button
-                        className="secondary-button"
-                        disabled={isSavingTodayOrder || !hasTodayOrderChanges}
-                        onClick={() => void saveTodayOrder()}
-                        type="button"
-                      >
-                        {isSavingTodayOrder ? "保存中..." : "順番を保存"}
-                      </button>
-                    </>
-                  ) : (
-                    <button className="pill" onClick={startTodayReorder} type="button">
-                      並び替え
+                    )}
+                  </div>
+                </header>
+                {isTodayReorderMode ? (
+                  <p className="status-text status-text--warning">
+                    今日の記録の順番を調整しています。保存すると他の一覧にも反映されます。
+                  </p>
+                ) : null}
+                {todayCompleteState ? (
+                  <div className="today-complete-banner">
+                    <strong>今日の習慣をすべて達成しました</strong>
+                    <span>そのまま streak と XP を積み上げましょう。</span>
+                  </div>
+                ) : null}
+                <TodayHabitList
+                  isBusy={isBusy || isTodayReorderMode}
+                  isReorderMode={isTodayReorderMode}
+                  isSavingOrder={isSavingTodayOrder}
+                  onToggle={(habitId, status) => void toggleHabit(habitId, status)}
+                  onMove={moveTodayHabit}
+                  orderedHabitIds={draftTodayHabitIds}
+                  today={today}
+                />
+              </div>
+            ) : view === "week" ? (
+              <div className="stack-space">
+                <header className="section-header">
+                  <h2>週間ビュー</h2>
+                  <div className="toolbar">
+                    <button
+                      className="pill"
+                      onClick={() => {
+                        startTransition(() => setSelectedWeekDate((current) => shiftDate(current, -7)));
+                      }}
+                      type="button"
+                    >
+                      前週
                     </button>
-                  )}
-                </div>
-              </header>
-              {isTodayReorderMode ? (
-                <p className="status-text status-text--warning">
-                  今日の記録の順番を調整しています。保存すると他の一覧にも反映されます。
-                </p>
-              ) : null}
-              {todayCompleteState ? (
-                <div className="today-complete-banner">
-                  <strong>今日の習慣をすべて達成しました</strong>
-                  <span>そのまま streak と XP を積み上げましょう。</span>
-                </div>
-              ) : null}
-              <TodayHabitList
-                isBusy={isBusy || isTodayReorderMode}
-                isReorderMode={isTodayReorderMode}
-                isSavingOrder={isSavingTodayOrder}
-                onToggle={(habitId, status) => void toggleHabit(habitId, status)}
-                onMove={moveTodayHabit}
-                orderedHabitIds={draftTodayHabitIds}
-                today={today}
-              />
-            </div>
-          ) : view === "week" ? (
-            <div className="stack-space">
-              <header className="section-header">
-                <h2>週間ビュー</h2>
-                <div className="toolbar">
-                  <button
-                    className="pill"
-                    onClick={() => {
-                      startTransition(() => setSelectedWeekDate((current) => shiftDate(current, -7)));
-                    }}
-                    type="button"
-                  >
-                    前週
-                  </button>
-                  <span className="month-chip">
-                    {weekly ? `${weekly.week.startDate} - ${weekly.week.endDate}` : deferredWeekDate}
-                  </span>
-                  <button
-                    className="pill"
-                    onClick={() => {
-                      startTransition(() => setSelectedWeekDate((current) => shiftDate(current, 7)));
-                    }}
-                    type="button"
-                  >
-                    次週
-                  </button>
-                </div>
-              </header>
-              <WeeklySummary weekly={weekly} />
-            </div>
-          ) : (
-            <div className="stack-space">
-              <header className="section-header">
-                <h2>月間ビュー</h2>
-                <div className="toolbar">
-                  <button
-                    className="pill"
-                    onClick={() => {
-                      startTransition(() => setSelectedMonth((current) => shiftMonth(current, -1)));
-                    }}
-                    type="button"
-                  >
-                    前月
-                  </button>
-                  <span className="month-chip">{deferredMonth}</span>
-                  <button
-                    className="pill"
-                    onClick={() => {
-                      startTransition(() => setSelectedMonth((current) => shiftMonth(current, 1)));
-                    }}
-                    type="button"
-                  >
-                    次月
-                  </button>
-                </div>
-              </header>
-              <MonthlyHabitGrid
-                month={deferredMonth}
-                monthly={monthly}
-                timezone={settings?.timezone ?? user.timezone}
-              />
-            </div>
-          )}
+                    <span className="month-chip">
+                      {weekly ? `${weekly.week.startDate} - ${weekly.week.endDate}` : deferredWeekDate}
+                    </span>
+                    <button
+                      className="pill"
+                      onClick={() => {
+                        startTransition(() => setSelectedWeekDate((current) => shiftDate(current, 7)));
+                      }}
+                      type="button"
+                    >
+                      次週
+                    </button>
+                  </div>
+                </header>
+                <WeeklySummary weekly={weekly} />
+              </div>
+            ) : (
+              <div className="stack-space">
+                <header className="section-header">
+                  <h2>月間ビュー</h2>
+                  <div className="toolbar">
+                    <button
+                      className="pill"
+                      onClick={() => {
+                        startTransition(() => setSelectedMonth((current) => shiftMonth(current, -1)));
+                      }}
+                      type="button"
+                    >
+                      前月
+                    </button>
+                    <span className="month-chip">{deferredMonth}</span>
+                    <button
+                      className="pill"
+                      onClick={() => {
+                        startTransition(() => setSelectedMonth((current) => shiftMonth(current, 1)));
+                      }}
+                      type="button"
+                    >
+                      次月
+                    </button>
+                  </div>
+                </header>
+                <MonthlyHabitGrid
+                  month={deferredMonth}
+                  monthly={monthly}
+                  timezone={settings?.timezone ?? user.timezone}
+                />
+              </div>
+            )}
+          </div>
+
+          <section className="panel dashboard-settings">
+            <h2>設定</h2>
+            <SettingsForm
+              hasUnsavedChanges={hasUnsavedSettingsChanges}
+              isLoggingOut={isLoggingOut}
+              isSaving={isSavingSettings}
+              onChange={(nextSettings) => {
+                setSettings(nextSettings);
+                setSettingsStatusMessage(null);
+                setSettingsStatusTone(null);
+              }}
+              onLogout={() => void handleLogout()}
+              onReset={resetSettingsChanges}
+              onSubmit={handleSettingsSave}
+              settings={settings}
+              statusTone={settingsStatusTone}
+              statusMessage={settingsStatusMessage}
+            />
+          </section>
         </div>
 
-        <aside className="side-stack">
+        <aside className="side-stack dashboard-side">
           <section className="panel">
             <h2>新しい習慣</h2>
             <HabitForm
@@ -590,25 +612,6 @@ export function DashboardPage({
             />
           </section>
 
-          <section className="panel">
-            <h2>設定</h2>
-            <SettingsForm
-              hasUnsavedChanges={hasUnsavedSettingsChanges}
-              isLoggingOut={isLoggingOut}
-              isSaving={isSavingSettings}
-              onChange={(nextSettings) => {
-                setSettings(nextSettings);
-                setSettingsStatusMessage(null);
-                setSettingsStatusTone(null);
-              }}
-              onLogout={() => void handleLogout()}
-              onReset={resetSettingsChanges}
-              onSubmit={handleSettingsSave}
-              settings={settings}
-              statusTone={settingsStatusTone}
-              statusMessage={settingsStatusMessage}
-            />
-          </section>
         </aside>
       </section>
     </div>

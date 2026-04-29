@@ -61,7 +61,7 @@ export function SettingsForm({
         </select>
       </label>
       {browserTimezone ? (
-        <div className="toolbar">
+        <div className="toolbar settings-inline">
           <button
             className="pill"
             disabled={Boolean(isSaving) || !canApplyBrowserTimezone}
@@ -115,7 +115,7 @@ export function SettingsForm({
           {statusMessage}
         </p>
       ) : null}
-      <div className="toolbar">
+      <div className="toolbar settings-actions">
         {hasUnsavedChanges ? (
           <button className="pill" disabled={Boolean(isSaving)} onClick={onReset} type="button">
             元に戻す
@@ -134,7 +134,7 @@ export function SettingsForm({
           <strong>アカウント</strong>
           <p className="status-text">この端末からログアウトします。</p>
           <button
-            className="pill pill--danger"
+            className="pill pill--danger settings-logout-button"
             disabled={Boolean(isLoggingOut)}
             onClick={onLogout}
             type="button"

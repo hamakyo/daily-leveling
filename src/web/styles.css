@@ -14,6 +14,9 @@
   --color-blue: #2f7df0;
   --color-violet: #8a5cf6;
   --shadow-card: 0 12px 30px rgba(29, 55, 105, 0.08);
+  --radius-card: 20px;
+  --radius-control: 12px;
+  --control-height: 2.65rem;
   background: var(--color-page);
   color: var(--color-text);
 }
@@ -38,9 +41,9 @@ button {
 }
 
 .page-shell {
-  width: min(1200px, calc(100% - 2rem));
+  width: min(1240px, calc(100% - 2rem));
   margin: 0 auto;
-  padding: 2rem 0 4rem;
+  padding: 1.5rem 0 3rem;
 }
 
 .hero-card,
@@ -55,15 +58,15 @@ button {
   z-index: 0;
   width: 100%;
   max-width: 100%;
-  border-radius: 28px;
-  padding: 2rem;
+  border-radius: 24px;
+  padding: 1.7rem 1.85rem;
 }
 
 .hero-card--compact {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
-  align-items: start;
-  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  align-items: center;
+  gap: 2rem;
 }
 
 .hero-card__main {
@@ -114,14 +117,14 @@ button {
   margin: 0;
   font-family: "Avenir Next", "Trebuchet MS", "Helvetica Neue", sans-serif;
   font-weight: 800;
-  letter-spacing: -0.045em;
-  font-size: clamp(2.5rem, 6vw, 4.75rem);
+  letter-spacing: 0;
+  font-size: 4.5rem;
   line-height: 0.95;
   color: var(--color-ink);
 }
 
 .hero-card--compact h1 {
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: 2.8rem;
 }
 
 .lede {
@@ -138,7 +141,8 @@ button {
   justify-content: center;
   gap: 0.5rem;
   border-radius: 999px;
-  padding: 0.85rem 1.3rem;
+  min-height: var(--control-height);
+  padding: 0.68rem 1.15rem;
   text-decoration: none;
   transition: transform 140ms ease, box-shadow 140ms ease;
 }
@@ -182,8 +186,8 @@ button {
 .feature-ribbon,
 .panel-grid {
   display: grid;
-  gap: 1rem;
-  margin-top: 1.2rem;
+  gap: 1.1rem;
+  margin-top: 1rem;
 }
 
 .feature-ribbon {
@@ -217,7 +221,7 @@ button {
 }
 
 .panel-grid--dashboard {
-  grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
   align-items: start;
 }
 
@@ -225,17 +229,38 @@ button {
   position: relative;
   width: 100%;
   max-width: 100%;
-  border-radius: 24px;
-  padding: 1.2rem;
+  border-radius: var(--radius-card);
+  padding: 1.15rem;
 }
 
 .panel h2,
 .panel h3 {
-  margin-top: 0;
+  margin: 0 0 0.9rem;
+  color: var(--color-ink);
 }
 
 .panel--wide {
   min-width: 0;
+}
+
+.dashboard-main-stack {
+  display: grid;
+  gap: 1.1rem;
+  min-width: 0;
+}
+
+.dashboard-settings .stack-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  column-gap: 1rem;
+}
+
+.dashboard-settings .settings-inline,
+.dashboard-settings .settings-preview,
+.dashboard-settings .settings-actions,
+.dashboard-settings .settings-account,
+.dashboard-settings .stack-form > .status-text {
+  grid-column: 1 / -1;
 }
 
 .template-stack,
@@ -246,7 +271,7 @@ button {
 .habit-admin-list,
 .stats-columns {
   display: grid;
-  gap: 0.9rem;
+  gap: 0.8rem;
   min-width: 0;
 }
 
@@ -276,7 +301,7 @@ button {
 .section-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.65rem;
   min-width: 0;
 }
 
@@ -297,11 +322,20 @@ button {
   flex-wrap: wrap;
 }
 
+.section-header h2 {
+  margin: 0;
+}
+
+.settings-inline,
+.settings-actions {
+  align-items: center;
+}
+
 .settings-preview {
   display: grid;
-  gap: 0.35rem;
-  padding: 0.9rem 1rem;
-  border-radius: 18px;
+  gap: 0.3rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 14px;
   border: 1px solid rgba(47, 125, 240, 0.12);
   background: var(--color-panel);
 }
@@ -316,7 +350,7 @@ button {
 
 .settings-account {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.45rem;
   padding-top: 0.9rem;
   border-top: 1px solid var(--color-line);
 }
@@ -326,7 +360,22 @@ button {
   border: 1px solid rgba(47, 125, 240, 0.18);
   background: var(--color-surface);
   color: var(--color-text);
-  padding: 0.55rem 0.9rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.85rem;
+}
+
+.icon-button {
+  width: 2.5rem;
+  min-width: 2.5rem;
+  padding: 0;
+}
+
+.habit-action-button {
+  min-width: 3.8rem;
+}
+
+.settings-logout-button {
+  justify-self: stretch;
 }
 
 .pill--active {
@@ -350,8 +399,8 @@ button {
   position: relative;
   overflow: hidden;
   width: 100%;
-  padding: 1rem 1.1rem;
-  border-radius: 20px;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
   border: 1px solid rgba(47, 125, 240, 0.16);
   background: var(--color-panel);
   transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
@@ -366,7 +415,7 @@ button {
 }
 
 .level-panel__heading strong {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   color: var(--color-ink);
 }
 
@@ -420,14 +469,14 @@ button {
   display: flex;
   align-items: baseline;
   gap: 1rem;
-  padding: 1rem 1.15rem;
-  border-radius: 20px;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
   background: var(--color-soft-cyan);
   border: 1px solid rgba(32, 199, 189, 0.22);
 }
 
 .summary-band strong {
-  font-size: 2rem;
+  font-size: 1.9rem;
   color: var(--color-cyan);
 }
 
@@ -436,9 +485,10 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.9rem 1rem;
-  border-radius: 18px;
+  gap: 0.85rem;
+  min-height: 4.6rem;
+  padding: 0.82rem 0.9rem;
+  border-radius: 14px;
   background: var(--color-surface);
   border: 1px solid var(--color-line);
 }
@@ -499,6 +549,9 @@ button {
 
 .habit-admin-row__actions {
   justify-content: flex-end;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  gap: 0.45rem;
 }
 
 .today-reorder-badge {
@@ -539,8 +592,8 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.9rem;
-  height: 2.9rem;
+  width: 2.5rem;
+  height: 2.5rem;
   padding: 0;
   border-radius: 999px;
   border: 1px solid rgba(47, 125, 240, 0.16);
@@ -559,8 +612,8 @@ button {
 }
 
 .checkbox-indicator {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.2rem;
+  height: 1.2rem;
   border-radius: 999px;
   border: 2px solid rgba(47, 125, 240, 0.32);
   background: white;
@@ -962,9 +1015,10 @@ button {
 
 .stack-form input,
 .stack-form select {
-  border-radius: 12px;
+  min-height: var(--control-height);
+  border-radius: var(--radius-control);
   border: 1px solid rgba(47, 125, 240, 0.18);
-  padding: 0.78rem 0.9rem;
+  padding: 0.68rem 0.85rem;
   background: var(--color-surface);
 }
 
@@ -985,10 +1039,32 @@ button {
     grid-template-columns: 1fr;
   }
 
-  .today-card,
-  .habit-admin-row {
-    flex-direction: column;
-    align-items: flex-start;
+  .dashboard-settings .stack-form {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-settings .settings-inline,
+  .dashboard-settings .settings-preview,
+  .dashboard-settings .settings-actions,
+  .dashboard-settings .settings-account,
+  .dashboard-settings .stack-form > .status-text {
+    grid-column: auto;
+  }
+
+  .dashboard-main-stack {
+    display: contents;
+  }
+
+  .dashboard-primary {
+    order: 1;
+  }
+
+  .dashboard-side {
+    order: 2;
+  }
+
+  .dashboard-settings {
+    order: 3;
   }
 
   .hero-card__main {
@@ -1038,7 +1114,24 @@ button {
   }
 
   .hero-card--compact h1 {
-    font-size: clamp(1.9rem, 10vw, 2.5rem);
+    font-size: 2.25rem;
+  }
+
+  .habit-admin-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .today-card__main {
+    gap: 0.75rem;
+  }
+
+  .today-card__actions,
+  .habit-admin-row__actions {
+    width: 100%;
+    justify-content: flex-start;
+    justify-items: start;
+    flex-wrap: wrap;
   }
 
   .eyebrow {
@@ -1087,8 +1180,7 @@ button {
   .level-panel__heading,
   .level-panel__stats,
   .summary-band,
-  .section-header,
-  .today-card__main {
+  .section-header {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -1147,7 +1239,7 @@ button {
   }
 
   .checkbox-toggle {
-    align-self: flex-start;
+    align-self: center;
   }
 
   .today-card__actions {

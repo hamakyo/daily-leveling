@@ -161,13 +161,13 @@ export function HabitList({
                     <p>{habit.isActive ? `有効 ・ ${formatFrequency(habit)}` : "削除済み"}</p>
                   </div>
                   <div className="toolbar habit-admin-row__actions">
-                    <button className="pill" onClick={() => startEditing(habit)} type="button">
+                    <button className="pill habit-action-button" onClick={() => startEditing(habit)} type="button">
                       編集
                     </button>
-                    <button className="pill" onClick={() => onMove(habit.id, -1)} type="button">
+                    <button className="pill icon-button" onClick={() => onMove(habit.id, -1)} type="button">
                       ↑
                     </button>
-                    <button className="pill" onClick={() => onMove(habit.id, 1)} type="button">
+                    <button className="pill icon-button" onClick={() => onMove(habit.id, 1)} type="button">
                       ↓
                     </button>
                   </div>

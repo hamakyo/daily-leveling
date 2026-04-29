@@ -106,7 +106,7 @@ export function TodayHabitList({
                   <div className="toolbar">
                     <button
                       aria-label={`${habit.name} を上へ移動`}
-                      className="pill"
+                      className="pill icon-button"
                       disabled={Boolean(isSavingOrder) || index === 0}
                       onClick={() => onMove?.(habit.habitId, -1)}
                       type="button"
@@ -115,7 +115,7 @@ export function TodayHabitList({
                     </button>
                     <button
                       aria-label={`${habit.name} を下へ移動`}
-                      className="pill"
+                      className="pill icon-button"
                       disabled={Boolean(isSavingOrder) || index === orderedHabits.length - 1}
                       onClick={() => onMove?.(habit.habitId, 1)}
                       type="button"
