@@ -1,3 +1,4 @@
+import type { HabitRecord } from "../../lib/types";
 import type { CreateHabitInput, HabitPayload } from "../types";
 
 export const weekdayOptions = [
@@ -18,6 +19,15 @@ export function createEmptyHabitForm(): CreateHabitInput {
     frequencyType: "daily",
     targetWeekdays: [],
     intervalDays: "3",
+  };
+}
+
+export function createHabitFormFromRecord(habit: HabitRecord): CreateHabitInput {
+  return {
+    name: habit.name,
+    frequencyType: habit.frequencyType,
+    targetWeekdays: habit.targetWeekdays ?? [],
+    intervalDays: habit.intervalDays ? String(habit.intervalDays) : "3",
   };
 }
 
@@ -69,6 +79,42 @@ export function buildIntervalSchedulePreview(
     description: `作成すると、今日を起点に ${intervalDays} 日間隔で対象日になります。`,
     targetDateLabels,
   };
+}
+
+export function validateHabitForm(form: CreateHabitInput): string | null {
+  if (form.frequencyType === "weekly_days" && form.targetWeekdays.length === 0) {
+    return "1つ以上の曜日を選択してください。";
+  }
+
+  if (form.frequencyType === "every_n_days") {
+    const intervalDays = parseIntervalDays(form.intervalDays);
+    if (intervalDays === null || intervalDays < 2 || intervalDays > 365) {
+      return "間隔日数は 2 から 365 の整数で指定してください。";
+    }
+  }
+
+  return null;
+}
+
+function areWeekdaysEqual(left: number[] | null, right: number[] | null): boolean {
+  const normalizedLeft = left ?? [];
+  const normalizedRight = right ?? [];
+
+  if (normalizedLeft.length !== normalizedRight.length) {
+    return false;
+  }
+
+  return normalizedLeft.every((weekday, index) => weekday === normalizedRight[index]);
+}
+
+export function hasHabitFormChanges(form: CreateHabitInput, habit: HabitRecord): boolean {
+  const payload = toHabitPayload(form);
+  return (
+    payload.name !== habit.name ||
+    payload.frequencyType !== habit.frequencyType ||
+    !areWeekdaysEqual(payload.targetWeekdays, habit.targetWeekdays) ||
+    payload.intervalDays !== habit.intervalDays
+  );
 }
 
 export function toHabitPayload(form: CreateHabitInput): HabitPayload {

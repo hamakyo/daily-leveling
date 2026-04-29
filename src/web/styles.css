@@ -321,6 +321,11 @@ button {
   color: white;
 }
 
+.pill--danger {
+  border-color: rgba(200, 77, 72, 0.2);
+  color: #b34747;
+}
+
 .month-chip {
   padding: 0.55rem 0.9rem;
   border-radius: 999px;
@@ -425,6 +430,10 @@ button {
   border: 1px solid var(--color-line);
 }
 
+.habit-admin-row--editing {
+  align-items: stretch;
+}
+
 .today-card {
   position: relative;
   overflow: visible;
@@ -465,6 +474,14 @@ button {
 .habit-admin-row__content,
 .habit-admin-row__actions {
   min-width: 0;
+}
+
+.habit-edit-form {
+  width: 100%;
+}
+
+.habit-edit-form__actions {
+  justify-content: flex-end;
 }
 
 .habit-admin-row__actions {

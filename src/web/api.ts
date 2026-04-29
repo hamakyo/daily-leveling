@@ -88,6 +88,13 @@ export async function createHabit(payload: HabitPayload): Promise<void> {
   });
 }
 
+export async function updateHabit(habitId: string, payload: HabitPayload): Promise<void> {
+  await apiFetch(`/habits/${habitId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function loadDashboardData(month: string, date: string): Promise<DashboardData> {
   const params = new URLSearchParams({
     month,
@@ -103,7 +110,7 @@ export async function toggleHabitLog(habitId: string, date: string, status: bool
   });
 }
 
-export async function archiveHabit(habitId: string): Promise<void> {
+export async function deleteHabit(habitId: string): Promise<void> {
   await apiFetch(`/habits/${habitId}`, {
     method: "PATCH",
     body: JSON.stringify({ isActive: false }),

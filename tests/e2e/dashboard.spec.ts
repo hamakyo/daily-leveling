@@ -142,7 +142,7 @@ test("authenticated user can create an every_n_days habit", async ({ page }, tes
 
 test("authenticated user can persist weekly as the default view", async ({ page }, testInfo) => {
   const testId = makeTestId(testInfo);
-  const timezone = "Asia/Tokyo";
+  const timezone = "UTC";
 
   await loginAsE2eUser(page, testId, { onboardingCompleted: true });
   try {
@@ -170,6 +170,60 @@ test("authenticated user can persist weekly as the default view", async ({ page 
     await expect(page.getByLabel("タイムゾーン")).toHaveValue(timezone);
     await expect(page.getByRole("heading", { name: "週間ビュー" })).toBeVisible();
     await expect(page.getByText("週間達成率")).toBeVisible();
+  } finally {
+    await resetE2eUser(page, testId);
+  }
+});
+
+test("authenticated user can edit and delete a habit from the habit list", async ({ page }, testInfo) => {
+  const testId = makeTestId(testInfo);
+  const originalHabitName = `E2E 編集前 ${Date.now()}`;
+  const updatedHabitName = `E2E 編集後 ${Date.now()}`;
+
+  await loginAsE2eUser(page, testId, { onboardingCompleted: true });
+  try {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "今日の記録" })).toBeVisible();
+
+    await page.getByLabel("名前").fill(originalHabitName);
+    await page.getByRole("button", { name: "作成" }).click();
+    await expect(page.getByText(originalHabitName).first()).toBeVisible();
+
+    const originalRow = page.locator(".habit-admin-row").filter({
+      has: page.getByText(originalHabitName, { exact: true }),
+    });
+    await expect(originalRow).toBeVisible();
+    await originalRow.getByRole("button", { name: "編集" }).click();
+
+    const editRow = page.locator(".habit-admin-row--editing");
+    await expect(editRow).toBeVisible();
+    await editRow.getByLabel("習慣名").fill(updatedHabitName);
+    await editRow.getByLabel("繰り返し方").selectOption("weekly_days");
+    await editRow.getByRole("button", { name: "火曜日" }).click();
+    await editRow.getByRole("button", { name: "木曜日" }).click();
+    await expect(editRow.getByRole("button", { name: "更新" })).toBeEnabled();
+
+    const updateResponse = page.waitForResponse((response) => {
+      return response.request().method() === "PATCH" && response.url().includes("/habits/");
+    });
+    await editRow.getByRole("button", { name: "更新" }).click();
+    expect((await updateResponse).ok()).toBe(true);
+
+    await expect(page.getByText("習慣を更新しました。")).toBeVisible();
+    await expect(page.getByText(updatedHabitName).first()).toBeVisible();
+    await expect(page.getByText("有効 ・ 毎週 火・木")).toBeVisible();
+
+    const updatedRow = page.locator(".habit-admin-row").filter({
+      has: page.getByText(updatedHabitName, { exact: true }),
+    });
+    const deleteResponse = page.waitForResponse((response) => {
+      return response.request().method() === "PATCH" && response.url().includes("/habits/");
+    });
+    await updatedRow.getByRole("button", { name: "削除" }).click();
+    expect((await deleteResponse).ok()).toBe(true);
+
+    await expect(page.getByText("習慣を削除しました。累計XPは維持されます。")).toBeVisible();
+    await expect(page.getByText(updatedHabitName, { exact: true })).toHaveCount(0);
   } finally {
     await resetE2eUser(page, testId);
   }

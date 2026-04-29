@@ -1,13 +1,14 @@
 import { type FormEvent, startTransition, useDeferredValue, useEffect, useRef, useState } from "react";
 import type { CurrentUser, HabitRecord, MonthlyDashboard, TodayDashboard, WeeklyDashboard } from "../../lib/types";
 import {
-  archiveHabit as archiveHabitApi,
   createHabit,
+  deleteHabit as deleteHabitApi,
   loadDashboardData,
   logout,
   reorderHabits,
   saveSettings,
   toggleHabitLog,
+  updateHabit as updateHabitApi,
 } from "../api";
 import { HabitForm } from "../components/HabitForm";
 import { HabitList } from "../components/HabitList";
@@ -243,9 +244,14 @@ export function DashboardPage({
     await reloadAll("習慣を作成しました。");
   }
 
-  async function archiveHabit(habitId: string) {
-    await archiveHabitApi(habitId);
-    await reloadAll("習慣をアーカイブしました。");
+  async function updateExistingHabit(habitId: string, payload: CreateHabitInput) {
+    await updateHabitApi(habitId, toHabitPayload(payload));
+    await reloadAll("習慣を更新しました。");
+  }
+
+  async function deleteHabit(habitId: string) {
+    await deleteHabitApi(habitId);
+    await reloadAll("習慣を削除しました。累計XPは維持されます。");
   }
 
   async function moveHabit(habitId: string, direction: -1 | 1) {
@@ -575,8 +581,9 @@ export function DashboardPage({
             <h2>習慣一覧</h2>
             <HabitList
               habits={habits}
-              onArchive={(habitId) => void archiveHabit(habitId)}
+              onDelete={(habitId) => deleteHabit(habitId)}
               onMove={(habitId, direction) => void moveHabit(habitId, direction)}
+              onSaveEdit={(habitId, payload) => updateExistingHabit(habitId, payload)}
             />
           </section>
 
