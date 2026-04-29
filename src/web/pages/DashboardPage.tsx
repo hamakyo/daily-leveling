@@ -376,7 +376,7 @@ export function DashboardPage({
           <p className="eyebrow">{user.displayName} としてログイン中</p>
           <h1>Daily Leveling</h1>
           <p className="lede">
-            モバイルでは今日、デスクトップでは月全体を中心に振り返れます。
+            週間を、今日の一歩に変える。
           </p>
         </div>
         <div className="dashboard-hero-side">

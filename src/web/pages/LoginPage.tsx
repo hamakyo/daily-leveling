@@ -62,7 +62,7 @@ export function LoginPage() {
   return (
     <div className="page-shell">
       <section className="hero-card">
-        <p className="eyebrow">習慣トラッカー MVP</p>
+        <p className="eyebrow">習慣トラッカーアプリ</p>
         <h1>Daily Leveling</h1>
         <p className="lede">
           毎日の記録を素早く続けられる、月間グリッド中心の習慣トラッカーです。

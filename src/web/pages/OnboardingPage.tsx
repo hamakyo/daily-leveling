@@ -95,7 +95,7 @@ export function OnboardingPage({
       </section>
       <div className="action-row">
         <button className="primary-button" disabled={isSubmitting} onClick={() => void finishOnboarding()} type="button">
-          ダッシュボードを始める
+          ダッシュボードへ進む
         </button>
       </div>
     </div>
