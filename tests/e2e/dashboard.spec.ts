@@ -43,6 +43,48 @@ test("authenticated user can create and complete a habit", async ({ page }, test
   }
 });
 
+test("authenticated user can reorder habits from the today screen", async ({ page }, testInfo) => {
+  const testId = makeTestId(testInfo);
+  const firstHabitName = `E2E 並び替え 1 ${Date.now()}`;
+  const secondHabitName = `E2E 並び替え 2 ${Date.now()}`;
+
+  await loginAsE2eUser(page, testId, { onboardingCompleted: true });
+  try {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "今日の記録" })).toBeVisible();
+
+    await page.getByLabel("名前").fill(firstHabitName);
+    await page.getByRole("button", { name: "作成" }).click();
+    await expect(page.getByText(firstHabitName).first()).toBeVisible();
+
+    await page.getByLabel("名前").fill(secondHabitName);
+    await page.getByRole("button", { name: "作成" }).click();
+    await expect(page.getByText(secondHabitName).first()).toBeVisible();
+
+    await page.getByRole("button", { name: "並び替え" }).click();
+    await expect(page.getByText("今日の記録の順番を調整しています。保存すると他の一覧にも反映されます。")).toBeVisible();
+
+    const reorderResponse = page.waitForResponse((response) => {
+      return response.request().method() === "POST" && response.url().includes("/habits/reorder");
+    });
+    await page.getByLabel(`${secondHabitName} を上へ移動`).click();
+    await page.getByRole("button", { name: "順番を保存" }).click();
+    expect((await reorderResponse).ok()).toBe(true);
+
+    await expect(page.getByText("今日の記録の並び順を更新しました。")).toBeVisible();
+    const habitTitles = page.locator(".today-card strong");
+    await expect(habitTitles.nth(0)).toContainText(secondHabitName);
+    await expect(habitTitles.nth(1)).toContainText(firstHabitName);
+
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "今日の記録" })).toBeVisible();
+    await expect(habitTitles.nth(0)).toContainText(secondHabitName);
+    await expect(habitTitles.nth(1)).toContainText(firstHabitName);
+  } finally {
+    await resetE2eUser(page, testId);
+  }
+});
+
 test("authenticated user sees a level-up effect after enough completions", async ({ page }, testInfo) => {
   const testId = makeTestId(testInfo);
   const habitNames = Array.from({ length: 10 }, (_, index) => `E2E レベル ${index + 1} ${Date.now()}`);
@@ -106,6 +148,14 @@ test("authenticated user can persist weekly as the default view", async ({ page 
   try {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "今日の記録" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "設定を保存" })).toBeDisabled();
+
+    await page.getByLabel("タイムゾーン").selectOption(timezone);
+    await expect(page.getByRole("button", { name: "元に戻す" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "設定を保存" })).toBeEnabled();
+    await page.getByRole("button", { name: "元に戻す" }).click();
+    await expect(page.getByRole("button", { name: "設定を保存" })).toBeDisabled();
+    await expect(page.getByLabel("タイムゾーン")).not.toHaveValue(timezone);
 
     await page.getByLabel("タイムゾーン").selectOption(timezone);
     await page.getByLabel("初期表示").selectOption("week");
@@ -114,6 +164,7 @@ test("authenticated user can persist weekly as the default view", async ({ page 
     });
     await page.getByRole("button", { name: "設定を保存" }).click();
     expect((await settingsResponse).ok()).toBe(true);
+    await expect(page.getByText("設定を保存しました。")).toBeVisible();
 
     await page.reload();
     await expect(page.getByLabel("タイムゾーン")).toHaveValue(timezone);

@@ -6,11 +6,19 @@ const XP_PER_COMPLETION = 10;
 export function TodayHabitList({
   today,
   isBusy,
+  isReorderMode,
+  isSavingOrder,
   onToggle,
+  onMove,
+  orderedHabitIds,
 }: {
   today: TodayDashboard | null;
   isBusy: boolean;
+  isReorderMode?: boolean;
+  isSavingOrder?: boolean;
   onToggle: (habitId: string, status: boolean) => void;
+  onMove?: (habitId: string, direction: -1 | 1) => void;
+  orderedHabitIds?: string[];
 }) {
   const [celebratingHabitId, setCelebratingHabitId] = useState<string | null>(null);
   const [xpBursts, setXpBursts] = useState<Array<{ id: number; habitId: string }>>([]);
@@ -32,6 +40,16 @@ export function TodayHabitList({
   if (!today) {
     return <p>今日の記録を読み込んでいます。</p>;
   }
+
+  const orderedHabits =
+    orderedHabitIds && orderedHabitIds.length > 0
+      ? [
+          ...orderedHabitIds
+            .map((habitId) => today.habits.find((habit) => habit.habitId === habitId))
+            .filter((habit): habit is NonNullable<typeof habit> => Boolean(habit)),
+          ...today.habits.filter((habit) => !orderedHabitIds.includes(habit.habitId)),
+        ]
+      : today.habits;
 
   function triggerCelebrate(habitId: string) {
     if (timeoutRef.current !== null) {
@@ -63,45 +81,77 @@ export function TodayHabitList({
         <span>{today.date}</span>
       </div>
       <div className="today-list">
-        {today.habits.map((habit) => (
+        {orderedHabits.map((habit, index) => (
           <article
-            className={celebratingHabitId === habit.habitId ? "today-card today-card--celebrate" : "today-card"}
+            className={
+              celebratingHabitId === habit.habitId
+                ? "today-card today-card--celebrate"
+                : isReorderMode
+                  ? "today-card today-card--reorder"
+                  : "today-card"
+            }
             key={habit.habitId}
           >
-            <div>
+            <div className="today-card__content">
               <strong>
                 {habit.emoji ? `${habit.emoji} ` : ""}
                 {habit.name}
               </strong>
               <p>{habit.isTargetDay ? "対象日" : "休みの日"}</p>
             </div>
-            <label
-              aria-label={!habit.isTargetDay ? `${habit.name} は対象外` : habit.status ? `${habit.name} を未達にする` : `${habit.name} を達成にする`}
-              className={!habit.isTargetDay ? "checkbox-toggle checkbox-toggle--disabled" : "checkbox-toggle"}
-            >
-              <input
-                checked={habit.status === true}
-                disabled={!habit.isTargetDay || isBusy}
-                onChange={() => {
-                  const nextStatus = !habit.status;
-                  if (nextStatus) {
-                    triggerCelebrate(habit.habitId);
-                    spawnXpBurst(habit.habitId);
+            {isReorderMode ? (
+              <div className="today-card__actions">
+                <span className="today-reorder-badge">並び替え</span>
+                <div className="toolbar">
+                  <button
+                    aria-label={`${habit.name} を上へ移動`}
+                    className="pill"
+                    disabled={Boolean(isSavingOrder) || index === 0}
+                    onClick={() => onMove?.(habit.habitId, -1)}
+                    type="button"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    aria-label={`${habit.name} を下へ移動`}
+                    className="pill"
+                    disabled={Boolean(isSavingOrder) || index === orderedHabits.length - 1}
+                    onClick={() => onMove?.(habit.habitId, 1)}
+                    type="button"
+                  >
+                    ↓
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label
+                aria-label={!habit.isTargetDay ? `${habit.name} は対象外` : habit.status ? `${habit.name} を未達にする` : `${habit.name} を達成にする`}
+                className={!habit.isTargetDay ? "checkbox-toggle checkbox-toggle--disabled" : "checkbox-toggle"}
+              >
+                <input
+                  checked={habit.status === true}
+                  disabled={!habit.isTargetDay || isBusy}
+                  onChange={() => {
+                    const nextStatus = !habit.status;
+                    if (nextStatus) {
+                      triggerCelebrate(habit.habitId);
+                      spawnXpBurst(habit.habitId);
+                    }
+                    onToggle(habit.habitId, nextStatus);
+                  }}
+                  type="checkbox"
+                />
+                <span
+                  className={
+                    habit.status
+                      ? celebratingHabitId === habit.habitId
+                        ? "checkbox-indicator checkbox-indicator--checked checkbox-indicator--celebrate"
+                        : "checkbox-indicator checkbox-indicator--checked"
+                      : "checkbox-indicator"
                   }
-                  onToggle(habit.habitId, nextStatus);
-                }}
-                type="checkbox"
-              />
-              <span
-                className={
-                  habit.status
-                    ? celebratingHabitId === habit.habitId
-                      ? "checkbox-indicator checkbox-indicator--checked checkbox-indicator--celebrate"
-                      : "checkbox-indicator checkbox-indicator--checked"
-                    : "checkbox-indicator"
-                }
-              />
-            </label>
+                />
+              </label>
+            )}
             <div className="xp-burst-layer" aria-hidden="true">
               {xpBursts
                 .filter((burst) => burst.habitId === habit.habitId)

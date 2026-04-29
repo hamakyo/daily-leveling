@@ -243,6 +243,23 @@ button {
   flex-wrap: wrap;
 }
 
+.settings-preview {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(47, 125, 240, 0.12);
+  background: var(--color-panel);
+}
+
+.settings-preview strong {
+  color: var(--color-ink);
+}
+
+.settings-preview .status-text {
+  margin: 0;
+}
+
 .pill {
   border-radius: 999px;
   border: 1px solid rgba(47, 125, 240, 0.18);
@@ -366,6 +383,31 @@ button {
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background-color 180ms ease;
 }
 
+.today-card--reorder {
+  border-color: rgba(47, 125, 240, 0.22);
+  background: var(--color-panel);
+}
+
+.today-card__content,
+.today-card__actions {
+  min-width: 0;
+}
+
+.today-card__actions {
+  display: grid;
+  justify-items: end;
+  gap: 0.5rem;
+}
+
+.today-reorder-badge {
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  background: var(--color-soft-blue);
+  color: var(--color-blue);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
 .today-card--celebrate {
   animation: card-celebrate 620ms ease;
   border-color: rgba(32, 199, 189, 0.36);
@@ -381,6 +423,14 @@ button {
 
 .status-text--warning {
   color: #8a5b00;
+}
+
+.status-text--success {
+  color: #167c64;
+}
+
+.status-text--error {
+  color: #c84d48;
 }
 
 .checkbox-toggle {

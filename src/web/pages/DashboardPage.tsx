@@ -18,6 +18,8 @@ import { WeeklySummary } from "../components/WeeklySummary";
 import type { CreateHabitInput, UserSettings } from "../types";
 import { createEmptyHabitForm, toHabitPayload } from "../utils/habitForm";
 import { currentDateString, currentMonthString, shiftDate, shiftMonth } from "../utils/month";
+import { areSettingsEqual, reconcileSettingsAfterRefresh } from "../utils/settings";
+import { moveItem } from "../utils/todayOrder";
 
 export function DashboardPage({
   user,
@@ -38,14 +40,21 @@ export function DashboardPage({
   const [monthly, setMonthly] = useState<MonthlyDashboard | null>(null);
   const [habits, setHabits] = useState<HabitRecord[]>([]);
   const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [savedSettings, setSavedSettings] = useState<UserSettings | null>(null);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [settingsStatusMessage, setSettingsStatusMessage] = useState<string | null>(null);
+  const [settingsStatusTone, setSettingsStatusTone] = useState<"success" | "error" | null>(null);
   const [form, setForm] = useState<CreateHabitInput>(createEmptyHabitForm);
   const [displayedLevelProgress, setDisplayedLevelProgress] = useState(0);
   const [levelUpState, setLevelUpState] = useState<{ id: number; level: number } | null>(null);
   const [streakToast, setStreakToast] = useState<{ id: number; streak: number } | null>(null);
   const [todayCompleteState, setTodayCompleteState] = useState<{ id: number } | null>(null);
+  const [isTodayReorderMode, setIsTodayReorderMode] = useState(false);
+  const [draftTodayHabitIds, setDraftTodayHabitIds] = useState<string[]>([]);
+  const [isSavingTodayOrder, setIsSavingTodayOrder] = useState(false);
   const feedbackIdRef = useRef(0);
   const levelTransitionTimeoutRef = useRef<number | null>(null);
   const previousLevelRef = useRef<{ level: number; progressRate: number } | null>(null);
@@ -58,7 +67,13 @@ export function DashboardPage({
       setWeekly(data.weekly);
       setMonthly(data.monthly);
       setHabits(data.habits);
-      setSettings(data.settings);
+      const nextSettingsState = reconcileSettingsAfterRefresh({
+        currentSettings: settings,
+        refreshedSettings: data.settings,
+        savedSettings,
+      });
+      setSettings(nextSettingsState.nextSettings);
+      setSavedSettings(nextSettingsState.nextSavedSettings);
       setDashboardError(null);
       return data;
     } catch (error) {
@@ -159,6 +174,14 @@ export function DashboardPage({
     };
   }, [todayCompleteState]);
 
+  useEffect(() => {
+    if (!today || isTodayReorderMode) {
+      return;
+    }
+
+    setDraftTodayHabitIds(today.habits.map((habit) => habit.habitId));
+  }, [today, isTodayReorderMode]);
+
   async function reloadAll(message?: string) {
     const [dashboardData] = await Promise.all([refreshDashboardData(), onUserReload()]);
     if (message && dashboardData) {
@@ -167,7 +190,7 @@ export function DashboardPage({
   }
 
   async function toggleHabit(habitId: string, status: boolean) {
-    if (!today || !monthly) {
+    if (!today || !monthly || isTodayReorderMode) {
       return;
     }
 
@@ -245,14 +268,88 @@ export function DashboardPage({
     await reloadAll("習慣の並び順を更新しました。");
   }
 
-  async function handleSettingsSave(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!settings) {
+  function startTodayReorder() {
+    if (!today) {
       return;
     }
 
-    await saveSettings(settings);
-    await reloadAll("設定を更新しました。");
+    setDraftTodayHabitIds(today.habits.map((habit) => habit.habitId));
+    setIsTodayReorderMode(true);
+  }
+
+  function cancelTodayReorder() {
+    if (today) {
+      setDraftTodayHabitIds(today.habits.map((habit) => habit.habitId));
+    }
+    setIsTodayReorderMode(false);
+  }
+
+  function moveTodayHabit(habitId: string, direction: -1 | 1) {
+    setDraftTodayHabitIds((current) => {
+      const index = current.indexOf(habitId);
+      if (index < 0) {
+        return current;
+      }
+
+      const nextIndex = index + direction;
+      return moveItem(current, index, nextIndex);
+    });
+  }
+
+  async function saveTodayOrder() {
+    if (!today || draftTodayHabitIds.length === 0) {
+      return;
+    }
+
+    setIsSavingTodayOrder(true);
+    try {
+      await reorderHabits(draftTodayHabitIds);
+      setIsTodayReorderMode(false);
+      await reloadAll("今日の記録の並び順を更新しました。");
+    } finally {
+      setIsSavingTodayOrder(false);
+    }
+  }
+
+  const hasTodayOrderChanges = today
+    ? draftTodayHabitIds.length === today.habits.length &&
+      draftTodayHabitIds.some((habitId, index) => habitId !== today.habits[index]?.habitId)
+    : false;
+
+  async function handleSettingsSave(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!settings || !savedSettings || areSettingsEqual(settings, savedSettings)) {
+      return;
+    }
+
+    setIsSavingSettings(true);
+    setSettingsStatusMessage(null);
+    setSettingsStatusTone(null);
+
+    try {
+      await saveSettings(settings);
+      await reloadAll("設定を更新しました。");
+      setSavedSettings(settings);
+      setSettingsStatusMessage("設定を保存しました。");
+      setSettingsStatusTone("success");
+    } catch (error) {
+      setSettingsStatusMessage(error instanceof Error ? error.message : "設定の保存に失敗しました。");
+      setSettingsStatusTone("error");
+    } finally {
+      setIsSavingSettings(false);
+    }
+  }
+
+  const hasUnsavedSettingsChanges = !areSettingsEqual(settings, savedSettings);
+
+  function resetSettingsChanges() {
+    if (!savedSettings) {
+      return;
+    }
+
+    setSettings(savedSettings);
+    setSettingsStatusMessage(null);
+    setSettingsStatusTone(null);
   }
 
   async function handleLogout() {
@@ -343,12 +440,43 @@ export function DashboardPage({
             <div className="stack-space">
               <header className="section-header">
                 <h2>今日の記録</h2>
-                {today ? (
-                  <span>
-                    {today.summary.completedCount}/{today.summary.targetCount} 達成
-                  </span>
-                ) : null}
+                <div className="toolbar">
+                  {today ? (
+                    <span>
+                      {today.summary.completedCount}/{today.summary.targetCount} 達成
+                    </span>
+                  ) : null}
+                  {isTodayReorderMode ? (
+                    <>
+                      <button
+                        className="pill"
+                        disabled={isSavingTodayOrder}
+                        onClick={cancelTodayReorder}
+                        type="button"
+                      >
+                        キャンセル
+                      </button>
+                      <button
+                        className="secondary-button"
+                        disabled={isSavingTodayOrder || !hasTodayOrderChanges}
+                        onClick={() => void saveTodayOrder()}
+                        type="button"
+                      >
+                        {isSavingTodayOrder ? "保存中..." : "順番を保存"}
+                      </button>
+                    </>
+                  ) : (
+                    <button className="pill" onClick={startTodayReorder} type="button">
+                      並び替え
+                    </button>
+                  )}
+                </div>
               </header>
+              {isTodayReorderMode ? (
+                <p className="status-text status-text--warning">
+                  今日の記録の順番を調整しています。保存すると他の一覧にも反映されます。
+                </p>
+              ) : null}
               {todayCompleteState ? (
                 <div className="today-complete-banner">
                   <strong>今日の習慣をすべて達成しました</strong>
@@ -356,8 +484,12 @@ export function DashboardPage({
                 </div>
               ) : null}
               <TodayHabitList
-                isBusy={isBusy}
+                isBusy={isBusy || isTodayReorderMode}
+                isReorderMode={isTodayReorderMode}
+                isSavingOrder={isSavingTodayOrder}
                 onToggle={(habitId, status) => void toggleHabit(habitId, status)}
+                onMove={moveTodayHabit}
+                orderedHabitIds={draftTodayHabitIds}
                 today={today}
               />
             </div>
@@ -449,9 +581,18 @@ export function DashboardPage({
           <section className="panel">
             <h2>設定</h2>
             <SettingsForm
-              onChange={setSettings}
+              hasUnsavedChanges={hasUnsavedSettingsChanges}
+              isSaving={isSavingSettings}
+              onChange={(nextSettings) => {
+                setSettings(nextSettings);
+                setSettingsStatusMessage(null);
+                setSettingsStatusTone(null);
+              }}
+              onReset={resetSettingsChanges}
               onSubmit={handleSettingsSave}
               settings={settings}
+              statusTone={settingsStatusTone}
+              statusMessage={settingsStatusMessage}
             />
           </section>
         </aside>
