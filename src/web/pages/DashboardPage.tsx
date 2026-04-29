@@ -368,29 +368,31 @@ export function DashboardPage({
           </p>
         </div>
         <div className="dashboard-hero-side">
-          <div className="toolbar">
-            <button
-              className={view === "today" ? "pill pill--active" : "pill"}
-              onClick={() => setView("today")}
-              type="button"
-            >
-              今日
-            </button>
-            <button
-              className={view === "week" ? "pill pill--active" : "pill"}
-              onClick={() => setView("week")}
-              type="button"
-            >
-              週間
-            </button>
-            <button
-              className={view === "month" ? "pill pill--active" : "pill"}
-              onClick={() => setView("month")}
-              type="button"
-            >
-              月間
-            </button>
-            <button className="pill" onClick={() => void handleLogout()} type="button">
+          <div className="dashboard-nav">
+            <div className="dashboard-nav__views" aria-label="表示切り替え">
+              <button
+                className={view === "today" ? "pill pill--active" : "pill"}
+                onClick={() => setView("today")}
+                type="button"
+              >
+                今日
+              </button>
+              <button
+                className={view === "week" ? "pill pill--active" : "pill"}
+                onClick={() => setView("week")}
+                type="button"
+              >
+                週間
+              </button>
+              <button
+                className={view === "month" ? "pill pill--active" : "pill"}
+                onClick={() => setView("month")}
+                type="button"
+              >
+                月間
+              </button>
+            </div>
+            <button className="pill dashboard-nav__logout" onClick={() => void handleLogout()} type="button">
               ログアウト
             </button>
           </div>

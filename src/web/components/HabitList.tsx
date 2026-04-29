@@ -35,14 +35,14 @@ export function HabitList({
         .sort((left, right) => left.displayOrder - right.displayOrder)
         .map((habit) => (
           <article className="habit-admin-row" key={habit.id}>
-            <div>
+            <div className="habit-admin-row__content">
               <strong>
                 {habit.emoji ? `${habit.emoji} ` : ""}
                 {habit.name}
               </strong>
               <p>{habit.isActive ? `有効 ・ ${formatFrequency(habit)}` : "アーカイブ済み"}</p>
             </div>
-            <div className="toolbar">
+            <div className="toolbar habit-admin-row__actions">
               <button className="pill" onClick={() => onMove(habit.id, -1)} type="button">
                 ↑
               </button>
