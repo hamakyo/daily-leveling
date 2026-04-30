@@ -65,6 +65,12 @@ button {
   padding: 1.5rem 0 3rem;
 }
 
+.page-shell--login {
+  display: grid;
+  gap: 1rem;
+  padding-top: 2rem;
+}
+
 .hero-card,
 .panel {
   border: 1px solid var(--color-line);
@@ -144,6 +150,155 @@ button {
 
 .hero-card--compact h1 {
   font-size: 2.8rem;
+}
+
+.login-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 460px);
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.login-hero__copy,
+.login-preview {
+  border: 1px solid var(--color-line);
+  border-radius: 24px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.login-hero__copy {
+  display: grid;
+  align-content: center;
+  min-height: 420px;
+  padding: 2rem;
+}
+
+.login-hero__copy h1 {
+  margin: 0;
+  max-width: 9ch;
+  font-family: "Avenir Next", "Trebuchet MS", "Helvetica Neue", sans-serif;
+  font-size: 5rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 0.92;
+  color: var(--color-ink);
+}
+
+.login-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+}
+
+.login-preview {
+  display: grid;
+  align-content: start;
+  gap: 0.85rem;
+  padding: 1.15rem;
+}
+
+.login-preview__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--color-ink);
+}
+
+.login-preview__header > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.login-preview__label,
+.login-preview__date,
+.login-preview__summary span {
+  color: var(--color-muted);
+  font-size: 0.88rem;
+}
+
+.login-preview__label {
+  color: var(--color-violet);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.login-preview__summary {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid rgba(32, 199, 189, 0.22);
+  border-radius: 16px;
+  background: var(--color-soft-cyan);
+}
+
+.login-preview__summary strong {
+  color: var(--color-cyan);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.login-preview__habits {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.login-preview__habit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 3rem;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  background: var(--color-panel);
+  color: var(--color-ink);
+}
+
+.login-preview__habit strong {
+  flex: none;
+  color: var(--color-muted);
+  font-size: 0.82rem;
+}
+
+.login-preview__habit--done strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.7rem;
+  padding: 0 0.7rem;
+  border-radius: 999px;
+  background: var(--color-cyan);
+  color: white;
+}
+
+.login-preview__month {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+  padding: 0.85rem;
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  background: var(--color-panel);
+}
+
+.login-preview__day {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  background: rgba(96, 112, 141, 0.14);
+}
+
+.login-preview__day--target {
+  background: rgba(47, 125, 240, 0.16);
+}
+
+.login-preview__day--done {
+  background: var(--color-cyan);
 }
 
 .lede {
@@ -1035,6 +1190,7 @@ button {
   .panel-grid,
   .panel-grid--dashboard,
   .hero-card--compact,
+  .login-hero,
   .summary-grid,
   .stats-columns {
     grid-template-columns: 1fr;
@@ -1103,6 +1259,39 @@ button {
   .hero-card,
   .panel {
     padding: 1rem;
+  }
+
+  .page-shell--login {
+    gap: 0.8rem;
+  }
+
+  .login-hero {
+    gap: 0.8rem;
+  }
+
+  .login-hero__copy,
+  .login-preview {
+    border-radius: 22px;
+    padding: 1rem;
+  }
+
+  .login-hero__copy {
+    min-height: 0;
+  }
+
+  .login-hero__copy h1 {
+    font-size: 3.1rem;
+  }
+
+  .login-hero__actions,
+  .login-hero__actions .primary-button {
+    width: 100%;
+  }
+
+  .login-preview__summary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.35rem;
   }
 
   .panel-grid {

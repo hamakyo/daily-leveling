@@ -4,7 +4,8 @@ test("guest can see the login screen", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "Daily Leveling" })).toBeVisible();
-  await expect(page.getByText("毎日の記録を素早く続けられる")).toBeVisible();
+  await expect(page.getByText("今日やることを軽く記録して")).toBeVisible();
+  await expect(page.getByLabel("Daily Leveling の利用イメージ")).toBeVisible();
   await expect(page.getByRole("button", { name: "Google でログイン" })).toBeVisible();
 });
 
