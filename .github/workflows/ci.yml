@@ -6,6 +6,10 @@ on:
       - main
   pull_request:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   app:
     runs-on: ubuntu-latest
@@ -36,6 +40,82 @@ jobs:
 
       - name: Build
         run: pnpm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: daily_leveling_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/daily_leveling_test
+      APP_BASE_URL: http://127.0.0.1:8788
+      GOOGLE_CLIENT_ID: test-google-client-id
+      GOOGLE_CLIENT_SECRET: test-google-client-secret
+      SESSION_COOKIE_NAME: dl_session
+      SESSION_TTL_SECONDS: "1209600"
+      DEFAULT_TIMEZONE: Asia/Tokyo
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Write E2E env file
+        run: |
+          cat > .dev.vars <<EOF
+          DATABASE_URL="${DATABASE_URL}"
+          APP_BASE_URL="${APP_BASE_URL}"
+          GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}"
+          GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET}"
+          SESSION_COOKIE_NAME="${SESSION_COOKIE_NAME}"
+          SESSION_TTL_SECONDS="${SESSION_TTL_SECONDS}"
+          DEFAULT_TIMEZONE="${DEFAULT_TIMEZONE}"
+          EOF
+
+      - name: Run migrations
+        run: pnpm run db:migrate
+
+      - name: Run Playwright E2E
+        run: pnpm run test:e2e
+
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
 
   terraform:
     runs-on: ubuntu-latest
