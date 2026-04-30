@@ -1,6 +1,5 @@
 import type { FormEvent } from "react";
 import type { UserSettings } from "../types";
-import { formatDefaultViewLabel } from "../utils/settings";
 import { THEME_LABELS } from "../utils/theme";
 import { buildTimezoneOptionGroups, formatTimezoneLabel, resolveBrowserTimezone } from "../utils/timezones";
 
@@ -34,8 +33,6 @@ export function SettingsForm({
   const timezoneGroups = buildTimezoneOptionGroups(settings.timezone);
   const browserTimezone = resolveBrowserTimezone();
   const canApplyBrowserTimezone = Boolean(browserTimezone) && browserTimezone !== settings.timezone;
-  const selectedTimezoneLabel = formatTimezoneLabel(settings.timezone);
-  const browserTimezoneLabel = browserTimezone ? formatTimezoneLabel(browserTimezone) : null;
 
   return (
     <form className="stack-form" onSubmit={onSubmit}>
@@ -83,18 +80,6 @@ export function SettingsForm({
           <span className="status-text">{formatTimezoneLabel(browserTimezone)}</span>
         </div>
       ) : null}
-      <section className="settings-preview" aria-label="設定プレビュー">
-        <strong>この設定での表示</strong>
-        <p className="status-text">表示テーマ: {THEME_LABELS[settings.theme]}</p>
-        <p className="status-text">日付の区切り: {selectedTimezoneLabel}</p>
-        <p className="status-text">ログイン後の初期表示: {formatDefaultViewLabel(settings.defaultView)}</p>
-        {browserTimezoneLabel ? (
-          <p className="status-text">
-            端末のタイムゾーン: {browserTimezoneLabel}
-            {canApplyBrowserTimezone ? " と異なります。" : " と同じです。"}
-          </p>
-        ) : null}
-      </section>
       <label>
         <span>表示テーマ</span>
         <select

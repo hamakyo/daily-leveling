@@ -275,7 +275,6 @@ button {
 }
 
 .dashboard-settings .settings-inline,
-.dashboard-settings .settings-preview,
 .dashboard-settings .settings-actions,
 .dashboard-settings .settings-account,
 .dashboard-settings .stack-form > .status-text {
@@ -348,23 +347,6 @@ button {
 .settings-inline,
 .settings-actions {
   align-items: center;
-}
-
-.settings-preview {
-  display: grid;
-  gap: 0.3rem;
-  padding: 0.85rem 0.95rem;
-  border-radius: 14px;
-  border: 1px solid rgba(47, 125, 240, 0.12);
-  background: var(--color-panel);
-}
-
-.settings-preview strong {
-  color: var(--color-ink);
-}
-
-.settings-preview .status-text {
-  margin: 0;
 }
 
 .settings-account {
@@ -1063,7 +1045,6 @@ button {
   }
 
   .dashboard-settings .settings-inline,
-  .dashboard-settings .settings-preview,
   .dashboard-settings .settings-actions,
   .dashboard-settings .settings-account,
   .dashboard-settings .stack-form > .status-text {
@@ -1234,7 +1215,6 @@ button {
   .stack-form > fieldset,
   .stack-form > .interval-builder,
   .stack-form > .toolbar,
-  .stack-form > .settings-preview,
   .stack-form > .status-text,
   .stack-form > .secondary-button {
     width: 100%;
@@ -1243,7 +1223,6 @@ button {
 
   .stack-form input,
   .stack-form select,
-  .settings-preview,
   .habit-admin-list,
   .habit-admin-row,
   .habit-admin-row__content,
