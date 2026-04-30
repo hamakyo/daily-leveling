@@ -13,7 +13,7 @@ test("new user can apply a starter template and enter the dashboard", async ({ p
     await page.getByRole("button", { name: /健康の基本/ }).click();
     await expect(page.getByText("テンプレート「健康の基本」を適用しました。")).toBeVisible();
 
-    await page.getByRole("button", { name: "ダッシュボードを始める" }).click();
+    await page.getByRole("button", { name: "ダッシュボードへ進む" }).click();
 
     await expect(page.getByRole("heading", { name: "Daily Leveling" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "今日の記録" })).toBeVisible();
