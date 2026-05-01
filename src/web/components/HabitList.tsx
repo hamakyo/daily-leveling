@@ -77,6 +77,11 @@ export function HabitList({
   }
 
   async function deleteExistingHabit(habitId: string) {
+    const confirmed = window.confirm("この習慣を削除しますか？累計XPは維持されます。");
+    if (!confirmed) {
+      return;
+    }
+
     setDeletingHabitId(habitId);
     try {
       await onDelete(habitId);

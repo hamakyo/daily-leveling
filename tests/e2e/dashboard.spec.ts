@@ -245,6 +245,11 @@ test("authenticated user can edit and delete a habit from the habit list", async
     const deleteResponse = page.waitForResponse((response) => {
       return response.request().method() === "PATCH" && response.url().includes("/habits/");
     });
+    page.once("dialog", async (dialog) => {
+      expect(dialog.type()).toBe("confirm");
+      expect(dialog.message()).toContain("この習慣を削除しますか？");
+      await dialog.accept();
+    });
     await deleteEditRow.getByRole("button", { name: "削除" }).click();
     expect((await deleteResponse).ok()).toBe(true);
 
